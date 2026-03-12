@@ -244,9 +244,9 @@ function renderJungleStrategy(strategyData) {
     const jungleHtml = `
         <div class="jungle-strategy-card">
             <h4>🗺️ 정글러 전용: 맞춤형 전략 동선</h4>
-            <div class="minimap-wrapper">
-                <img src="https://ddragon.leagueoflegends.com/cdn/img/map/map11.png" class="minimap-img">
-                <canvas id="jungle-path-canvas" width="300" height="300"></canvas>
+            <div class="jungle-analysis-container">
+                <img src="https://ddragon.leagueoflegends.com/cdn/img/map/map11.png" id="jungle-minimap">
+                <canvas id="jungle-path-canvas" width="320" height="320"></canvas>
             </div>
             <div class="strategy-details">
                 <div class="matchup-box">

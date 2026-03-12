@@ -4,11 +4,14 @@ let selectedLane = '탑';
 let language = 'ko';
 
 const champions = [
-    {name:'가렌',id:'Garen',i:'ㄱㄹ'},{name:'갈리오',id:'Galio',i:'ㄱㄹㅇ'},{name:'신 짜오',id:'XinZhao',i:'ㅅㅉㅇ'},
-    {name:'피즈',id:'Fizz',i:'ㅍㅈ'},{name:'니달리',id:'Nidalee',i:'ㄴㄷㄹ'},{name:'리 신',id:'LeeSin',i:'ㄹㅅ'},
-    {name:'카이사',id:'KaiSa',i:'ㅋㅇㅅ'},{name:'진',id:'Jhin',i:'ㅈ'},{name:'럭스',id:'Lux',i:'ㄹㅅ'},
-    {name:'이즈리얼',id:'Ezreal',i:'ㅇㅈㄹㅇ'},{name:'아리',id:'Ahri',i:'ㅇㄹ'},{name:'요네',id:'Yone',i:'ㅇㄴ'}
+    {name:'가렌',id:'Garen',i:'ㄱㄹ'},{name:'갈리오',id:'Galio',i:'ㄱㄹㅇ'},{name:'갱플랭크',id:'Gangplank',i:'ㄱㅍㄹㅋ'},{name:'그라가스',id:'Gragas',i:'ㄱㄹㄱㅅ'},{name:'그레이브즈',id:'Graves',i:'ㄱㄹㅇㅂㅈ'},{name:'나르',id:'Gnar',i:'ㄴㄹ'},{name:'나서스',id:'Nasus',i:'ㄴㅅㅅ'},{name:'노틸러스',id:'Nautilus',i:'ㄴㅌㄹㅅ'},{name:'녹턴',id:'Nocturne',i:'ㄴㅌ'},{name:'누누와 윌럼프',id:'Nunu',i:'ㄴㄴㅇㅇㄹㅍ'},{name:'니달리',id:'Nidalee',i:'ㄴㄷㄹ'},{name:'다리우스',id:'Darius',i:'ㄷㄹㅇㅅ'},{name:'다이애나',id:'Diana',i:'ㄷㅇㅇㄴ'},{name:'럭스',id:'Lux',i:'ㄹㅅ'},{name:'리 신',id:'LeeSin',i:'ㄹㅅ'},{name:'리븐',id:'Riven',i:'ㄹㅂ'},{name:'마스터 이',id:'MasterYi',i:'ㅁㅅㅌㅇ'},{name:'말파이트',id:'Malphite',i:'ㅁㅍㅇㅌ'},{name:'바이',id:'Vi',i:'ㅂㅇ'},{name:'베인',id:'Vayne',i:'ㅂㅇ'},{name:'브라이어',id:'Briar',i:'ㅂㄹㅇㅇ'},{name:'비에고',id:'Viego',i:'ㅂㅇㄱ'},{name:'아리',id:'Ahri',i:'ㅇㄹ'},{name:'아칼리',id:'Akali',i:'ㅇㅋㄹ'},{name:'야스오',id:'Yasuo',i:'ㅇㅅㅇ'},{name:'요네',id:'Yone',i:'ㅇㄴ'},{name:'이즈리얼',id:'Ezreal',i:'ㅇㅈㄹㅇ'},{name:'제드',id:'Zed',i:'ㅈㄷ'},{name:'진',id:'Jhin',i:'ㅈ'},{name:'카이사',id:'KaiSa',i:'ㅋㅇㅅ'},{name:'티모',id:'Teemo',i:'ㅌㅁ'},{name:'피즈',id:'Fizz',i:'ㅍㅈ'},{name:'흐웨이',id:'Hwei',i:'ㅎㅇ'}
 ];
+
+const getImg = {
+    item: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/item/${id}.png`,
+    rune: (path) => `https://ddragon.leagueoflegends.com/cdn/img/${path}`,
+    champ: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${id}.png`
+};
 
 function getChoseong(str) {
     const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
@@ -33,13 +36,13 @@ function showAutocomplete(input) {
     filtered.slice(0, 8).forEach(c => {
         const li = document.createElement('li');
         li.className = 'autocomplete-item';
-        li.innerHTML = `<img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png"> ${c.name}`;
+        li.innerHTML = `<img src="${getImg.champ(c.id)}"> ${c.name}`;
         li.onclick = () => {
             input.value = c.name;
             const row = input.closest('.player-row');
             const iconImg = row.querySelector('.champ-icon-main');
-            iconImg.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png`;
-            iconImg.classList.add('active'); // 아이콘 표시
+            iconImg.src = getImg.champ(c.id);
+            iconImg.classList.add('active'); 
             listEl.innerHTML = '';
         };
         listEl.appendChild(li);
@@ -180,7 +183,10 @@ async function startAnalysis() {
                 </button>
 
                 <div id="analysis-details" class="hidden-details">
-                    <div class="analysis-text">${details.replace(/\n/g, '<br>')}</div>
+                    <div class="analysis-text">
+                        <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 전략 및 추천 빌드</h5>
+                        ${details.replace(/\n/g, '<br>')}
+                    </div>
                 </div>
             `;
         }

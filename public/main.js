@@ -36,11 +36,25 @@ function showAutocomplete(input) {
             const row = input.closest('.player-row');
             const iconImg = row.querySelector('.champ-icon-main');
             iconImg.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png`;
-            iconImg.classList.add('active');
+            iconImg.classList.add('active'); // 아이콘 표시
             listEl.innerHTML = '';
         };
         listEl.appendChild(li);
     });
+}
+
+function handleLaneChange(selectEl) {
+    const row = selectEl.closest('.player-row');
+    const s1 = row.querySelector('.s1');
+    if (selectEl.value === '정글') {
+        s1.value = '강타';
+        updateSpellIcon(s1);
+    }
+}
+
+function updateSpellIcon(selectEl) {
+    const icon = selectEl.parentElement.querySelector('.spell-icon');
+    icon.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spellInfo[selectEl.value]}.png`;
 }
 
 function selectMyLane(lane, btn) {
@@ -49,9 +63,9 @@ function selectMyLane(lane, btn) {
     btn.classList.add('active');
 }
 
-function updateSpellIcon(selectEl) {
-    const icon = selectEl.parentElement.querySelector('.spell-icon');
-    icon.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spellInfo[selectEl.value]}.png`;
+function toggleLanguage() {
+    language = language === 'ko' ? 'en' : 'ko';
+    document.getElementById('lang-status').innerText = language === 'ko' ? 'KR' : 'EN';
 }
 
 function addPlayer(team) {
@@ -66,7 +80,7 @@ function addPlayer(team) {
                 <input type="text" class="champ-input" placeholder="ㄱ, 가ㄹ 검색" oninput="showAutocomplete(this)">
                 <ul class="autocomplete-list"></ul>
             </div>
-            <select class="lane-select">${lanes.map(l => `<option value="${l}">${l}</option>`).join('')}</select>
+            <select class="lane-select" onchange="handleLaneChange(this)">${lanes.map(l => `<option value="${l}">${l}</option>`).join('')}</select>
         </div>
         <div class="spell-row">
             <div class="spell-item"><img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/SummonerFlash.png" class="spell-icon"><select class="spell-select s1" onchange="updateSpellIcon(this)">${Object.keys(spellInfo).map(s => `<option value="${s}">${s}</option>`).join('')}</select></div>
@@ -87,9 +101,6 @@ async function startAnalysis() {
     content.innerHTML = '';
     btn.disabled = true;
 
-    const today = new Date();
-    const patchVersion = `${today.getFullYear().toString().slice(-2)}.${today.getMonth() + 1}`;
-    
     const blueTeamArr = [];
     document.querySelectorAll('#blue-team-list .player-row').forEach(row => {
         const l = row.querySelector('.lane-select').value;

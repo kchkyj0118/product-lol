@@ -2,59 +2,54 @@
 body { background: var(--dark); color: #f1f5f9; font-family: 'Pretendard', sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
 .container { max-width: 900px; width: 100%; }
 
-/* 헤더 & 모드 선택 */
-h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
-.version { font-size: 12px; vertical-align: middle; color: #64748b; }
-.lang-toggle { background: var(--card); border: 1px solid #475569; color: #f1f5f9; padding: 4px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+/* 초상화: 기본적으로 안 보임 */
+.champ-icon-main { 
+    width: 34px; height: 34px; border-radius: 4px; border: 1px solid #334155; 
+    background: #0f172a; visibility: hidden; /* 공간은 차지하되 보이지 않음 */
+}
+.champ-icon-main.active { visibility: visible; }
 
-.my-lane-selector { background: var(--card); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
-.lane-btns { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
-.lane-opt { padding: 6px 12px; font-size: 13px; border: 1px solid #475569; background: #0f172a; color: #94a3b8; border-radius: 15px; cursor: pointer; }
-.lane-opt.active { background: var(--blue); color: white; border-color: var(--blue); }
-
-/* 팀 레이아웃 (모바일 대응) */
-.main-layout { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-@media (min-width: 768px) { .main-layout { flex-direction: row; } }
-.team-section { flex: 1; background: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #1e293b; }
-.blue-card { border-top: 4px solid var(--blue); }
-.red-card { border-top: 4px solid var(--red); }
-
-/* 플레이어 로우 & 스펠 아이콘 */
-.player-row { position: relative; background: var(--card); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-.input-line { display: flex; gap: 5px; margin-bottom: 8px; align-items: center; }
-.lane-select { width: 65px; background: var(--dark); color: white; border: none; border-radius: 4px; font-size: 12px; height: 32px; }
-.champ-input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--dark); color: white; font-size: 14px; height: 32px; box-sizing: border-box; }
-.spell-row { display: flex; gap: 10px; align-items: center; }
-.spell-item { display: flex; align-items: center; gap: 4px; flex: 1; }
-.spell-icon { width: 20px; height: 20px; border-radius: 3px; background: #000; }
-.spell-select { flex: 1; padding: 4px; font-size: 11px; background: #334155; color: white; border: none; }
-
-/* 자동완성 스타일 */
-.champ-input-container { position: relative; flex: 1; display: flex; flex-direction: column; }
+.champ-input-container { position: relative; flex: 1; }
 .autocomplete-list { 
     position: absolute; top: 100%; left: 0; right: 0; 
     background: #1e293b; border: 1px solid #334155; border-radius: 4px; 
     z-index: 100; max-height: 200px; overflow-y: auto; list-style: none; padding: 0; margin: 0;
 }
-.autocomplete-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #f1f5f9; text-align: left; }
+.autocomplete-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: white; text-align: left; }
 .autocomplete-item:hover { background: #334155; }
 .autocomplete-item img { width: 24px; height: 24px; border-radius: 50%; }
-.champ-icon-main { 
-    width: 32px; height: 32px; border-radius: 4px; border: 1px solid #334155; background: #020617; 
-    display: none; /* 기본적으로는 숨김 처리 */
-}
-.champ-icon-main.active {
-    display: block; /* 챔피언 선택 시에만 표시 */
-}
 
-/* 결과창 디자인 개선 */
+/* 기존 레이아웃 유지 */
+.player-row { background: var(--card); padding: 10px; border-radius: 8px; margin-bottom: 10px; position: relative; border-top: 4px solid transparent; }
+.blue-card .player-row { border-color: var(--blue); }
+.red-card .player-row { border-color: var(--red); }
+
+.input-line { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.champ-input { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--dark); color: white; font-size: 14px; box-sizing: border-box; }
+.lane-select { width: 70px; background: var(--dark); color: white; border: none; border-radius: 4px; padding: 5px; font-size: 12px; }
+
+.spell-row { display: flex; gap: 10px; }
+.spell-item { display: flex; align-items: center; gap: 4px; flex: 1; }
+.spell-icon { width: 22px; height: 22px; border-radius: 3px; background: #000; }
+.spell-select { flex: 1; padding: 4px; font-size: 12px; background: #334155; color: white; border: none; border-radius: 4px; }
+
+.remove-btn { position: absolute; right: -8px; top: -8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; z-index: 10; font-size: 12px; }
+
+/* 헤더 & 결과창 등 기타 스타일 */
+h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.my-lane-selector { background: var(--card); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+.lane-btns { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+.lane-opt { padding: 6px 12px; font-size: 13px; border: 1px solid #475569; background: #0f172a; color: #94a3b8; border-radius: 15px; cursor: pointer; }
+.lane-opt.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+#analyze-btn { width: 100%; padding: 15px; background: var(--blue); border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+.result-area { margin-top: 20px; background: var(--card); padding: 25px; border-radius: 12px; line-height: 1.8; border-top: 4px solid var(--blue); }
 .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .copy-btn { padding: 5px 12px; background: #475569; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px; }
-.summary-card { background: linear-gradient(135deg, #1e3a8a, #1e293b); padding: 15px; border-radius: 8px; border-left: 5px solid var(--blue); margin-bottom: 20px; }
-.item-section { border-top: 1px dashed #475569; margin-top: 15px; padding-top: 15px; }
-
-#analyze-btn { width: 100%; padding: 15px; background: var(--blue); border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; }
-.result-area { margin-top: 20px; background: var(--card); padding: 20px; border-radius: 12px; line-height: 1.6; }
 .analysis-text { white-space: pre-wrap; text-align: left; }
 .hidden { display: none; }
-.remove-btn { position: absolute; right: -8px; top: -8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; z-index: 10; font-size: 12px; }
+.version { font-size: 12px; color: #64748b; }
+.lang-toggle { background: var(--card); border: 1px solid #475569; color: #f1f5f9; padding: 4px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+.main-layout { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+@media (min-width: 768px) { .main-layout { flex-direction: row; } }
+.team-section { flex: 1; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b; }

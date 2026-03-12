@@ -2,10 +2,7 @@ const spellInfo = { '점멸': 'SummonerFlash', '점화': 'SummonerDot', '텔포'
 const lanes = ['탑', '정글', '미드', '원딜', '서포터'];
 let selectedLane = '탑';
 let language = 'ko';
-
-const champions = [
-    {name:'가렌',id:'Garen',i:'ㄱㄹ'},{name:'갈리오',id:'Galio',i:'ㄱㄹㅇ'},{name:'갱플랭크',id:'Gangplank',i:'ㄱㅍㄹㅋ'},{name:'그라가스',id:'Gragas',i:'ㄱㄹㄱㅅ'},{name:'그레이브즈',id:'Graves',i:'ㄱㄹㅇㅂㅈ'},{name:'나르',id:'Gnar',i:'ㄴㄹ'},{name:'나서스',id:'Nasus',i:'ㄴㅅㅅ'},{name:'노틸러스',id:'Nautilus',i:'ㄴㅌㄹㅅ'},{name:'녹턴',id:'Nocturne',i:'ㄴㅌ'},{name:'누누와 윌럼프',id:'Nunu',i:'ㄴㄴㅇㅇㄹㅍ'},{name:'니달리',id:'Nidalee',i:'ㄴㄷㄹ'},{name:'다리우스',id:'Darius',i:'ㄷㄹㅇㅅ'},{name:'다이애나',id:'Diana',i:'ㄷㅇㅇㄴ'},{name:'럭스',id:'Lux',i:'ㄹㅅ'},{name:'리 신',id:'LeeSin',i:'ㄹㅅ'},{name:'리븐',id:'Riven',i:'ㄹㅂ'},{name:'마스터 이',id:'MasterYi',i:'ㅁㅅㅌㅇ'},{name:'말파이트',id:'Malphite',i:'ㅁㅍㅇㅌ'},{name:'바이',id:'Vi',i:'ㅂㅇ'},{name:'베인',id:'Vayne',i:'ㅂㅇ'},{name:'브라이어',id:'Briar',i:'ㅂㄹㅇㅇ'},{name:'비에고',id:'Viego',i:'ㅂㅇㄱ'},{name:'아리',id:'Ahri',i:'ㅇㄹ'},{name:'아칼리',id:'Akali',i:'ㅇㅋㄹ'},{name:'야스오',id:'Yasuo',i:'ㅇㅅㅇ'},{name:'요네',id:'Yone',i:'ㅇㄴ'},{name:'이즈리얼',id:'Ezreal',i:'ㅇㅈㄹㅇ'},{name:'제드',id:'Zed',i:'ㅈㄷ'},{name:'진',id:'Jhin',i:'ㅈ'},{name:'카이사',id:'KaiSa',i:'ㅋㅇㅅ'},{name:'티모',id:'Teemo',i:'ㅌㅁ'},{name:'피즈',id:'Fizz',i:'ㅍㅈ'},{name:'흐웨이',id:'Hwei',i:'ㅎㅇ'}
-];
+let allChampions = [];
 
 const getImg = {
     item: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/item/${id}.png`,
@@ -24,16 +21,31 @@ function getChoseong(str) {
     return result;
 }
 
+async function fetchAllChampions() {
+    try {
+        const v = "14.5.1"; 
+        const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${v}/data/ko_KR/champion.json`);
+        const data = await res.json();
+        allChampions = Object.values(data.data).map(c => ({
+            name: c.name,
+            id: c.id,
+            i: getChoseong(c.name)
+        }));
+    } catch (e) {
+        console.error("챔피언 데이터를 불러오는데 실패했습니다.", e);
+    }
+}
+
 function showAutocomplete(input) {
     const val = input.value.trim();
     const listEl = input.parentElement.querySelector('.autocomplete-list');
     listEl.innerHTML = '';
     if(!val) return;
 
-    const searchVal = getChoseong(val);
-    const filtered = champions.filter(c => c.name.includes(val) || c.i.includes(searchVal));
+    const searchVal = getChoseong(val).toLowerCase();
+    const filtered = allChampions.filter(c => c.name.includes(val) || c.i.includes(searchVal) || c.id.toLowerCase().includes(val.toLowerCase()));
 
-    filtered.slice(0, 8).forEach(c => {
+    filtered.slice(0, 10).forEach(c => {
         const li = document.createElement('li');
         li.className = 'autocomplete-item';
         li.innerHTML = `<img src="${getImg.champ(c.id)}"> ${c.name}`;
@@ -140,7 +152,7 @@ async function startAnalysis() {
     const redTeamInfo = redTeamArr.join(", ");
 
     let prompt = `[시스템: LOL.PS 전문 분석 모드]
-- 반드시 2026년 최신 아이템(예: 피즈-황혼의 새벽)을 기반으로 추천할 것.
+- 반드시 2026년 최신 아이템을 기반으로 추천할 것.
 - 답변 시작 시 'LOL.PS 분석 리포트'나 날짜 같은 머리말은 절대 쓰지 마세요.
 - 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
 - 2단계: 그 아래에 상세 분석 및 템트리를 작성하세요.
@@ -174,17 +186,17 @@ async function startAnalysis() {
 
             content.innerHTML = `
                 <div class="summary-card">
-                    <h4>⚡ 핵심 요약</h4>
+                    <h4>⚡ 핵심 승리 전략</h4>
                     <div class="summary-text">${summary.replace(/\n/g, '<br>')}</div>
                 </div>
                 
                 <button id="toggle-details" class="details-btn" onclick="toggleDetails()">
-                    상세 분석 및 템트리 보기 ↓
+                    상세 룬/템트리 보기 ↓
                 </button>
 
                 <div id="analysis-details" class="hidden-details">
                     <div class="analysis-text">
-                        <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 전략 및 추천 빌드</h5>
+                        <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 분석 및 추천 빌드</h5>
                         ${details.replace(/\n/g, '<br>')}
                     </div>
                 </div>
@@ -203,7 +215,7 @@ function toggleDetails() {
     const btn = document.getElementById('toggle-details');
     if (detailsDiv.style.display === 'block') {
         detailsDiv.style.display = 'none';
-        btn.innerText = '상세 분석 및 템트리 보기 ↓';
+        btn.innerText = '상세 룬/템트리 보기 ↓';
     } else {
         detailsDiv.style.display = 'block';
         btn.innerText = '상세 내용 접기 ↑';
@@ -215,7 +227,8 @@ function copyResult() {
     navigator.clipboard.writeText(text).then(() => alert('복사되었습니다!'));
 }
 
-window.onload = () => {
+window.onload = async () => {
+    await fetchAllChampions();
     addPlayer('blue');
     addPlayer('red');
 };

@@ -34,3 +34,4 @@ export async function onRequest(context) {
     });
   }
 }
+// Triggering functions activation

@@ -45,8 +45,8 @@ export async function onRequestPost(context) {
 
     const userPrompt = `우리팀: ${allies.join(",")}\n상대팀: ${enemies.join(",")}\n최적의 승리 플랜을 알려줘.`;
 
-    // 3. API 호출 규격 수정 (v1 및 gemini-1.5-flash 사용)
-    const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // 3. API 호출 규격 수정 (v1beta 및 gemini-1.5-flash 사용)
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const response = await fetch(API_URL, {
       method: "POST",

@@ -7,40 +7,43 @@
     <style>
         :root { --gold: #c89b3c; --blue: #3d8bff; --red: #ff4d4d; --dark: #0f1217; --panel: #1e232a; --input: #2a3039; }
         body { font-family: 'Pretendard', sans-serif; background: var(--dark); color: #ececec; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 30px; }
         .header h1 { color: var(--gold); font-size: 2.2rem; margin-bottom: 5px; }
 
-        /* 대결 구도 레이아웃 */
-        .matchup-wrapper { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; margin-bottom: 20px; }
-        .team-panel { background: var(--panel); border-radius: 12px; padding: 20px; border-top: 5px solid #ccc; min-height: 200px; }
-        .blue-side { border-color: var(--blue); }
+        .matchup-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; margin-bottom: 20px; }
+        .team-panel { background: var(--panel); border-radius: 12px; padding: 20px; border-top: 5px solid #ccc; min-height: 250px; }
+        .blue-side { border-color: var(--blue); } 
         .red-side { border-color: var(--red); }
-        .vs-zone { display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; color: var(--gold); }
-
-        /* 입력 행 스타일 */
-        .lane-row { position: relative; display: grid; grid-template-columns: 80px 1fr 90px 90px; gap: 8px; margin-bottom: 15px; align-items: center; animation: fadeIn 0.3s ease; }
-        .red-side .lane-row { grid-template-columns: 80px 1fr 90px 90px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .lane-label { font-size: 0.8rem; color: #888; font-weight: bold; }
-        input, select { background: var(--input); color: white; border: 1px solid #3c4450; padding: 10px; border-radius: 6px; width: 100%; outline: none; box-sizing: border-box; }
-        input:focus { border-color: var(--gold); }
-
-        /* 자동완성 목록 */
-        .autocomplete-list { position: absolute; top: 100%; left: 88px; right: 196px; background: #333; border: 1px solid #444; z-index: 100; border-radius: 0 0 6px 6px; max-height: 150px; overflow-y: auto; display: none; }
-        .autocomplete-list div { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; }
-        .autocomplete-list div:hover { background: var(--gold); color: black; }
-
-        /* 버튼 스타일 */
-        .add-btn { background: none; border: 1px dashed #555; color: #888; padding: 10px; cursor: pointer; width: 100%; border-radius: 8px; margin-top: 10px; transition: 0.3s; }
-        .add-btn:hover { border-color: var(--gold); color: var(--gold); }
-        .analyze-btn { background: var(--gold); color: black; font-weight: bold; font-size: 1.2rem; padding: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 30px; }
         
-        #result-display { margin-top: 30px; padding: 25px; background: #161a20; border-radius: 12px; border-left: 6px solid var(--gold); white-space: pre-wrap; display: none; line-height: 1.8; }
+        .team-label { font-weight: bold; text-align: center; margin-bottom: 20px; font-size: 1.2rem; letter-spacing: 1px; }
+        .blue-side .team-label { color: var(--blue); }
+        .red-side .team-label { color: var(--red); }
+
+        /* 레이아웃: 포지션 선택 | 챔피언 검색 | 스펠1 | 스펠2 | 삭제 */
+        .lane-row { position: relative; display: grid; grid-template-columns: 100px 1fr 85px 85px 40px; gap: 8px; margin-bottom: 15px; align-items: center; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        input, select { background: var(--input); color: white; border: 1px solid #3c4450; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; font-size: 0.9rem; }
+        input:focus { border-color: var(--gold); }
+        
+        /* 자동완성 목록 */
+        .search-results { position: absolute; top: 100%; left: 108px; right: 186px; background: #222; border: 1px solid var(--gold); z-index: 100; border-radius: 6px; max-height: 150px; overflow-y: auto; display: none; }
+        .search-results div { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; }
+        .search-results div:hover { background: var(--gold); color: black; }
+
+        .del-btn { background: #3d1a1a; color: #ff4d4d; border: 1px solid #632a2a; border-radius: 6px; cursor: pointer; height: 100%; font-weight: bold; transition: 0.2s; }
+        .del-btn:hover { background: #ff4d4d; color: white; }
+        
+        .add-btn { background: none; border: 1px dashed #555; color: #888; padding: 12px; cursor: pointer; width: 100%; border-radius: 8px; margin-top: 10px; transition: 0.3s; }
+        .add-btn:hover { border-color: var(--gold); color: var(--gold); }
+        
+        .analyze-btn { background: var(--gold); color: black; font-weight: bold; font-size: 1.2rem; padding: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; }
+        .analyze-btn:hover { background: #e1ad46; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(200, 155, 60, 0.3); }
+
+        #result { margin-top: 30px; padding: 25px; background: #161a20; border-radius: 12px; border-left: 6px solid var(--gold); white-space: pre-wrap; display: none; line-height: 1.8; text-align: left; }
         
         footer { text-align: center; padding: 40px 20px; font-size: 0.85rem; color: #666; }
-        footer a { color: #888; text-decoration: none; margin: 0 10px; }
     </style>
 </head>
 <body>
@@ -48,25 +51,27 @@
 <div class="container">
     <div class="header">
         <h1>LOL AI PRO COACH</h1>
-        <p>1:1 매치업부터 5:5 한타까지 커스텀 분석</p>
+        <p>포지션별 정밀 상성 분석 및 맞춤형 한타 전략</p>
     </div>
 
-    <div class="matchup-wrapper">
+    <div class="matchup-grid">
         <div class="team-panel blue-side">
+            <div class="team-label">BLUE TEAM (우리팀)</div>
             <div id="blue-list"></div>
-            <button class="add-btn" onclick="addChamp('blue')">+ 아군 추가하기</button>
+            <button class="add-btn" onclick="addChamp('blue')">+ 아군 포지션 추가</button>
         </div>
 
-        <div class="vs-zone">VS</div>
+        <div style="display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:bold; font-size:1.5rem;">VS</div>
 
         <div class="team-panel red-side">
+            <div class="team-label">RED TEAM (상대팀)</div>
             <div id="red-list"></div>
-            <button class="add-btn" onclick="addChamp('red')">+ 적군 추가하기</button>
+            <button class="add-btn" onclick="addChamp('red')">+ 적군 포지션 추가</button>
         </div>
     </div>
 
-    <button class="analyze-btn" onclick="runAnalysis()">프로급 전략 분석 시작</button>
-    <div id="result-display"></div>
+    <button class="analyze-btn" onclick="runAnalysis()">프로급 한타 분석 시작</button>
+    <div id="result"></div>
 </div>
 
 <footer>
@@ -86,11 +91,20 @@
         const row = document.createElement('div');
         row.className = 'lane-row';
         row.innerHTML = `
-            <div class="lane-label">${lanes[count]}</div>
-            <input type="text" class="${side}-n" placeholder="챔피언" oninput="showAuto(this)">
-            <div class="autocomplete-list"></div>
-            <select class="${side}-s1">${spells.map(s => `<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}</select>
-            <select class="${side}-s2">${spells.map(s => `<option ${lanes[count]==='JUNGLE'&&s==='강타'?'selected':''}>${s}</option>`).join('')}</select>
+            <select class="p-pos">
+                ${lanes.map((l, i) => `<option ${i===count?'selected':''}>${l}</option>`).join('')}
+            </select>
+            <div style="position:relative;">
+                <input type="text" class="p-name" placeholder="챔피언 명" oninput="showAuto(this)">
+                <div class="search-results"></div>
+            </div>
+            <select class="p-s1">
+                ${spells.map(s => `<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}
+            </select>
+            <select class="p-s2">
+                ${spells.map(s => `<option ${lanes[count]==='JUNGLE' && s==='강타' ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+            <button class="del-btn" onclick="this.parentElement.remove()">X</button>
         `;
         list.appendChild(row);
     }
@@ -112,81 +126,66 @@
             list.appendChild(div);
         });
 
-        // 클릭 외에 외부 클릭 시 닫기
         document.addEventListener('click', (e) => {
             if (e.target !== input) list.style.display = 'none';
         }, { once: true });
     }
 
-    // 초기 세팅
-    window.onload = () => {
-        addChamp('blue'); addChamp('red');
-    };
+    // 초기 1명씩 생성
+    window.onload = () => { addChamp('blue'); addChamp('red'); };
 
     async function runAnalysis() {
-        // 1. 보안을 위해 환경 변수를 직접 코드에 적지 않고, 
-        // Cloudflare Pages에서 제공하는 환경 변수를 호출하도록 세팅해야 합니다.
+        // 💡 API KEY 환경 변수 연동
+        const GEMINI_KEY = "AIzaSyD0uy5jfR7XYy..."; 
         
-        // 현재 방식(브라우저 직접 호출 시):
-        // 이미지에 등록된 실제 키 값을 아래 따옴표 안에 넣으세요.
-        const GEMINI_KEY = "AIzaSyD0uy5jfR7XYy..."; // 이미지의 실제 값 복사
-        const RIOT_KEY = "RGAPI-1fb3d879-0f3...";  // 이미지의 실제 값 복사
+        const res = document.getElementById('result');
+        res.style.display = "block";
+        res.innerText = "🌀 프로 코치가 팀 조합과 상성을 분석 중입니다...";
 
-        const res = document.getElementById('result-display');
-        res.style.display = 'block';
-        res.innerText = "🌀 라이엇 데이터를 확인하고 AI 분석을 시작합니다...";
+        const getTeamData = (side) => {
+            return Array.from(document.querySelectorAll(`.${side}-side .lane-row`)).map(row => {
+                const pos = row.querySelector('.p-pos').value;
+                const name = row.querySelector('.p-name').value;
+                const s1 = row.querySelector('.p-s1').value;
+                const s2 = row.querySelector('.p-s2').value;
+                return name ? `${pos}: ${name}(${s1}/${s2})` : '';
+            }).filter(t => t).join(', ');
+        };
 
-        const blueData = Array.from(document.querySelectorAll('.blue-side .lane-row')).map(row => {
-            const name = row.querySelector('.blue-n').value;
-            const s1 = row.querySelector('.blue-s1').value;
-            const s2 = row.querySelector('.blue-s2').value;
-            return name ? `${name}(${s1}/${s2})` : '';
-        }).filter(n => n).join(',');
-
-        const redData = Array.from(document.querySelectorAll('.red-side .lane-row')).map(row => {
-            const name = row.querySelector('.red-n').value;
-            const s1 = row.querySelector('.red-s1').value;
-            const s2 = row.querySelector('.red-s2').value;
-            return name ? `${name}(${s1}/${s2})` : '';
-        }).filter(n => n).join(',');
+        const blueData = getTeamData('blue');
+        const redData = getTeamData('red');
 
         if (!blueData || !redData) {
-            alert("아군과 적군 각각 최소 1명의 챔피언을 입력해주세요.");
+            alert("아군과 적군 각각 1명 이상의 챔피언을 입력해주세요.");
             res.style.display = "none";
             return;
         }
 
-        const prompt = `당신은 롤 프로팀 헤드 코치입니다. 다음 상황을 아주 전문적으로 분석하세요.
-        - 아군 조합: ${blueData}
-        - 적군 조합: ${redData}
+        const prompt = `당신은 롤 프로팀 수석 분석관입니다. 다음 데이터를 기반으로 한타 전략 리포트를 작성하세요.
+        [아군]: ${blueData}
+        [적군]: ${redData}
         
-        [요청 분석 리포트]
-        1. 팀 조합 상성 요약: 어느 쪽이 한타 기여도가 더 높은가?
-        2. 타겟 우선순위: 한타 발생 시 내가 무조건 먼저 잡아야 할 적 핵심 챔피언 2명.
-        3. 승리 전략: 우리 팀이 한타에서 이기기 위한 진입 시점과 포지셔닝.
-        4. 주의 사항: 적의 위협적인 스킬 콤보와 대처법.
+        분석 요청:
+        1. 라인별 주도권 및 상성 분석
+        2. 우리 팀의 정글 동선 제안
+        3. 한타 시 최우선 타겟팅 및 진입 순서
+        4. 경계해야 할 적의 핵심 스킬과 대처법
         
-        *전문적인 코칭 용어를 사용하고, JSON이나 불필요한 기호(*, #) 없이 깔끔한 텍스트로만 상세히 답변하세요.`;
+        *전문적인 코칭 용어를 사용하고, JSON이나 불필요한 기호(*, #) 없이 깔끔한 텍스트로만 답변하세요.`;
 
         try {
-            // 재미나이 분석 호출
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }]
-                })
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
-
             const data = await response.json();
             if (data.error) throw new Error(data.error.message);
             
             const text = data.candidates[0].content.parts[0].text;
             res.innerText = text.replace(/\{[\s\S]*?\}|\[[\s\S]*?\]/g, '').replace(/[\*#]/g, '').trim();
         } catch (e) {
-            res.innerText = "❌ 분석 중 오류 발생: " + e.message;
+            res.innerText = "❌ 오류: " + e.message;
         }
     }
 </script>

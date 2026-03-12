@@ -10,13 +10,23 @@ const getImg = {
     champ: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${id}.png`
 };
 
-const loadingMessages = [
-    "상대 정글러의 초반 동선을 예측 중입니다...",
-    "라인별 상성 데이터를 대조하고 있습니다...",
-    "오브젝트 주도권을 시뮬레이션 중입니다...",
-    "첫 코어 아이템 시점의 파워 스파이크를 계산 중입니다...",
-    "최적의 갱킹 루트를 설계하고 있습니다..."
-];
+const loadingMessages = {
+    ko: ["상대 정글러의 초반 동선을 예측 중입니다...", "라인별 상성 데이터를 대조하고 있습니다...", "오브젝트 주도권을 시뮬레이션 중입니다...", "첫 코어 아이템 시점의 파워 스파이크를 계산 중입니다...", "최적의 갱킹 루트를 설계하고 있습니다..."],
+    en: ["Predicting enemy jungler's initial path...", "Comparing lane-by-lane matchup data...", "Simulating object control...", "Calculating power spikes for the first core item...", "Designing the optimal ganking route..."]
+};
+
+// --- 글로벌 언어 전환 함수 ---
+function toggleLanguage() {
+    language = (language === 'ko') ? 'en' : 'ko';
+    document.getElementById('lang-status').innerText = (language === 'ko') ? 'KR' : 'EN';
+    document.getElementById('lang-btn').innerText = (language === 'ko') ? '🌐 EN' : '🌐 KR';
+
+    document.querySelectorAll('[data-kr]').forEach(el => {
+        const translation = el.getAttribute(`data-${language}`);
+        if (el.tagName === 'INPUT') el.placeholder = translation;
+        else el.innerText = translation;
+    });
+}
 
 // --- 로컬 캐싱 시스템 (12시간 유지) ---
 const cacheAnalysis = (key, value) => {
@@ -46,14 +56,14 @@ async function fetchWithRetry(prompt, retries = 2, backoff = 3000) {
             });
 
             if (response.status === 429 && i < retries) {
-                console.warn(`제한 발생. ${(backoff * (i + 1))/1000}초 후 재시도...`);
+                console.warn(`Rate limit. Retrying in ${(backoff * (i + 1))/1000}s...`);
                 await new Promise(res => setTimeout(res, backoff * (i + 1)));
                 continue;
             }
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "분석 요청에 실패했습니다.");
+                throw new Error(errorData.error || "Analysis failed.");
             }
 
             return await response.json();
@@ -86,7 +96,7 @@ async function fetchAllChampions() {
             i: getChoseong(c.name)
         }));
     } catch (e) {
-        console.error("챔피언 데이터를 불러오는데 실패했습니다.", e);
+        console.error("Failed to load champions.", e);
     }
 }
 
@@ -147,11 +157,6 @@ function selectMyLane(lane, btn) {
     btn.classList.add('active');
 }
 
-function toggleLanguage() {
-    language = language === 'ko' ? 'en' : 'ko';
-    document.getElementById('lang-status').innerText = language === 'ko' ? 'KR' : 'EN';
-}
-
 function addPlayer(team) {
     const list = document.getElementById(`${team}-team-list`);
     const div = document.createElement('div');
@@ -161,7 +166,7 @@ function addPlayer(team) {
         <div class="input-line">
             <img src="" class="champ-icon-main">
             <div class="champ-input-container">
-                <input type="text" class="champ-input" placeholder="ㄱ, 가ㄹ 검색" oninput="showAutocomplete(this)">
+                <input type="text" class="champ-input" placeholder="${language === 'ko' ? 'ㄱ, 가ㄹ 검색' : 'Search champion'}" oninput="showAutocomplete(this)">
                 <ul class="autocomplete-list"></ul>
             </div>
             <select class="lane-select" onchange="handleLaneChange(this)">${lanes.map(l => `<option value="${l}">${l}</option>`).join('')}</select>
@@ -181,7 +186,6 @@ async function startAnalysis() {
     const content = document.getElementById('analysis-content');
     const btn = document.getElementById('analyze-btn');
 
-    // 데이터 수집
     const blueTeam = [];
     document.querySelectorAll('#blue-team-list .player-row').forEach(row => {
         const l = row.querySelector('.lane-select').value;
@@ -201,12 +205,11 @@ async function startAnalysis() {
     });
 
     if (blueTeam.length === 0 || redTeam.length === 0) {
-        alert("챔피언 정보를 입력해주세요.");
+        alert(language === 'ko' ? "챔피언 정보를 입력해주세요." : "Please enter champion information.");
         return;
     }
 
-    // 캐시 확인용 고유 키 생성
-    const cacheKey = btoa(encodeURIComponent(`${selectedLane}_${JSON.stringify(blueTeam)}_${JSON.stringify(redTeam)}`));
+    const cacheKey = btoa(encodeURIComponent(`${language}_${selectedLane}_${JSON.stringify(blueTeam)}_${JSON.stringify(redTeam)}`));
     const cached = getCachedAnalysis(cacheKey);
     if (cached) {
         resultArea.classList.remove('hidden');
@@ -214,19 +217,18 @@ async function startAnalysis() {
         return;
     }
 
-    // UI 피드백 및 로딩 시작
     resultArea.classList.add('hidden');
     loadingContainer.style.display = 'block';
-    loadingText.innerText = "데이터를 수집 중입니다...";
+    loadingText.innerText = language === 'ko' ? "데이터를 수집 중입니다..." : "Collecting data...";
     
     const msgInterval = setInterval(() => {
-        loadingText.innerText = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+        const msgs = loadingMessages[language];
+        loadingText.innerText = msgs[Math.floor(Math.random() * msgs.length)];
     }, 2500);
 
     content.innerHTML = '';
     btn.disabled = true;
 
-    // 프롬프트 최적화 (데이터 위주 + 유저 주문)
     const prompt = `
 [DATA]
 User Lane: ${selectedLane}
@@ -235,13 +237,13 @@ Red Team: ${JSON.stringify(redTeam)}
 
 [RULE]
 1. 2026 Season Meta.
-2. 리쉬(Leash) 언급 금지.
-3. 타임라인별 강세(레벨/분) 1줄 요약.
-4. 첫 코어템 시점 상성 변화 1줄 요약.
-5. 전체 승리 플랜 3줄 요약.
-6. '---' 구분자로 요약과 상세 분리.
-7. 한국어로 짧고 명확하게 답변.
-${selectedLane === '정글' ? '8. 정글러 전용 JSON 동선 포함: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]' : ''}
+2. No leash mention.
+3. Timeline strengths (level/minute) 1-line summary.
+4. Matchup changes at first core item 1-line summary.
+5. Overall victory plan 3-line summary.
+6. Use '---' separator between summary and details.
+7. Answer in ${language === 'ko' ? 'Korean' : 'English'}.
+${selectedLane === '정글' ? '8. Include Jungle JSON pathing: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]' : ''}
     `.trim();
 
     try {
@@ -249,33 +251,28 @@ ${selectedLane === '정글' ? '8. 정글러 전용 JSON 동선 포함: [JUNGLE_D
         clearInterval(msgInterval);
         loadingContainer.style.display = 'none';
         
-        let fullText = "";
-        if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
-            fullText = result.candidates[0].content.parts[0].text;
-        } else {
-            fullText = JSON.stringify(result);
-        }
+        let fullText = result.candidates[0].content.parts[0].text;
 
         const jungleDataMatch = fullText.match(/\[JUNGLE_DATA: (.*?)\]/);
         let cleanText = fullText.replace(/\[JUNGLE_DATA: .*?\]/, '');
 
         const sections = cleanText.split('---'); 
-        const summary = sections[0] || "요약 데이터를 불러오지 못했습니다.";
-        const details = sections[1] || "상세 분석 내용이 없습니다.";
+        const summary = sections[0] || "...";
+        const details = sections[1] || "...";
 
         const finalHtml = `
             <div class="summary-card">
-                <h4>⚡ 핵심 승리 전략</h4>
+                <h4>⚡ ${language === 'ko' ? '핵심 승리 전략' : 'Core Victory Strategy'}</h4>
                 <div class="summary-text">${summary.replace(/\n/g, '<br>')}</div>
             </div>
             
             <button id="toggle-details" class="details-btn" onclick="toggleDetails()">
-                상세 룬/템트리 보기 ↓
+                ${language === 'ko' ? '상세 룬/템트리 보기 ↓' : 'View Detailed Runes/Items ↓'}
             </button>
 
             <div id="analysis-details" class="hidden-details">
                 <div class="analysis-text">
-                    <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 전략 및 추천 빌드</h5>
+                    <h5 style="margin-top:0; color:#3b82f6;">🛡️ ${language === 'ko' ? '상세 전략 및 추천 빌드' : 'Detailed Strategy & Recommended Build'}</h5>
                     ${details.replace(/\n/g, '<br>')}
                 </div>
             </div>
@@ -283,15 +280,10 @@ ${selectedLane === '정글' ? '8. 정글러 전용 JSON 동선 포함: [JUNGLE_D
 
         resultArea.classList.remove('hidden');
         content.innerHTML = finalHtml;
-        cacheAnalysis(cacheKey, finalHtml); // 결과 저장
+        cacheAnalysis(cacheKey, finalHtml);
 
         if (jungleDataMatch && selectedLane === '정글') {
-            try {
-                const jungleData = JSON.parse(jungleDataMatch[1]);
-                renderJungleStrategy(jungleData);
-            } catch (e) {
-                console.error("정글 데이터 파싱 실패", e);
-            }
+            try { renderJungleStrategy(JSON.parse(jungleDataMatch[1])); } catch (e) {}
         }
     } catch (e) { 
         clearInterval(msgInterval);
@@ -299,8 +291,8 @@ ${selectedLane === '정글' ? '8. 정글러 전용 JSON 동선 포함: [JUNGLE_D
         resultArea.classList.remove('hidden');
         content.innerHTML = `
             <div class="error-box">
-                <p>현재 분석 요청이 너무 많습니다. (에러: ${e.message})</p>
-                <button onclick="startAnalysis()" class="retry-btn">다시 시도하기</button>
+                <p>${language === 'ko' ? '분석 요청이 지연되고 있습니다.' : 'Analysis request delayed.'} (${e.message})</p>
+                <button onclick="startAnalysis()" class="retry-btn">${language === 'ko' ? '다시 시도하기' : 'Retry'}</button>
             </div>`;
     } finally { 
         btn.disabled = false;
@@ -311,14 +303,14 @@ function renderJungleStrategy(strategyData) {
     const analysisSection = document.getElementById('analysis-content');
     const jungleHtml = `
         <div class="jungle-strategy-card">
-            <h4>🗺️ 정글러 전용: 맞춤형 전략 동선</h4>
+            <h4>🗺️ ${language === 'ko' ? '정글러 전용: 맞춤형 전략 동선' : 'Jungle Specific: Custom Pathing'}</h4>
             <div class="jungle-analysis-container">
                 <img src="https://ddragon.leagueoflegends.com/cdn/img/map/map11.png" id="jungle-minimap">
                 <canvas id="jungle-path-canvas" width="320" height="320"></canvas>
             </div>
             <div class="strategy-details">
                 <div class="matchup-box">
-                    <strong>🆚 정글 상성 분석:</strong> 
+                    <strong>🆚 ${language === 'ko' ? '정글 상성 분석' : 'Jungle Matchup'}:</strong> 
                     <p>${strategyData.matchupTip}</p>
                 </div>
                 <ul class="step-list">
@@ -341,13 +333,8 @@ function drawJungleStrategy(points, strategyType) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.strokeStyle = strategyType === '카정' ? '#ef4444' : '#fbbf24';
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.setLineDash([8, 8]);
-
+    ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.setLineDash([8, 8]);
     ctx.beginPath();
     points.forEach((p, i) => {
         const targetX = (p.x / 100) * canvas.width;
@@ -356,14 +343,10 @@ function drawJungleStrategy(points, strategyType) {
         else ctx.lineTo(targetX, targetY);
     });
     ctx.stroke();
-
     const last = points[points.length - 1];
     if (last) {
-        ctx.fillStyle = '#ef4444';
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.arc((last.x/100)*canvas.width, (last.y/100)*canvas.height, 8, 0, Math.PI*2);
-        ctx.fill();
+        ctx.fillStyle = '#ef4444'; ctx.setLineDash([]); ctx.beginPath();
+        ctx.arc((last.x/100)*canvas.width, (last.y/100)*canvas.height, 8, 0, Math.PI*2); ctx.fill();
     }
 }
 
@@ -372,10 +355,10 @@ function toggleDetails() {
     const btn = document.getElementById('toggle-details');
     if (detailsDiv.style.display === 'block') {
         detailsDiv.style.display = 'none';
-        btn.innerText = '상세 룬/템트리 보기 ↓';
+        btn.innerText = (language === 'ko') ? '상세 룬/템트리 보기 ↓' : 'View Detailed Runes/Items ↓';
     } else {
         detailsDiv.style.display = 'block';
-        btn.innerText = '상세 내용 접기 ↑';
+        btn.innerText = (language === 'ko') ? '상세 내용 접기 ↑' : 'Collapse Details ↑';
     }
 }
 

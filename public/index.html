@@ -1,132 +1,89 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI LOL COACH - 승리를 위한 최신 롤 정글 동선 및 조합 분석</title>
-    
-    <meta name="description" content="2026년 최신 롤 패치 데이터를 기반으로 승률 통계와 AI 분석을 통한 완벽한 승리 플랜을 제공합니다. 챔피언 상성, 추천 아이템, 정글 동선 시각화 서비스를 무료로 이용하세요.">
-    <meta name="keywords" content="롤 분석, AI 롤 코치, 롤 승률, 롤 템트리, 정글 동선, 롤 상성, LOL.PS, 롤 전적 검색">
-    
-    <!-- Google Site Verification -->
-    <meta name="google-site-verification" content="여기에_구글이_준_확인_코드_값만_넣으세요" />
-    
-    <link rel="stylesheet" href="style.css">
-    <!-- Google AdSense (Placeholder - replace with your ID later) -->
-    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
-</head>
-<body>
-    <header class="site-header">
-        <div class="nav-container">
-            <a href="/" class="logo">AI LOL COACH</a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="#analysis-tool">분석기</a></li>
-                    <li><a href="/about.html">서비스 소개</a></li>
-                    <li><a href="/guide.html">사용법</a></li>
-                </ul>
-            </nav>
-            <button class="lang-toggle" onclick="toggleLanguage()">🌐 <span id="lang-status">KR</span></button>
-        </div>
-    </header>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
 
-    <main class="container">
-        <section class="hero-section">
-            <h1>당신의 승리를 위한 AI 전략 파트너</h1>
-            <p>빅데이터와 2026년 최신 메타 통계를 분석하여 가장 확률 높은 승리 플랜을 제안합니다.</p>
-        </section>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/12.10.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/12.10.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/12.10.0/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
-        <section id="analysis-tool" class="tool-section">
-            <div class="my-lane-selector">
-                <p>내 라인 선택</p>
-                <div class="lane-btns">
-                    <button class="lane-opt active" onclick="selectMyLane('탑', this)">탑</button>
-                    <button class="lane-opt" onclick="selectMyLane('정글', this)">정글</button>
-                    <button class="lane-opt" onclick="selectMyLane('미드', this)">미드</button>
-                    <button class="lane-opt" onclick="selectMyLane('원딜', this)">원딜</button>
-                    <button class="lane-opt" onclick="selectMyLane('서포터', this)">서포터</button>
-                </div>
-            </div>
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        body, #message { margin-top: 0; background: white; box-shadow: none; }
+        body { border-top: 16px solid #ffa100; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="message">
+      <h2>Welcome</h2>
+      <h1>Firebase Hosting Setup Complete</h1>
+      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
+      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+    </div>
+    <p id="load">Firebase SDK Loading&hellip;</p>
 
-            <div class="main-layout">
-                <div class="team-section blue-card">
-                    <h3>우리 팀 (Blue Team)</h3>
-                    <div id="blue-team-list"></div>
-                    <button class="add-btn" onclick="addPlayer('blue')">+ 아군 추가</button>
-                </div>
-                
-                <div class="team-section red-card">
-                    <h3>상대 팀 (Red Team)</h3>
-                    <div id="red-team-list"></div>
-                    <button class="add-btn" onclick="addPlayer('red')">+ 적군 추가</button>
-                </div>
-            </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const loadEl = document.querySelector('#load');
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        // firebase.auth().onAuthStateChanged(user => { });
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        // firebase.firestore().doc('/foo/bar').get().then(() => { });
+        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+        // firebase.messaging().requestPermission().then(() => { });
+        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+        // firebase.analytics(); // call to activate
+        // firebase.analytics().logEvent('tutorial_completed');
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
 
-            <div class="action-area">
-                <button id="analyze-btn" onclick="startAnalysis()">승리 플랜 분석 시작</button>
-            </div>
-
-            <!-- 신규 로딩 컨테이너 -->
-            <div id="loading-container">
-                <div class="loader-spinner"></div>
-                <p id="loading-text">데이터를 수집 중입니다...</p>
-                <p style="color: #64748b; font-size: 0.85rem;">잠시만 기다려 주세요.</p>
-            </div>
-
-            <div id="result" class="result-area hidden">
-                <div id="analysis-content"></div>
-            </div>
-        </section>
-
-        <section class="info-section">
-            <h2>AI 롤 정글 동선 분석 가이드</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <h3>🔍 왜 AI 분석이 필요한가요?</h3>
-                    <p>시즌 14 이후 정글 캠프 생성 시간과 오브젝트 중요도가 크게 변했습니다. AI LOL COACH는 최신 데이터를 바탕으로 상대 정글러와의 상성을 분석하여 최적의 초반 동선을 제안합니다.</p>
-                </div>
-                <div class="info-item">
-                    <h3>⚔️ 상성별 맞춤 전략</h3>
-                    <p>육식형 정글러를 상대할 때는 카운터 정글을 대비한 역동선 설계가, 성장형 정글러를 상대할 때는 빠른 풀캠프 이후 주도권 확보가 중요합니다.</p>
-                </div>
-                <div class="info-item">
-                    <h3>📈 빅데이터 기반 추천</h3>
-                    <p>마스터 이상 상위권 구간의 실시간 승률과 아이템 빌드 데이터를 학습한 AI가 현재 조합에 가장 적합한 룬과 템트리를 제안합니다.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 정보성 섹션 추가: 정글 운영 가이드 -->
-        <section style="max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.8; color: #ddd; background: #1a1a1a; border-radius: 10px; text-align: left;">
-            <h2 style="color: #fff; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">League of Legends 정글 운영 가이드</h2>
-            
-            <div style="margin-top: 20px;">
-                <h3 style="color: #60a5fa;">1. 왜 AI 정글 동선 분석이 필요한가요?</h3>
-                <p>시즌 14 이후 정글 캠프의 생성 시간과 공허 유충, 협곡의 전령 등 오브젝트의 중요도가 변함에 따라 정글러의 초반 동선 설계가 승패의 70% 이상을 결정합니다. AI LOL COACH는 최신 메타 데이터를 바탕으로 상대 정글러와의 상성을 분석하여 최적의 동선을 제안합니다.</p>
-            </div>
-
-            <div style="margin-top: 20px;">
-                <h3 style="color: #60a5fa;">2. 상대 정글러에 따른 맞춤형 전략</h3>
-                <p>육식형 정글러(리 신, 신 짜오 등)를 상대할 때는 카운터 정글을 대비한 역동선 설계가 필수적이며, 성장형 정글러(카서스, 쉬바나 등)를 상대할 때는 빠른 풀캠프 이후 바위게 주도권을 확보하는 것이 중요합니다. 본 서비스는 이러한 상성 차이를 실시간 AI 분석으로 요약해 드립니다.</p>
-            </div>
-
-            <div style="margin-top: 20px;">
-                <h3 style="color: #60a5fa;">3. 첫 코어 아이템과 전성기 파악</h3>
-                <p>각 챔피언마다 첫 코어 아이템이 뜨는 시점(예: 리안드리의 고뇌, 갈라진 하늘 등)에 파워 스파이크가 발생합니다. AI가 제공하는 시간대별 전성기 정보를 통해 교전 시점을 정확히 판단하고 승률을 높여보세요.</p>
-            </div>
-        </section>
-    </main>
-
-    <footer style="margin-top: 50px; padding: 40px 20px; text-align: center; border-top: 1px solid #333; color: #888; font-size: 0.8rem; background: #0f172a;">
-        <p>© 2024 AI LOL COACH. All rights reserved.</p>
-        <p>
-            <a href="/privacy.html" style="color: #888; text-decoration: underline;">개인정보 처리방침</a> | 
-            <a href="/terms.html" style="color: #888; text-decoration: underline;">이용약관</a> | 
-            <a href="mailto:support@example.com" style="color: #888; text-decoration: underline;">문의하기</a>
-        </p>
-        <p style="margin-top: 10px; font-size: 0.7rem; color: #475569;">AI LOL COACH isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends.</p>
-    </footer>
-
-    <script src="main.js"></script>
-</body>
+        try {
+          let app = firebase.app();
+          let features = [
+            'auth', 
+            'database', 
+            'firestore',
+            'functions',
+            'messaging', 
+            'storage', 
+            'analytics', 
+            'remoteConfig',
+            'performance',
+          ].filter(feature => typeof app[feature] === 'function');
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+        } catch (e) {
+          console.error(e);
+          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+        }
+      });
+    </script>
+  </body>
 </html>

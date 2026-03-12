@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 롤 승리 코치 | 전략 분석기</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fa-solid fa-brain"></i> AI 롤 승리 코치</h1>
+      <p>챔피언 조합을 분석하여 최적의 승리 전략을 제시합니다.</p>
+    </header>
+
+    <main>
+      <section class="selection-area">
+        <div class="team allies">
+          <h3><i class="fa-solid fa-shield-halved"></i> 아군 챔피언</h3>
+          <div class="slots" id="ally-slots">
+            <div class="slot" data-team="ally" data-index="0"></div>
+            <div class="slot" data-team="ally" data-index="1"></div>
+            <div class="slot" data-team="ally" data-index="2"></div>
+            <div class="slot" data-team="ally" data-index="3"></div>
+            <div class="slot" data-team="ally" data-index="4"></div>
+          </div>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="team enemies">
+          <h3><i class="fa-solid fa-bolt"></i> 적군 챔피언</h3>
+          <div class="slots" id="enemy-slots">
+            <div class="slot" data-team="enemy" data-index="0"></div>
+            <div class="slot" data-team="enemy" data-index="1"></div>
+            <div class="slot" data-team="enemy" data-index="2"></div>
+            <div class="slot" data-team="enemy" data-index="3"></div>
+            <div class="slot" data-team="enemy" data-index="4"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="role-selection">
+        <h3><i class="fa-solid fa-map"></i> 내 라인 선택</h3>
+        <div class="role-buttons">
+          <button type="button" class="role-btn" data-role="탑">탑</button>
+          <button type="button" class="role-btn" data-role="정글">정글</button>
+          <button type="button" class="role-btn" data-role="미드">미드</button>
+          <button type="button" class="role-btn" data-role="원딜">원딜</button>
+          <button type="button" class="role-btn" data-role="서폿">서폿</button>
+        </div>
+      </section>
+
+      <section class="action-area">
+        <button id="analyze-btn" disabled>승리 플랜 분석 시작</button>
+      </section>
+
+      <section id="loading" class="hidden">
+        <div class="loader"></div>
+        <p>AI 코치가 승리 플랜을 분석 중입니다...</p>
+      </section>
+
+      <section id="result-area" class="hidden">
+        <div class="result-card">
+          <div class="result-section" id="early-game">
+            <h4><i class="fa-solid fa-seedling"></i> 초반 전략</h4>
+            <div class="content"></div>
+          </div>
+          <div class="result-section" id="mid-game">
+            <h4><i class="fa-solid fa-dragon"></i> 중반 전략</h4>
+            <div class="content"></div>
+          </div>
+          <div class="result-section" id="late-game">
+            <h4><i class="fa-solid fa-crown"></i> 후반 전략</h4>
+            <div class="content"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 챔피언 선택 모달 -->
+  <div id="champion-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>챔피언 선택</h3>
+        <input type="text" id="champion-search" placeholder="챔피언 이름 검색...">
+      </div>
+      <div class="champion-list" id="champion-list"></div>
+      <button class="close-modal">닫기</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

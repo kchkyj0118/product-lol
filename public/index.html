@@ -3,68 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL AI PRO COACH | 팀 분석</title>
+    <title>LoL AI PRO COACH | lol-coaches.com</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <div class="main-card">
-        <div class="header">
-            <h1>LOL AI PRO COACH</h1>
-            <p>전체 팀 구성 기반 정밀 한타 분석</p>
-        </div>
-
-        <div class="section-title">MY TEAM (아군)</div>
-        <div class="team-grid">
-            <div class="champ-row">
-                <input type="text" id="my-champ" placeholder="내 챔피언" class="highlight">
-                <select id="my-spell-1">
-                    <option>점멸</option>
-                    <option>유체화</option>
-                    <option>정화</option>
-                    <option>탈진</option>
-                </select>
-                <select id="my-spell-2">
-                    <option>강타</option>
-                    <option>점화</option>
-                    <option>텔포</option>
-                    <option>탈진</option>
-                    <option>회복</option>
-                </select>
-            </div>
-            <div class="others-grid">
-                <input type="text" id="my-team-2" placeholder="아군 2">
-                <input type="text" id="my-team-3" placeholder="아군 3">
-                <input type="text" id="my-team-4" placeholder="아군 4">
-                <input type="text" id="my-team-5" placeholder="아군 5">
-            </div>
-        </div>
-
-        <div class="section-title">ENEMY TEAM (적군)</div>
-        <div class="team-grid">
-            <div class="others-grid">
-                <input type="text" id="op-champ-1" placeholder="적군 1 (상대)" class="highlight-op">
-                <input type="text" id="op-champ-2" placeholder="적군 2">
-                <input type="text" id="op-champ-3" placeholder="적군 3">
-                <input type="text" id="op-champ-4" placeholder="적군 4">
-                <input type="text" id="op-champ-5" placeholder="적군 5">
-            </div>
-        </div>
-
-        <div class="section-title">BATTLE OPTION</div>
-        <select id="fight-scale" style="margin-bottom: 20px;">
-            <option value="5대5">5대5 정식 한타 (드래곤/바론)</option>
-            <option value="1대1">1대1 라인전/사이드</option>
-            <option value="2대2">2대2 소규모 교전</option>
-            <option value="3대3">3대3 오브젝트 싸움</option>
-        </select>
-
-        <button onclick="runGlobalAnalysis()">프로급 팀 분석 시작</button>
-
-        <div id="loading-bar" class="loading">🌀 프로 코치가 팀 조합과 상성을 정밀 분석 중입니다...</div>
-        <div id="analysis-result"></div>
+    <div class="header">
+        <h1>LOL AI PRO COACH</h1>
+        <p>프로팀 분석 알고리즘 기반 5:5 한타 정밀 분석</p>
     </div>
+
+    <div class="matchup-wrapper">
+        <!-- BLUE TEAM (User's Team) -->
+        <div class="team-panel blue-side">
+            <div class="team-label">BLUE TEAM (우리팀)</div>
+            <div class="champ-list">
+                <div class="champ-row">
+                    <input type="text" id="my-1" placeholder="내 챔피언 (본인)" style="border-color: var(--gold);">
+                    <select id="s1-1"><option>점멸</option><option>유체화</option><option>정화</option></select>
+                    <select id="s1-2"><option>강타</option><option>점화</option><option>텔포</option><option>탈진</option></select>
+                </div>
+                <div class="champ-row"><input type="text" id="my-2" placeholder="아군 2"></div>
+                <div class="champ-row"><input type="text" id="my-3" placeholder="아군 3"></div>
+                <div class="champ-row"><input type="text" id="my-4" placeholder="아군 4"></div>
+                <div class="champ-row"><input type="text" id="my-5" placeholder="아군 5"></div>
+            </div>
+        </div>
+
+        <div class="vs-zone">VS</div>
+
+        <!-- RED TEAM (Enemy Team) -->
+        <div class="team-panel red-side">
+            <div class="team-label">RED TEAM (상대팀)</div>
+            <div class="champ-list">
+                <div class="champ-row"><input type="text" id="op-1" placeholder="적군 1 (라인 상대)"></div>
+                <div class="champ-row"><input type="text" id="op-2" placeholder="적군 2"></div>
+                <div class="champ-row"><input type="text" id="op-3" placeholder="적군 3"></div>
+                <div class="champ-row"><input type="text" id="op-4" placeholder="적군 4"></div>
+                <div class="champ-row"><input type="text" id="op-5" placeholder="적군 5"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="option-group">
+            <label>교전 규모 선택:</label>
+            <select id="fight-scale">
+                <option value="5vs5">5대5 정식 한타 (오브젝트)</option>
+                <option value="2vs2">2대2 소규모 교전</option>
+                <option value="1vs1">1대1 사이드 대결</option>
+            </select>
+        </div>
+        <button onclick="analyzeMatchup()">프로 코칭 분석 시작하기</button>
+    </div>
+
+    <div id="result-display"></div>
 </div>
 
 <footer>
@@ -76,5 +70,6 @@
 </footer>
 
 <script src="main.js"></script>
+
 </body>
 </html>

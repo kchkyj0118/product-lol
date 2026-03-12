@@ -1,5 +1,5 @@
 export async function onRequestPost(context) {
-  // 3. 환경 변수 추출: context.env.GEMINI_API_KEY를 함수 내부 최상단에 배치
+  // 2. 환경 변수: context.env.GEMINI_API_KEY 문장을 반드시 onRequest 함수 내부 첫 줄에 삽입
   const apiKey = context.env.GEMINI_API_KEY;
 
   try {
@@ -7,8 +7,8 @@ export async function onRequestPost(context) {
     const { allies, enemies, myLine, analysisMode } = requestData;
 
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "API 키(GEMINI_API_KEY)가 설정되지 않았습니다. Cloudflare 설정을 확인해주세요." }), { 
-        status: 500, 
+      return new Response(JSON.stringify({ error: "API 키(GEMINI_API_KEY)가 설정되지 않았습니다." }), { 
+        status: 500,
         headers: { "Content-Type": "application/json; charset=UTF-8" }
       });
     }
@@ -20,8 +20,8 @@ export async function onRequestPost(context) {
 
     const userPrompt = `우리팀: ${allies.join(",")}\n상대팀: ${enemies.join(",")}\n승리 플랜 분석 요청.`;
 
-    // 1 & 2. 모델 강제 변경 및 API 주소 고정 (gemini-pro 사용)
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // 1. 모델 및 주소 고정: v1 주소에 gemini-1.5-flash 모델 조합
+    const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -31,11 +31,11 @@ export async function onRequestPost(context) {
       })
     });
 
+    // 3. 강제 텍스트 확인: text()로 먼저 받아서 에러 발생 시 원문 출력
     const responseText = await response.text();
-
-    // 4. 철저한 예외 처리: response.ok가 아닐 경우 에러 메시지를 JSON으로 반환
+    
     if (!response.ok) {
-      console.error("Gemini API Error Response:", responseText);
+      console.error("Gemini API Error Raw Text:", responseText);
       return new Response(JSON.stringify({ error: `Gemini API 오류 (${response.status}): ${responseText}` }), {
         status: response.status,
         headers: { "Content-Type": "application/json; charset=UTF-8" }
@@ -50,15 +50,15 @@ export async function onRequestPost(context) {
         headers: { "Content-Type": "application/json; charset=UTF-8" }
       });
     } else {
-      return new Response(JSON.stringify({ error: "AI 응답 형식이 올바르지 않습니다." }), {
+      return new Response(JSON.stringify({ error: `AI 응답 구조가 올바르지 않습니다: ${responseText}` }), {
         status: 500,
         headers: { "Content-Type": "application/json; charset=UTF-8" }
       });
     }
 
   } catch (error) {
-    console.error("Runtime Error:", error.message);
-    return new Response(JSON.stringify({ error: `서버 내부 오류: ${error.message}` }), {
+    console.error("Runtime Exception:", error.message);
+    return new Response(JSON.stringify({ error: `서버 내부 에러: ${error.message}` }), {
       status: 500,
       headers: { "Content-Type": "application/json; charset=UTF-8" }
     });

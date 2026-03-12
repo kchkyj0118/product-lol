@@ -10,6 +10,61 @@ const getImg = {
     champ: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${id}.png`
 };
 
+// --- [신규] 로컬 캐싱 시스템 ---
+const getCachedResult = (key) => {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+        const item = JSON.parse(cached);
+        const now = new Date();
+        if (now.getTime() < item.expiry) return item.value;
+        localStorage.removeItem(key);
+    }
+    return null;
+};
+
+const setCachedResult = (key, value) => {
+    const now = new Date();
+    const item = {
+        value: value,
+        expiry: now.getTime() + (24 * 60 * 60 * 1000), // 24시간 유지
+    };
+    localStorage.setItem(key, JSON.stringify(item));
+};
+
+// --- [신규] 지수 백오프 기반 재시도 함수 ---
+async function fetchWithRetry(prompt, retries = 3, backoff = 2000) {
+    try {
+        const response = await fetch('/analyze', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt }) 
+        });
+
+        if (response.status === 429) {
+            if (retries > 0) {
+                console.log(`API 제한 발생. ${backoff/1000}초 후 재시도...`);
+                await new Promise(resolve => setTimeout(resolve, backoff));
+                return fetchWithRetry(prompt, retries - 1, backoff * 2);
+            } else {
+                throw new Error("API 사용량 제한이 지속되고 있습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "분석 요청에 실패했습니다.");
+        }
+
+        return await response.json();
+    } catch (error) {
+        if (retries > 0 && (error.message.includes('429') || error.message.includes('fetch'))) {
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            return fetchWithRetry(prompt, retries - 1, backoff * 2);
+        }
+        throw error;
+    }
+}
+
 function getChoseong(str) {
     const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
     let result = "";
@@ -121,120 +176,115 @@ function addPlayer(team) {
 }
 
 async function startAnalysis() {
+    const resultArea = document.getElementById('result');
     const loading = document.getElementById('loading');
     const content = document.getElementById('analysis-content');
-    const resultArea = document.getElementById('result');
     const btn = document.getElementById('analyze-btn');
 
-    resultArea.classList.remove('hidden');
-    loading.classList.remove('hidden');
-    content.innerHTML = '';
-    btn.disabled = true;
-
-    const blueTeamArr = [];
+    // 데이터 수집
+    const blueTeam = [];
     document.querySelectorAll('#blue-team-list .player-row').forEach(row => {
         const l = row.querySelector('.lane-select').value;
         const c = row.querySelector('.champ-input').value;
         const s1 = row.querySelector('.s1').value;
         const s2 = row.querySelector('.s2').value;
-        if(c) blueTeamArr.push(`${l}: ${c}(${s1}/${s2})${l === selectedLane ? '[사용자]' : ''}`);
+        if(c) blueTeam.push({lane: l, champ: c, spells: [s1, s2], isUser: l === selectedLane});
     });
-    const blueTeamInfo = blueTeamArr.join(", ");
 
-    const redTeamArr = [];
+    const redTeam = [];
     document.querySelectorAll('#red-team-list .player-row').forEach(row => {
         const l = row.querySelector('.lane-select').value;
         const c = row.querySelector('.champ-input').value;
         const s1 = row.querySelector('.s1').value;
         const s2 = row.querySelector('.s2').value;
-        if(c) redTeamArr.push(`${l}: ${c}(${s1}/${s2})`);
+        if(c) redTeam.push({lane: l, champ: c, spells: [s1, s2]});
     });
-    const redTeamInfo = redTeamArr.join(", ");
 
-    let prompt = `[시스템: LOL.PS 전문 분석 모드]
-- 반드시 2026년 최신 아이템을 기반으로 추천할 것.
-- 답변 시작 시 'LOL.PS 분석 리포트'나 날짜 같은 머리말은 절대 쓰지 마세요.
-- 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
-- 2단계: 그 아래에 상세 분석 및 템트리를 작성하세요.
-- 승리 전략에는 몇 레벨까지 유리하고 언제부터 불리한지 타임라인을 명시하세요.
-- [응답은 반드시 한국어로만 하세요]
+    if (blueTeam.length === 0 || redTeam.length === 0) {
+        alert("챔피언 정보를 입력해주세요.");
+        return;
+    }
 
-현재 라인: ${selectedLane}
-우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
+    // 캐시 확인
+    const cacheKey = `analysis_${selectedLane}_${JSON.stringify(blueTeam)}_${JSON.stringify(redTeam)}`;
+    const cached = getCachedResult(cacheKey);
+    if (cached) {
+        resultArea.classList.remove('hidden');
+        content.innerHTML = cached;
+        return;
+    }
+
+    // UI 피드백
+    resultArea.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    content.innerHTML = '';
+    btn.disabled = true;
+
+    // 프롬프트 최적화 (데이터 위주)
+    let prompt = `
+        [DATA]
+        User Lane: ${selectedLane}
+        Blue Team: ${JSON.stringify(blueTeam)}
+        Red Team: ${JSON.stringify(redTeam)}
+        
+        [RULE]
+        1. 2026 Season 메타 반영.
+        2. 리쉬(Leash) 언급 금지.
+        3. 타임라인별 강세(레벨/분) 1줄 요약.
+        4. 첫 코어템 시점 상성 변화 1줄 요약.
+        5. 전체 승리 플랜 3줄 요약.
+        6. '---' 구분자 사용하여 요약과 상세내용 분리.
+        7. 한국어로 짧고 명확하게 답변해.
+    `;
 
     if (selectedLane === '정글') {
-        prompt = `[정글러 전략 설계 모드]
-- 현재 픽된 10명의 챔피언 정보를 모두 분석하세요.
-- 1. **정글 상성**: 내 챔피언이 상대 정글과 만났을 때(카정/교전)의 유불리 판단.
-- 2. **라인 분석**: 어느 라인이 '갱킹 호응'이 좋고, 어느 라인이 '상대 압박'에 취약한지 분석.
-- 3. **동선 설계**: 
-   * 레드/블루 팀 진영에 따른 최적 스타트 지점 결정.
-   * "상대 정글러가 육식형이므로 3캠프 후 역갱 대기" 또는 "아군 바텀 호응이 좋으니 풀캠프 후 바텀 찌르기" 등 구체적 이유 제시.
-- 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
-- 2단계: 그 아래에 상세 분석을 작성하세요.
-- 반드시 JSON 형식으로 동선 데이터를 포함하세요: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "레드", "desc": "..."}], "pathPoints": [{"x": 100, "y": 100}]}]
-- [응답은 반드시 한국어로만 하세요]
-
-현재 라인: ${selectedLane}
-우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
+        prompt += `\n8. 정글러 전용 JSON 동선 포함: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]`;
     }
 
     try {
-        const response = await fetch('/analyze', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt }) 
-        });
-
-        if (response.status === 429) {
-            alert("API 사용량 제한에 걸렸습니다. 약 1분 뒤에 다시 시도해 주세요!");
-            return;
+        const result = await fetchWithRetry(prompt);
+        
+        let fullText = "";
+        if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
+            fullText = result.candidates[0].content.parts[0].text;
+        } else {
+            fullText = JSON.stringify(result);
         }
 
-        const result = await response.json();
-        
-        if (result.error) {
-            content.innerText = "Error: " + result.error;
-        } else {
-            let fullText = "";
-            if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
-                fullText = result.candidates[0].content.parts[0].text;
-            } else {
-                fullText = JSON.stringify(result);
-            }
+        const jungleDataMatch = fullText.match(/\[JUNGLE_DATA: (.*?)\]/);
+        let cleanText = fullText.replace(/\[JUNGLE_DATA: .*?\]/, '');
 
-            const jungleDataMatch = fullText.match(/\[JUNGLE_DATA: (.*?)\]/);
-            let cleanText = fullText.replace(/\[JUNGLE_DATA: .*?\]/, '');
+        const sections = cleanText.split('---'); 
+        const summary = sections[0] || "요약 데이터를 불러오지 못했습니다.";
+        const details = sections[1] || "상세 분석 내용이 없습니다.";
 
-            const sections = cleanText.split('---'); 
-            const summary = sections[0] || "요약 데이터를 불러오지 못했습니다.";
-            const details = sections[1] || "상세 분석 내용이 없습니다.";
+        const finalHtml = `
+            <div class="summary-card">
+                <h4>⚡ 핵심 승리 전략</h4>
+                <div class="summary-text">${summary.replace(/\n/g, '<br>')}</div>
+            </div>
+            
+            <button id="toggle-details" class="details-btn" onclick="toggleDetails()">
+                상세 룬/템트리 보기 ↓
+            </button>
 
-            content.innerHTML = `
-                <div class="summary-card">
-                    <h4>⚡ 핵심 승리 전략</h4>
-                    <div class="summary-text">${summary.replace(/\n/g, '<br>')}</div>
+            <div id="analysis-details" class="hidden-details">
+                <div class="analysis-text">
+                    <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 전략 및 추천 빌드</h5>
+                    ${details.replace(/\n/g, '<br>')}
                 </div>
-                
-                <button id="toggle-details" class="details-btn" onclick="toggleDetails()">
-                    상세 룬/템트리 보기 ↓
-                </button>
+            </div>
+        `;
 
-                <div id="analysis-details" class="hidden-details">
-                    <div class="analysis-text">
-                        <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 전략 및 추천 빌드</h5>
-                        ${details.replace(/\n/g, '<br>')}
-                    </div>
-                </div>
-            `;
+        content.innerHTML = finalHtml;
+        setCachedResult(cacheKey, finalHtml); // 결과 저장
 
-            if (jungleDataMatch && selectedLane === '정글') {
-                try {
-                    const jungleData = JSON.parse(jungleDataMatch[1]);
-                    renderJungleStrategy(jungleData);
-                } catch (e) {
-                    console.error("정글 데이터 파싱 실패", e);
-                }
+        if (jungleDataMatch && selectedLane === '정글') {
+            try {
+                const jungleData = JSON.parse(jungleDataMatch[1]);
+                renderJungleStrategy(jungleData);
+            } catch (e) {
+                console.error("정글 데이터 파싱 실패", e);
             }
         }
     } catch (e) { 
@@ -280,30 +330,25 @@ function drawJungleStrategy(points, strategyType) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 선 스타일 설정
-    ctx.strokeStyle = strategyType === '카정' ? '#ef4444' : '#fbbf24'; // 카정은 빨간색, 일반은 노란색
+    ctx.strokeStyle = strategyType === '카정' ? '#ef4444' : '#fbbf24';
     ctx.lineWidth = 5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.setLineDash([8, 8]); // 점선 효과로 동선 느낌 강조
+    ctx.setLineDash([8, 8]);
 
-    // 경로 그리기
     ctx.beginPath();
     points.forEach((p, i) => {
-        // 미니맵 크기(320px)에 맞춰 좌표 변환 로직
         const targetX = (p.x / 100) * canvas.width;
         const targetY = (p.y / 100) * canvas.height;
-        
         if (i === 0) ctx.moveTo(targetX, targetY);
         else ctx.lineTo(targetX, targetY);
     });
     ctx.stroke();
 
-    // 갱킹 지점(마지막 포인트)에 마커 표시
     const last = points[points.length - 1];
     if (last) {
         ctx.fillStyle = '#ef4444';
-        ctx.setLineDash([]); // 마커는 실선
+        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.arc((last.x/100)*canvas.width, (last.y/100)*canvas.height, 8, 0, Math.PI*2);
         ctx.fill();
@@ -324,7 +369,7 @@ function toggleDetails() {
 
 function copyResult() {
     const text = document.querySelector('.analysis-text').innerText;
-    navigator.clipboard.writeText(text).then(() => alert('복사되었습니다!'));
+    navigator.clipboard.writeText(text).then(() => alert(language === 'ko' ? '복사되었습니다!' : 'Copied!'));
 }
 
 window.onload = async () => {

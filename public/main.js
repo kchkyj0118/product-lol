@@ -151,17 +151,17 @@ async function startAnalysis() {
     });
     const redTeamInfo = redTeamArr.join(", ");
 
-    let prompt = `[명령: LOL.PS & DeepLoL 실시간 데이터 기반 분석]
-    - 모든 템트리는 2026년 3월 현재 마스터+ 구간 승률 1위 빌드로 구성할 것.
-    - 아이템 언급 시 반드시 이미지를 넣으세요: <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/item/[아이템ID].png" style="width:20px; vertical-align:middle; border-radius:3px;"> [아이템이름]
-    - 룬 언급 시에도 이미지를 포함하세요: <img src="https://ddragon.leagueoflegends.com/cdn/img/[룬경로]" style="width:20px; vertical-align:middle;"> [룬이름]
-    - 절대로 '분석 리포트' 같은 서론을 쓰지 마세요.
-    - 형식: 요약(3줄) --- 상세분석(템, 룬, 레벨별 우위 수치)
-    - [응답은 반드시 한국어로만 하세요]
+    let prompt = `[시스템: LOL.PS 전문 분석 모드]
+- 반드시 2026년 최신 아이템을 기반으로 추천할 것.
+- 답변 시작 시 'LOL.PS 분석 리포트'나 날짜 같은 머리말은 절대 쓰지 마세요.
+- 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
+- 2단계: 그 아래에 상세 분석 및 템트리를 작성하세요.
+- 승리 전략에는 몇 레벨까지 유리하고 언제부터 불리한지 타임라인을 명시하세요.
+- 만약 사용자 라인이 '정글'이라면, JSON 형식으로 동선 데이터를 포함하세요: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "레드", "desc": "..."}], "pathPoints": [{"x": 100, "y": 100}]}]
+- [응답은 반드시 한국어로만 하세요]
 
-    현재 라인: ${selectedLane}
-    우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
-
+현재 라인: ${selectedLane}
+우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
 
     try {
         const response = await fetch('/analyze', { 
@@ -181,7 +181,11 @@ async function startAnalysis() {
                 fullText = JSON.stringify(result);
             }
 
-            const sections = fullText.split('---'); 
+            // 정글 데이터 추출 시도
+            const jungleDataMatch = fullText.match(/\[JUNGLE_DATA: (.*?)\]/);
+            let cleanText = fullText.replace(/\[JUNGLE_DATA: .*?\]/, '');
+
+            const sections = cleanText.split('---'); 
             const summary = sections[0] || "요약 데이터를 불러오지 못했습니다.";
             const details = sections[1] || "상세 분석 내용이 없습니다.";
 
@@ -197,11 +201,20 @@ async function startAnalysis() {
 
                 <div id="analysis-details" class="hidden-details">
                     <div class="analysis-text">
-                        <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 분석 및 추천 빌드</h5>
+                        <h5 style="margin-top:0; color:#3b82f6;">🛡️ 상세 전략 및 추천 빌드</h5>
                         ${details.replace(/\n/g, '<br>')}
                     </div>
                 </div>
             `;
+
+            if (jungleDataMatch && selectedLane === '정글') {
+                try {
+                    const jungleData = JSON.parse(jungleDataMatch[1]);
+                    renderJungleStrategy(jungleData);
+                } catch (e) {
+                    console.error("정글 데이터 파싱 실패", e);
+                }
+            }
         }
     } catch (e) { 
         content.innerText = "Error: " + e.message; 
@@ -209,6 +222,63 @@ async function startAnalysis() {
         loading.classList.add('hidden'); 
         btn.disabled = false;
     }
+}
+
+function renderJungleStrategy(strategyData) {
+    const analysisSection = document.getElementById('analysis-content');
+    const jungleHtml = `
+        <div class="jungle-strategy-card">
+            <h4>🗺️ 정글러 전용: 맞춤형 전략 동선</h4>
+            <div class="minimap-wrapper">
+                <img src="https://ddragon.leagueoflegends.com/cdn/img/map/map11.png" class="minimap-img">
+                <canvas id="jungle-path-canvas" width="300" height="300"></canvas>
+            </div>
+            <div class="strategy-details">
+                <div class="matchup-box">
+                    <strong>🆚 정글 상성 분석:</strong> 
+                    <p>${strategyData.matchupTip}</p>
+                </div>
+                <ul class="step-list">
+                    ${strategyData.steps.map((step, i) => `
+                        <li>
+                            <span class="step-num">${i + 1}</span>
+                            <div><strong>${step.target}</strong>: ${step.desc}</div>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        </div>
+    `;
+    analysisSection.insertAdjacentHTML('beforeend', jungleHtml);
+    setTimeout(() => drawPathOnCanvas(strategyData.pathPoints), 100);
+}
+
+function drawPathOnCanvas(points) {
+    const canvas = document.getElementById('jungle-path-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#f59e0b';
+    ctx.fillStyle = '#f59e0b';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([5, 5]);
+    points.forEach((p, i) => {
+        if (i === 0) { ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        else {
+            ctx.lineTo(p.x, p.y);
+            if (i === points.length - 1) {
+                const prev = points[i-1];
+                const angle = Math.atan2(p.y - prev.y, p.x - prev.x);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - 10 * Math.cos(angle - Math.PI / 6), p.y - 10 * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(p.x - 10 * Math.cos(angle + Math.PI / 6), p.y - 10 * Math.sin(angle + Math.PI / 6));
+                ctx.closePath(); ctx.fill();
+            }
+        }
+    });
+    ctx.stroke();
 }
 
 function toggleDetails() {

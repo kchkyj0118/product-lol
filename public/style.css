@@ -83,3 +83,72 @@ h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; 
 .main-layout { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
 @media (min-width: 768px) { .main-layout { flex-direction: row; } }
 .team-section { flex: 1; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b; }
+
+/* 미니맵 위에 동선을 그리기 위한 캔버스 설정 */
+.minimap-wrapper {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 10px auto;
+    border: 2px solid #475569;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.minimap-img { width: 100%; height: 100%; opacity: 0.8; }
+#jungle-path-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; /* 클릭 방해 금지 */
+}
+
+/* 정글 전략 카드 스타일 */
+.jungle-strategy-card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #f59e0b;
+    text-align: left;
+}
+.jungle-strategy-card h4 {
+    margin-top: 0;
+    color: #f59e0b;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.matchup-box {
+    background: rgba(245, 158, 11, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #f59e0b;
+}
+.step-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.step-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+.step-num {
+    background: #f59e0b;
+    color: #020617;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 2px;
+}

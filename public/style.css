@@ -1,62 +1,111 @@
-:root {
-    --gold: #c89b3c;
-    --dark-bg: #0f1217;
-    --card-bg: #1e232a;
-    --text-main: #ececec;
+:root { 
+    --gold: #c89b3c; 
+    --dark-bg: #0f1217; 
+    --card-bg: #1e232a; 
+    --text: #ececec; 
 }
 
 body { 
-    font-family: 'Pretendard', -apple-system, sans-serif; 
-    background-color: var(--dark-bg); 
-    color: var(--text-main); 
-    margin: 0; padding: 0;
-    display: flex; flex-direction: column; min-height: 100vh;
+    font-family: 'Pretendard', sans-serif; 
+    background: var(--dark-bg); 
+    color: var(--text); 
+    margin: 0; 
+    padding: 20px; 
 }
 
-.container { max-width: 700px; margin: 40px auto; padding: 20px; flex: 1; }
+.container { 
+    max-width: 800px; 
+    margin: 40px auto; 
+}
 
-/* 카드 UI 및 짤림 방지 */
 .main-card { 
-    background: var(--card-bg); border-radius: 16px; padding: 30px; 
-    border: 1px solid #323842; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    background: var(--card-bg); 
+    border-radius: 16px; 
+    padding: 30px; 
+    border: 1px solid #323842; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
 }
 
-.header { text-align: center; margin-bottom: 30px; }
-.header h1 { color: var(--gold); margin-bottom: 10px; }
-
-.input-group { margin-bottom: 20px; }
-label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #a0a0a0; }
-
-select, input {
-    width: 100%; padding: 14px; box-sizing: border-box;
-    border-radius: 8px; border: 1px solid #3c4450;
-    background: #2a3039; color: white; font-size: 1rem;
+.header h1 { 
+    color: var(--gold); 
+    text-align: center; 
+    margin-bottom: 5px; 
 }
 
-button {
-    width: 100%; padding: 15px; margin-top: 10px;
-    border-radius: 8px; border: none;
-    background: var(--gold); color: #000;
-    font-weight: bold; font-size: 1.1rem; cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
+.header p { 
+    text-align: center; 
+    color: #888; 
+    margin-bottom: 30px; 
 }
 
-button:hover { background: #e1ad46; transform: translateY(-2px); }
-button:active { transform: translateY(0); }
-
-/* AI 분석 결과 출력창 (정제된 텍스트용) */
-#result-display {
-    margin-top: 30px; padding: 20px; background: #161a20;
-    border-radius: 10px; line-height: 1.7; border-left: 4px solid var(--gold);
-    white-space: pre-wrap; display: none;
+.section-title { 
+    font-size: 0.9rem; 
+    color: var(--gold); 
+    margin-bottom: 10px; 
+    font-weight: bold; 
+    letter-spacing: 1px;
 }
 
-/* 애드센스 대비 FAQ */
-.faq-section { margin-top: 40px; border-top: 1px solid #323842; padding-top: 20px; }
-details { background: #1a1e24; padding: 10px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+.flex-row { 
+    display: flex; 
+    gap: 15px; 
+    margin-bottom: 20px; 
+}
+
+.input-item { 
+    flex: 1; 
+}
+
+input, select { 
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 8px; 
+    border: 1px solid #3c4450;
+    background: #2a3039; 
+    color: white; 
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+button { 
+    width: 100%; 
+    padding: 18px; 
+    background: var(--gold); 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 1.1rem; 
+    cursor: pointer;
+    margin-top: 10px; 
+    transition: 0.3s;
+    color: #000;
+}
+
+button:hover { 
+    background: #e1ad46; 
+    transform: translateY(-2px); 
+}
+
+#analysis-result { 
+    margin-top: 30px; 
+    padding: 25px; 
+    background: #161a20; 
+    border-radius: 12px;
+    line-height: 1.8; 
+    border-left: 5px solid var(--gold); 
+    display: none;
+    white-space: pre-wrap;
+}
+
+.loading { 
+    text-align: center; 
+    display: none; 
+    margin: 20px 0; 
+    color: var(--gold); 
+    font-weight: bold; 
+}
 
 footer { 
     text-align: center; padding: 30px; font-size: 0.85rem; color: #666; 
-    background: #0a0c10; 
 }
 footer a { color: #888; text-decoration: none; margin: 0 10px; }

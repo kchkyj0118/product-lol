@@ -4,20 +4,18 @@
 LoL AI Coach is a web-based application designed to provide real-time strategic advice for League of Legends players. It uses AI to analyze matchups and suggest optimal playstyles based on current meta data.
 
 ## Features implemented
-- **Position Selection**: Users can select their role (Top, Jungle, Mid, ADC, Support).
-- **Pro Matchup Input**: Enhanced inputs for "My Champion" and "Opponent Champion".
-- **Advanced Context**: Added "My Spell" and "Fight Scale" selection for more precise coaching.
-- **Gemini Pro Integration**: Direct integration with the Gemini API using a detailed coaching prompt.
-- **AI Analysis**: Simulates a strategic analysis of the matchup with a professional coaching tone.
-- **Data Cleaning**: Improved JavaScript logic to ensure only clean text is displayed.
-- **Modern UI**: Dark-themed "PRO COACH" interface with flexible layouts.
-- **FAQ Section**: Updated info for API connectivity and tier support.
+- **Polished PRO COACH UI**: Organized sections for "CHAMPION MATCHUP" and "BATTLE SETTING".
+- **Enhanced Context**: Support for detailed matchup inputs (My/Op Champion), Fight Scale (1v1 to 5v5), and Spell selection.
+- **Gemini Pro Integration**: Direct connection to the Gemini API for professional-grade coaching reports.
+- **Advanced Text Cleaning**: Regex-based cleaning to remove JSON, coordinates, and markdown characters (*, #) for a clean report look.
+- **Loading State**: Visual feedback with a loading bar while the AI processes data.
+- **Modern Dark Theme**: Optimized layout for readability and professional feel.
 - **Privacy & Terms**: Links to legal documentation.
 
 ## Technical Details
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+).
-- **Design**: Gold-themed aesthetics with container queries and responsive layouts.
-- **Data Processing**: Regex-based cleaning of AI output.
+- **Design**: Gold-themed aesthetics with flexbox and responsive layouts.
+- **Data Processing**: Prompt engineering for "Pro Team Head Coach" persona.
 
 ## Current Plan
 1. [x] Update project structure (Move files to `public/`).

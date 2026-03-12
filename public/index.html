@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LoL AI 전략 코치 | lol-coaches.com</title>
+    <title>LoL AI 프로 코치 | lol-coaches.com</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
 <div class="container">
     <div class="main-card">
         <div class="header">
-            <h1>LOL AI COACH</h1>
-            <p>실시간 메타 분석 기반 맞춤형 전략</p>
+            <h1>LOL AI PRO COACH</h1>
+            <p>프로팀 코칭 알고리즘 기반 정밀 분석</p>
         </div>
 
         <div class="input-group">
@@ -26,21 +26,51 @@
             </select>
         </div>
 
-        <div class="input-group">
-            <label>매치업 입력 (예: 카밀 vs 피오라)</label>
-            <input type="text" id="matchup-input" placeholder="본인 챔피언 vs 상대 챔피언">
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex: 1;">
+                <label>내 챔피언</label>
+                <input type="text" id="my-champ" placeholder="예: 리신">
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label>상대 챔피언</label>
+                <input type="text" id="op-champ" placeholder="예: 카직스">
+            </div>
         </div>
 
-        <button onclick="startAnalysis()">전략 분석 시작하기</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+                <label>내 스펠</label>
+                <select id="my-spell">
+                    <option value="점멸/강타">점멸/강타</option>
+                    <option value="점화/강타">점화/강타</option>
+                    <option value="텔포/점멸">텔포/점멸</option>
+                    <option value="점멸/점화">점멸/점화</option>
+                    <option value="점멸/탈진">점멸/탈진</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label>교전 규모</label>
+                <select id="fight-scale">
+                    <option value="1대1">1대1 (라인전/카정)</option>
+                    <option value="2대2">2대2 (소규모 교전)</option>
+                    <option value="3대3">3대3 (오브젝트 싸움)</option>
+                    <option value="5대5">5대5 (한타)</option>
+                </select>
+            </div>
+        </div>
 
-        <div id="result-display"></div>
+        <button onclick="startAnalysis()">프로 코칭 시작하기</button>
+
+        <div id="result-display" style="display: none; background: #161a20; padding: 20px; border-radius: 10px; border-left: 4px solid #c89b3c; margin-top: 20px;">
+            <div id="ai-content" style="line-height: 1.8; white-space: pre-wrap;"></div>
+        </div>
     </div>
 
     <div class="faq-section">
         <h3>승률을 높이는 AI 코칭 가이드</h3>
         <details>
             <summary>분석 결과가 나오지 않는다면?</summary>
-            <p>네트워크 상태를 확인하고, 챔피언 이름을 정확히 입력했는지 확인해주세요.</p>
+            <p>네트워크 상태를 확인하고, API 키가 올바르게 설정되어 있는지 확인해주세요.</p>
         </details>
         <details>
             <summary>모든 티어에서 사용 가능한가요?</summary>

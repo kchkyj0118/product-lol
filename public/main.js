@@ -1,45 +1,56 @@
-async function startAnalysis() {
-    const position = document.getElementById('user-position').value;
-    const matchup = document.getElementById('matchup-input').value;
-    const display = document.getElementById('result-display');
+// ⚠️ 여기에 본인의 API KEY를 입력해야 진짜로 작동합니다!
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
 
-    if (!matchup) {
-        alert("매치업을 입력해주세요!");
-        return;
+async function startAnalysis() {
+    const myChamp = document.getElementById('my-champ').value;
+    const opChamp = document.getElementById('op-champ').value;
+    const pos = document.getElementById('user-position').value;
+    const scale = document.getElementById('fight-scale').value;
+    const spell = document.getElementById('my-spell').value;
+    const display = document.getElementById('ai-content');
+    const container = document.getElementById('result-display');
+
+    if (!myChamp || !opChamp) { 
+        alert("챔피언을 입력해주세요!"); 
+        return; 
     }
 
-    display.style.display = "block";
-    display.innerText = "🌀 AI 코치가 게임 데이터를 정밀 분석 중입니다...";
+    container.style.display = "block";
+    display.innerHTML = "<b>🔥 프로 코치가 리플레이를 분석 중입니다...</b>";
+
+    // Gemini에게 보낼 상세 프롬프트 (설명이 풍부해지는 비결)
+    const prompt = `당신은 롤 프로팀 코치입니다. 다음 상황에 대해 아주 상세하고 전문적인 전략을 짜주세요.
+    상황: ${pos} 포지션, 내 챔피언 ${myChamp}(${spell}) vs 상대 ${opChamp}.
+    상황 종류: ${scale} 상황.
+    
+    답변 구성:
+    1. 핵심 상성 요약
+    2. ${scale} 시 구체적인 스킬 콤보 및 스펠 활용법
+    3. 아이템 빌드 추천
+    4. 주의해야 할 상대 스킬 및 대처법
+    
+    *결과에 JSON이나 좌표 데이터는 절대 포함하지 말고 깔끔한 텍스트로만 작성하세요.`;
 
     try {
-        // 여기에 파이어베이스/제미나이 API 호출 로직 연결
-        const response = await fetchAIResponse(position, matchup);
-        
-        // [핵심] 데이터 정제 로직 적용
-        // 1. JSON 형태 { } 제거
-        // 2. [ ] 리스트 형태 제거
-        // 3. (123, 456) 같은 좌표값 제거
-        const cleanText = response
-            .replace(/\{[\s\S]*?\}|\[[\s\S]*?\]/g, '') 
-            .replace(/\(\d+,\s*\d+\)/g, '')
-            .replace(/["']/g, '') // 불필요한 따옴표 제거
-            .trim();
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
 
-        display.innerText = cleanText || "분석 결과가 비어 있습니다. 다시 시도해 주세요.";
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+
+        const text = data.candidates[0].content.parts[0].text;
+        
+        // 텍스트 정제 및 출력
+        display.innerText = text.replace(/\{[\s\S]*?\}|\[[\s\S]*?\]/g, '').trim();
 
     } catch (error) {
-        display.innerText = "❌ 분석 중 오류가 발생했습니다. 터미널의 Firebase 연결 상태를 확인하세요.";
+        console.error(error);
+        display.innerText = `❌ 분석 중 오류가 발생했습니다: ${error.message}\nAPI 키가 올바른지 확인해주세요.`;
     }
-}
-
-// 실제 API 연동 시 이 부분을 수정 (지금은 테스트용 응답)
-async function fetchAIResponse(pos, match) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(`"${pos} ${match} 분석 리포트: 
-            라인전에서는 상대의 주요 스킬이 빠진 타이밍을 노리세요. 
-            현재 메타에서는 2코어 타이밍이 가장 강력합니다.
-            { "status": "success", "coord": [150, 200] }"`); // 정제 전 예시 데이터
-        }, 1500);
-    });
 }

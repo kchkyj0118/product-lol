@@ -5,11 +5,13 @@ LoL AI Coach is a web-based application designed to provide real-time strategic 
 
 ## Features implemented
 - **Position Selection**: Users can select their role (Top, Jungle, Mid, ADC, Support).
-- **Matchup Input**: Users can input their champion vs. the enemy champion.
-- **AI Analysis**: Simulates a strategic analysis of the matchup.
-- **Data Cleaning**: JavaScript logic to strip JSON objects, arrays, and coordinate data from AI responses for a cleaner user experience.
-- **Modern UI**: Dark-themed, responsive design with gold accents and polished card components.
-- **FAQ Section**: Information for users about potential issues and tier support.
+- **Pro Matchup Input**: Enhanced inputs for "My Champion" and "Opponent Champion".
+- **Advanced Context**: Added "My Spell" and "Fight Scale" selection for more precise coaching.
+- **Gemini Pro Integration**: Direct integration with the Gemini API using a detailed coaching prompt.
+- **AI Analysis**: Simulates a strategic analysis of the matchup with a professional coaching tone.
+- **Data Cleaning**: Improved JavaScript logic to ensure only clean text is displayed.
+- **Modern UI**: Dark-themed "PRO COACH" interface with flexible layouts.
+- **FAQ Section**: Updated info for API connectivity and tier support.
 - **Privacy & Terms**: Links to legal documentation.
 
 ## Technical Details

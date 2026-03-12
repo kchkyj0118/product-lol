@@ -1,52 +1,88 @@
 // ⚠️ 본인의 Gemini API Key를 아래 G_KEY에 입력하세요.
 const G_KEY = "여기에_제미나이_API_키를_넣으세요";
 
-async function analyzeMatchup() {
+const lanes = ["TOP", "JUNGLE", "MID", "ADC", "SUPPORT"];
+const spells = ["점멸", "강타", "점화", "텔포", "탈진", "유체화", "정화", "회복"];
+
+// UI 자동 생성 (정글 선택 시 강타 로직 포함)
+function initUI() {
+    const blueSide = document.getElementById('blue-team-inputs');
+    const redSide = document.getElementById('red-team-inputs');
+
+    if (!blueSide || !redSide) return;
+
+    lanes.forEach(lane => {
+        // 블루 사이드 (스펠 선택 포함)
+        const bRow = document.createElement('div');
+        bRow.className = 'lane-row';
+        const isJungle = lane === "JUNGLE";
+        
+        bRow.innerHTML = `
+            <div class="lane-name">${lane}</div>
+            <input type="text" class="b-name" placeholder="챔피언 명">
+            <select class="b-s1">
+                ${spells.map(s => `<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}
+            </select>
+            <select class="b-s2">
+                ${spells.map(s => `<option ${isJungle && s==='강타'?'selected':''}>${s}</option>`).join('')}
+            </select>
+        `;
+        blueSide.appendChild(bRow);
+
+        // 레드 사이드 (이름만)
+        const rRow = document.createElement('div');
+        rRow.className = 'lane-row';
+        rRow.innerHTML = `
+            <div class="lane-name">${lane}</div>
+            <input type="text" class="r-name" placeholder="챔피언 명">
+        `;
+        redSide.appendChild(rRow);
+    });
+}
+
+async function startAnalysis() {
     const resultDiv = document.getElementById('result-display');
+    const bNames = document.querySelectorAll('.b-name');
+    const rNames = document.querySelectorAll('.r-name');
+    const bS1s = document.querySelectorAll('.b-s1');
+    const bS2s = document.querySelectorAll('.b-s2');
     
-    // 데이터 수집
-    const myChamp = document.getElementById('my-1').value;
-    const s1 = document.getElementById('s1-1').value;
-    const s2 = document.getElementById('s1-2').value;
+    let blueTeamData = [];
+    let hasBlueChamp = false;
+    lanes.forEach((lane, i) => {
+        const name = bNames[i].value.trim();
+        const s1 = bS1s[i].value;
+        const s2 = bS2s[i].value;
+        if (name) hasBlueChamp = true;
+        blueTeamData.push(`${lane}: ${name || '미정'}(${s1}/${s2})`);
+    });
 
-    const myTeamArr = [
-        myChamp,
-        document.getElementById('my-2').value,
-        document.getElementById('my-3').value,
-        document.getElementById('my-4').value,
-        document.getElementById('my-5').value
-    ].filter(n => n);
+    let redTeamData = [];
+    let hasRedChamp = false;
+    lanes.forEach((lane, i) => {
+        const name = rNames[i].value.trim();
+        if (name) hasRedChamp = true;
+        redTeamData.push(`${lane}: ${name || '미정'}`);
+    });
 
-    const opTeamArr = [
-        document.getElementById('op-1').value,
-        document.getElementById('op-2').value,
-        document.getElementById('op-3').value,
-        document.getElementById('op-4').value,
-        document.getElementById('op-5').value
-    ].filter(n => n);
-
-    if(!myChamp || opTeamArr.length === 0) { 
-        alert("최소한 본인과 상대 챔피언은 입력해야 합니다!"); 
-        return; 
+    if (!hasBlueChamp || !hasRedChamp) {
+        alert("최소한 아군과 적군 각각 1명 이상의 챔피언을 입력해주세요!");
+        return;
     }
 
-    const myTeam = myTeamArr.join(', ');
-    const opTeam = opTeamArr.join(', ');
-    const fightScale = document.getElementById('fight-scale').value;
-
     resultDiv.style.display = "block";
-    resultDiv.innerText = "🌀 AI 코치가 팀 조합 상성을 분석 중입니다. 잠시만 기다려주세요...";
+    resultDiv.innerText = "🌀 프로 코치가 팀 조합과 포지션별 상성을 분석 중입니다. 잠시만 기다려주세요...";
 
-    const prompt = `당신은 롤 프로팀 헤드 코치입니다. 다음 상황을 아주 전문적으로 분석하세요.
-    - 아군 조합: ${myTeam} (나: ${myChamp}, 스펠: ${s1}/${s2})
-    - 적군 조합: ${opTeam}
-    - 상황: ${fightScale} 한타 상황.
+    const prompt = `당신은 롤 프로팀 수석 분석관입니다. 다음 데이터를 기반으로 아주 전문적인 리포트를 작성하세요.
 
-    [요청 분석 리포트]
-    1. 팀 조합 상성 요약: 어느 쪽이 한타 기여도가 더 높은가?
-    2. 타겟 우선순위: 한타 발생 시 내가 무조건 먼저 잡아야 할 적 핵심 챔피언 2명.
-    3. 승리 전략: 우리 팀이 한타에서 이기기 위한 진입 시점과 포지셔닝.
-    4. 주의 사항: 적의 위협적인 스킬 콤보와 대처법.
+    [아군 구성]: ${blueTeamData.join(', ')}
+    [적군 구성]: ${redTeamData.join(', ')}
+
+    요청 분석 사항:
+    1. 라인별 주도권: 각 포지션별 상성 요약 및 주도권 예측.
+    2. 정글 동선 제안: 우리 정글러가 초반에 주력해야 할 라인과 이유.
+    3. 한타 핵심: 5대5 한타 시 우리 팀의 이상적인 진입 순서와 타겟팅 우선순위.
+    4. 변수 대처: 적의 주요 스킬 중 가장 경계해야 할 것과 그 대처법.
 
     *전문적인 코칭 용어를 사용하고, JSON이나 불필요한 기호(*, #) 없이 깔끔한 텍스트로만 상세히 답변하세요.`;
 
@@ -76,3 +112,6 @@ async function analyzeMatchup() {
         resultDiv.innerText = `❌ 분석 중 오류가 발생했습니다: ${error.message}\nAPI 키 입력 상태를 확인해 주세요.`;
     }
 }
+
+// 초기화 실행
+window.onload = initUI;

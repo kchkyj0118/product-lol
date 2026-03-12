@@ -8,28 +8,37 @@
 </head>
 <body>
     <div class="container">
-        <h1>AI 롤 승리 플랜 코치</h1>
+        <h1>AI 롤 코치 <span class="version">v2.1</span></h1>
         
+        <div class="my-lane-selector">
+            <p>내 라인 선택</p>
+            <div class="lane-btns">
+                <button class="lane-opt active" onclick="selectMyLane('탑', this)">탑</button>
+                <button class="lane-opt" onclick="selectMyLane('정글', this)">정글</button>
+                <button class="lane-opt" onclick="selectMyLane('미드', this)">미드</button>
+                <button class="lane-opt" onclick="selectMyLane('원딜', this)">원딜</button>
+                <button class="lane-opt" onclick="selectMyLane('서포터', this)">서포터</button>
+            </div>
+        </div>
+
         <div class="main-layout">
-            <div class="team-section">
-                <h3>우리 팀 (Allies)</h3>
+            <div class="team-section blue-card">
+                <h3>우리 팀</h3>
                 <div id="blue-team-list"></div>
                 <button class="add-btn" onclick="addPlayer('blue')">+ 아군 추가</button>
             </div>
             
-            <div class="team-section">
-                <h3>상대 팀 (Enemies)</h3>
+            <div class="team-section red-card">
+                <h3>상대 팀</h3>
                 <div id="red-team-list"></div>
                 <button class="add-btn" onclick="addPlayer('red')">+ 적군 추가</button>
             </div>
         </div>
 
-        <div class="analysis-control">
-            <button id="analyze-btn" onclick="startAnalysis()">승리 플랜 분석 시작</button>
-        </div>
+        <button id="analyze-btn" onclick="startAnalysis()">승리 플랜 분석 시작</button>
 
         <div id="result" class="result-area hidden">
-            <div id="loading" class="hidden">분석 중...</div>
+            <div id="loading" class="hidden">AI가 조합을 분석 중입니다...</div>
             <div id="analysis-content"></div>
         </div>
     </div>

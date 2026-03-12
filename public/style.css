@@ -1,17 +1,30 @@
-body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+body { background: #020617; color: #f1f5f9; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; padding: 20px; }
 .container { max-width: 900px; width: 100%; }
-h1 { text-align: center; color: #60a5fa; }
-.main-layout { display: flex; gap: 20px; margin-bottom: 20px; }
-.team-section { flex: 1; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
-.player-row { display: flex; flex-direction: column; gap: 5px; background: #334155; padding: 10px; border-radius: 8px; margin-bottom: 10px; position: relative; }
-.input-line { display: flex; gap: 5px; }
-.champ-input { flex: 2; padding: 8px; border-radius: 4px; border: none; background: #0f172a; color: white; }
-.lane-select { flex: 1; background: #0f172a; color: white; border: none; border-radius: 4px; padding: 8px; }
+h1 { text-align: center; color: #3b82f6; margin-bottom: 30px; }
+.version { font-size: 12px; vertical-align: middle; color: #64748b; }
+
+.my-lane-selector { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 1px solid #334155; }
+.my-lane-selector p { margin-bottom: 10px; font-weight: bold; color: #94a3b8; }
+.lane-btns { display: flex; justify-content: center; gap: 10px; }
+.lane-opt { padding: 8px 16px; border: 1px solid #475569; background: #0f172a; color: #94a3b8; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+.lane-opt.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+
+.main-layout { display: flex; gap: 15px; margin-bottom: 20px; }
+.team-section { flex: 1; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b; }
+.blue-card { border-left: 4px solid #3b82f6; }
+.red-card { border-left: 4px solid #ef4444; }
+
+.player-row { position: relative; background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+.input-line { display: flex; gap: 5px; margin-bottom: 8px; }
+.lane-select { width: 70px; background: #020617; color: white; border: none; border-radius: 4px; padding: 5px; }
+.champ-input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #020617; color: white; }
 .spell-row { display: flex; gap: 5px; }
-.spell-select { flex: 1; padding: 5px; font-size: 11px; background: #1e293b; color: #ddd; border-radius: 4px; border: 1px solid #475569; }
-.add-btn { width: 100%; padding: 10px; background: transparent; border: 1px dashed #60a5fa; color: #60a5fa; cursor: pointer; border-radius: 8px; }
-.remove-btn { position: absolute; right: -5px; top: -5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px; z-index: 10; }
-#analyze-btn { width: 100%; padding: 15px; background: #3b82f6; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 18px; }
-.result-area { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 12px; white-space: pre-wrap; line-height: 1.6; }
+.spell-select { flex: 1; padding: 5px; font-size: 11px; background: #334155; color: white; border: none; border-radius: 4px; }
+
+.add-btn { width: 100%; padding: 8px; background: transparent; border: 1px dashed #475569; color: #94a3b8; border-radius: 8px; cursor: pointer; }
+.remove-btn { position: absolute; right: -8px; top: -8px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; z-index: 10; }
+
+#analyze-btn { width: 100%; padding: 18px; background: linear-gradient(to right, #3b82f6, #2563eb); border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+.result-area { margin-top: 20px; background: #1e293b; padding: 25px; border-radius: 12px; border-top: 4px solid #3b82f6; line-height: 1.8; }
 .result-area.hidden { display: none; }
 .hidden { display: none; }

@@ -66,11 +66,14 @@
                 <button id="analyze-btn" onclick="startAnalysis()">승리 플랜 분석 시작</button>
             </div>
 
+            <!-- 신규 로딩 컨테이너 -->
+            <div id="loading-container">
+                <div class="loader-spinner"></div>
+                <p id="loading-text">데이터를 수집 중입니다...</p>
+                <p style="color: #64748b; font-size: 0.85rem;">잠시만 기다려 주세요.</p>
+            </div>
+
             <div id="result" class="result-area hidden">
-                <div id="loading" class="hidden">
-                    <div class="spinner"></div>
-                    <p>AI가 최신 데이터를 바탕으로 조합을 정밀 분석 중입니다...</p>
-                </div>
                 <div id="analysis-content"></div>
             </div>
         </section>
@@ -84,12 +87,32 @@
                 </div>
                 <div class="info-item">
                     <h3>⚔️ 상성별 맞춤 전략</h3>
-                    <p>육식형 정글러를 상대할 때는 카운터 정글을 대비한 역동선 설계가, 성장형 정글러를 상대할 때는 빠른 풀캠프 이후 바위게 주도권 확보가 중요합니다.</p>
+                    <p>육식형 정글러를 상대할 때는 카운터 정글을 대비한 역동선 설계가, 성장형 정글러를 상대할 때는 빠른 풀캠프 이후 주도권 확보가 중요합니다.</p>
                 </div>
                 <div class="info-item">
                     <h3>📈 빅데이터 기반 추천</h3>
                     <p>마스터 이상 상위권 구간의 실시간 승률과 아이템 빌드 데이터를 학습한 AI가 현재 조합에 가장 적합한 룬과 템트리를 제안합니다.</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- 정보성 섹션 추가: 정글 운영 가이드 -->
+        <section style="max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.8; color: #ddd; background: #1a1a1a; border-radius: 10px; text-align: left;">
+            <h2 style="color: #fff; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">League of Legends 정글 운영 가이드</h2>
+            
+            <div style="margin-top: 20px;">
+                <h3 style="color: #60a5fa;">1. 왜 AI 정글 동선 분석이 필요한가요?</h3>
+                <p>시즌 14 이후 정글 캠프의 생성 시간과 공허 유충, 협곡의 전령 등 오브젝트의 중요도가 변함에 따라 정글러의 초반 동선 설계가 승패의 70% 이상을 결정합니다. AI LOL COACH는 최신 메타 데이터를 바탕으로 상대 정글러와의 상성을 분석하여 최적의 동선을 제안합니다.</p>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #60a5fa;">2. 상대 정글러에 따른 맞춤형 전략</h3>
+                <p>육식형 정글러(리 신, 신 짜오 등)를 상대할 때는 카운터 정글을 대비한 역동선 설계가 필수적이며, 성장형 정글러(카서스, 쉬바나 등)를 상대할 때는 빠른 풀캠프 이후 바위게 주도권을 확보하는 것이 중요합니다. 본 서비스는 이러한 상성 차이를 실시간 AI 분석으로 요약해 드립니다.</p>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #60a5fa;">3. 첫 코어 아이템과 전성기 파악</h3>
+                <p>각 챔피언마다 첫 코어 아이템이 뜨는 시점(예: 리안드리의 고뇌, 갈라진 하늘 등)에 파워 스파이크가 발생합니다. AI가 제공하는 시간대별 전성기 정보를 통해 교전 시점을 정확히 판단하고 승률을 높여보세요.</p>
             </div>
         </section>
     </main>

@@ -10,26 +10,34 @@ const getImg = {
     champ: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${id}.png`
 };
 
-// 1. 결과 캐싱 (localStorage 활용, 24시간 유지)
+const loadingMessages = [
+    "상대 정글러의 초반 동선을 예측 중입니다...",
+    "라인별 상성 데이터를 대조하고 있습니다...",
+    "오브젝트 주도권을 시뮬레이션 중입니다...",
+    "첫 코어 아이템 시점의 파워 스파이크를 계산 중입니다...",
+    "최적의 갱킹 루트를 설계하고 있습니다..."
+];
+
+// --- 로컬 캐싱 시스템 (12시간 유지) ---
 const cacheAnalysis = (key, value) => {
-    const data = { value, timestamp: Date.now() };
+    const data = { value, expiry: Date.now() + (1000 * 60 * 60 * 12) };
     localStorage.setItem(`lol_analysis_${key}`, JSON.stringify(data));
 };
 
 const getCachedAnalysis = (key) => {
-    const cached = localStorage.getItem(`lol_analysis_${key}`);
-    if (!cached) return null;
-    const { value, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp > 1000 * 60 * 60 * 24) {
+    const item = localStorage.getItem(`lol_analysis_${key}`);
+    if (!item) return null;
+    const parsed = JSON.parse(item);
+    if (Date.now() > parsed.expiry) {
         localStorage.removeItem(`lol_analysis_${key}`);
         return null;
     }
-    return value;
+    return parsed.value;
 };
 
-// 2. 스마트 재시도 로직 (429 에러 대응)
-async function fetchWithRetry(prompt, maxRetries = 2) {
-    for (let i = 0; i <= maxRetries; i++) {
+// --- 지수 백오프 기반 재시도 함수 ---
+async function fetchWithRetry(prompt, retries = 2, backoff = 3000) {
+    for (let i = 0; i <= retries; i++) {
         try {
             const response = await fetch('/analyze', { 
                 method: 'POST', 
@@ -37,10 +45,9 @@ async function fetchWithRetry(prompt, maxRetries = 2) {
                 body: JSON.stringify({ prompt }) 
             });
 
-            if (response.status === 429 && i < maxRetries) {
-                const waitTime = (i + 1) * 3000;
-                console.warn(`제한 발생. ${waitTime/1000}초 후 재시도...`);
-                await new Promise(res => setTimeout(res, waitTime));
+            if (response.status === 429 && i < retries) {
+                console.warn(`제한 발생. ${(backoff * (i + 1))/1000}초 후 재시도...`);
+                await new Promise(res => setTimeout(res, backoff * (i + 1)));
                 continue;
             }
 
@@ -51,7 +58,7 @@ async function fetchWithRetry(prompt, maxRetries = 2) {
 
             return await response.json();
         } catch (error) {
-            if (i === maxRetries) throw error;
+            if (i === retries) throw error;
             await new Promise(res => setTimeout(res, 2000));
         }
     }
@@ -169,7 +176,8 @@ function addPlayer(team) {
 
 async function startAnalysis() {
     const resultArea = document.getElementById('result');
-    const loading = document.getElementById('loading');
+    const loadingContainer = document.getElementById('loading-container');
+    const loadingText = document.getElementById('loading-text');
     const content = document.getElementById('analysis-content');
     const btn = document.getElementById('analyze-btn');
 
@@ -206,27 +214,40 @@ async function startAnalysis() {
         return;
     }
 
-    // UI 피드백
-    resultArea.classList.remove('hidden');
-    loading.classList.remove('hidden');
+    // UI 피드백 및 로딩 시작
+    resultArea.classList.add('hidden');
+    loadingContainer.style.display = 'block';
+    loadingText.innerText = "데이터를 수집 중입니다...";
+    
+    const msgInterval = setInterval(() => {
+        loadingText.innerText = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+    }, 2500);
+
     content.innerHTML = '';
     btn.disabled = true;
 
-    // 프롬프트 경량화 (토큰 절약 및 속도 향상)
+    // 프롬프트 최적화 (데이터 위주 + 유저 주문)
     const prompt = `
-[ROLE] 롤 전문 코치
-[DATA] Blue:${JSON.stringify(blueTeam)} / Red:${JSON.stringify(redTeam)}
-[ORDER] 
-1. 10초 내 읽게 요약.
+[DATA]
+User Lane: ${selectedLane}
+Blue Team: ${JSON.stringify(blueTeam)}
+Red Team: ${JSON.stringify(redTeam)}
+
+[RULE]
+1. 2026 Season Meta.
 2. 리쉬(Leash) 언급 금지.
-3. 시간/레벨별 유리한 시점 명시.
-4. '---' 구분자로 요약과 상세 분리.
-5. 한국어로 짧고 명확하게 답변.
-${selectedLane === '정글' ? '6. 정글 전용 JSON 동선 포함: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]' : ''}
+3. 타임라인별 강세(레벨/분) 1줄 요약.
+4. 첫 코어템 시점 상성 변화 1줄 요약.
+5. 전체 승리 플랜 3줄 요약.
+6. '---' 구분자로 요약과 상세 분리.
+7. 한국어로 짧고 명확하게 답변.
+${selectedLane === '정글' ? '8. 정글러 전용 JSON 동선 포함: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]' : ''}
     `.trim();
 
     try {
         const result = await fetchWithRetry(prompt);
+        clearInterval(msgInterval);
+        loadingContainer.style.display = 'none';
         
         let fullText = "";
         if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
@@ -260,6 +281,7 @@ ${selectedLane === '정글' ? '6. 정글 전용 JSON 동선 포함: [JUNGLE_DATA
             </div>
         `;
 
+        resultArea.classList.remove('hidden');
         content.innerHTML = finalHtml;
         cacheAnalysis(cacheKey, finalHtml); // 결과 저장
 
@@ -272,13 +294,15 @@ ${selectedLane === '정글' ? '6. 정글 전용 JSON 동선 포함: [JUNGLE_DATA
             }
         }
     } catch (e) { 
+        clearInterval(msgInterval);
+        loadingContainer.style.display = 'none';
+        resultArea.classList.remove('hidden');
         content.innerHTML = `
-            <div class="error-msg">
-                현재 분석 요청이 너무 많습니다. <br>
-                <button onclick="startAnalysis()" class="retry-btn" style="margin-top:10px; padding:8px 16px; background:#3b82f6; border:none; border-radius:6px; color:white; cursor:pointer;">다시 시도하기</button>
+            <div class="error-box">
+                <p>현재 분석 요청이 너무 많습니다. (에러: ${e.message})</p>
+                <button onclick="startAnalysis()" class="retry-btn">다시 시도하기</button>
             </div>`;
     } finally { 
-        loading.classList.add('hidden'); 
         btn.disabled = false;
     }
 }

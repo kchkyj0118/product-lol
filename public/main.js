@@ -46,9 +46,23 @@ function showAutocomplete(input) {
 function handleLaneChange(selectEl) {
     const row = selectEl.closest('.player-row');
     const s1 = row.querySelector('.s1');
+    const s2 = row.querySelector('.s2');
+
     if (selectEl.value === '정글') {
-        s1.value = '강타';
-        updateSpellIcon(s1);
+        // 만약 첫 번째 스펠이 점멸이라면, 두 번째 스펠을 강타로 변경
+        if (s1.value === '점멸') {
+            s2.value = '강타';
+            updateSpellIcon(s2);
+        } else {
+            // 그 외의 경우(점멸이 없거나 두 번째에 점멸이 있는 경우 등)
+            // 첫 번째를 강타로 바꾸고 두 번째를 점멸로 세팅 (점멸 우선 순위)
+            s1.value = '강타';
+            updateSpellIcon(s1);
+            if (s2.value !== '점멸') {
+                s2.value = '점멸';
+                updateSpellIcon(s2);
+            }
+        }
     }
 }
 

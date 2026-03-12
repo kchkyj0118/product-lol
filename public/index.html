@@ -10,40 +10,26 @@
     <div class="container">
         <h1>AI 롤 승리 플랜 코치</h1>
         
-        <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('5v5', event)">5대5 (전체)</button>
-            <button class="mode-btn" onclick="setMode('2v2', event)">2대2 (바텀/정글)</button>
-            <button class="mode-btn" onclick="setMode('1v1', event)">1대1 (라인전)</button>
+        <div class="main-layout">
+            <div class="team-section">
+                <h3>우리 팀 (Allies)</h3>
+                <div id="blue-team-list"></div>
+                <button class="add-btn" onclick="addPlayer('blue')">+ 아군 추가</button>
+            </div>
+            
+            <div class="team-section">
+                <h3>상대 팀 (Enemies)</h3>
+                <div id="red-team-list"></div>
+                <button class="add-btn" onclick="addPlayer('red')">+ 적군 추가</button>
+            </div>
         </div>
 
-        <div class="input-section">
-            <div class="team-container">
-                <div class="team blue-team">
-                    <h3>우리 팀 (Allies)</h3>
-                    <div id="blue-inputs"></div>
-                </div>
-                <div class="team red-team">
-                    <h3>상대 팀 (Enemies)</h3>
-                    <div id="red-inputs"></div>
-                </div>
-            </div>
-
-            <div class="my-info">
-                <label>내 라인:</label>
-                <select id="my-lane" onchange="updateView()">
-                    <option value="탑">탑</option>
-                    <option value="정글">정글</option>
-                    <option value="미드">미드</option>
-                    <option value="원딜">원딜</option>
-                    <option value="서포터">서포터</option>
-                </select>
-            </div>
-
+        <div class="analysis-control">
             <button id="analyze-btn" onclick="startAnalysis()">승리 플랜 분석 시작</button>
         </div>
 
         <div id="result" class="result-area hidden">
-            <div id="loading" class="hidden">분석 중... (최대 30초 소요)</div>
+            <div id="loading" class="hidden">분석 중...</div>
             <div id="analysis-content"></div>
         </div>
     </div>

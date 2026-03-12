@@ -39,7 +39,13 @@ h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; 
 .autocomplete-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #f1f5f9; text-align: left; }
 .autocomplete-item:hover { background: #334155; }
 .autocomplete-item img { width: 24px; height: 24px; border-radius: 50%; }
-.champ-icon-main { width: 32px; height: 32px; border-radius: 4px; border: 1px solid #334155; background: #020617; }
+.champ-icon-main { 
+    width: 32px; height: 32px; border-radius: 4px; border: 1px solid #334155; background: #020617; 
+    display: none; /* 기본적으로는 숨김 처리 */
+}
+.champ-icon-main.active {
+    display: block; /* 챔피언 선택 시에만 표시 */
+}
 
 /* 결과창 디자인 개선 */
 .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }

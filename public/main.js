@@ -37,7 +37,9 @@ function showAutocomplete(input) {
         li.onclick = () => {
             input.value = c.name;
             const row = input.closest('.player-row');
-            row.querySelector('.champ-icon-main').src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png`;
+            const iconMain = row.querySelector('.champ-icon-main');
+            iconMain.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png`;
+            iconMain.classList.add('active');
             listEl.innerHTML = '';
         };
         listEl.appendChild(li);
@@ -62,7 +64,7 @@ function addPlayer(team) {
     div.innerHTML = `
         <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
         <div class="input-line">
-            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/Garen.png" class="champ-icon-main">
+            <img src="" class="champ-icon-main">
             <div class="champ-input-container">
                 <input type="text" class="champ-input" placeholder="챔피언 검색" oninput="showAutocomplete(this)">
                 <ul class="autocomplete-list"></ul>

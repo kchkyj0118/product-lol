@@ -3,7 +3,7 @@ export async function onRequest(context) {
   const apiKey = context.env.GEMINI_API_KEY;
   
   // 404 에러를 잡는 마법의 주소 (v1beta)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
 
   try {
     const body = await context.request.json();

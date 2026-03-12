@@ -4,7 +4,10 @@ let selectedLane = '탑';
 let language = 'ko';
 
 const champions = [
-    {name:'가렌',id:'Garen',i:'ㄱㄹ'},{name:'갈리오',id:'Galio',i:'ㄱㄹㅇ'},{name:'갱플랭크',id:'Gangplank',i:'ㄱㅍㄹㅋ'},{name:'그라가스',id:'Gragas',i:'ㄱㄹㄱㅅ'},{name:'그레이브즈',id:'Graves',i:'ㄱㄹㅇㅂㅈ'},{name:'나르',id:'Gnar',i:'ㄴㄹ'},{name:'나서스',id:'Nasus',i:'ㄴㅅㅅ'},{name:'노틸러스',id:'Nautilus',i:'ㄴㅌㄹㅅ'},{name:'녹턴',id:'Nocturne',i:'ㄴㅌ'},{name:'누누와 윌럼프',id:'Nunu',i:'ㄴㄴㅇㅇㄹㅍ'},{name:'니달리',id:'Nidalee',i:'ㄴㄷㄹ'},{name:'다리우스',id:'Darius',i:'ㄷㄹㅇㅅ'},{name:'다이애나',id:'Diana',i:'ㄷㅇㅇㄴ'},{name:'럭스',id:'Lux',i:'ㄹㅅ'},{name:'리 신',id:'LeeSin',i:'ㄹㅅ'},{name:'리븐',id:'Riven',i:'ㄹㅂ'},{name:'마스터 이',id:'MasterYi',i:'ㅁㅅㅌㅇ'},{name:'말파이트',id:'Malphite',i:'ㅁㅍㅇㅌ'},{name:'바이',id:'Vi',i:'ㅂㅇ'},{name:'베인',id:'Vayne',i:'ㅂㅇ'},{name:'브라이어',id:'Briar',i:'ㅂㄹㅇㅇ'},{name:'비에고',id:'Viego',i:'ㅂㅇㄱ'},{name:'아리',id:'Ahri',i:'ㅇㄹ'},{name:'아칼리',id:'Akali',i:'ㅇㅋㄹ'},{name:'야스오',id:'Yasuo',i:'ㅇㅅㅇ'},{name:'요네',id:'Yone',i:'ㅇㄴ'},{name:'이즈리얼',id:'Ezreal',i:'ㅇㅈㄹㅇ'},{name:'제드',id:'Zed',i:'ㅈㄷ'},{name:'진',id:'Jhin',i:'ㅈ'},{name:'카이사',id:'KaiSa',i:'ㅋㅇㅅ'},{name:'티모',id:'Teemo',i:'ㅌㅁ'},{name:'피즈',id:'Fizz',i:'ㅍㅈ'},{name:'흐웨이',id:'Hwei',i:'ㅎㅇ'}
+    {name:'가렌',id:'Garen',i:'ㄱㄹ'},{name:'갈리오',id:'Galio',i:'ㄱㄹㅇ'},{name:'신 짜오',id:'XinZhao',i:'ㅅㅉㅇ'},
+    {name:'피즈',id:'Fizz',i:'ㅍㅈ'},{name:'니달리',id:'Nidalee',i:'ㄴㄷㄹ'},{name:'리 신',id:'LeeSin',i:'ㄹㅅ'},
+    {name:'카이사',id:'KaiSa',i:'ㅋㅇㅅ'},{name:'진',id:'Jhin',i:'ㅈ'},{name:'럭스',id:'Lux',i:'ㄹㅅ'},
+    {name:'이즈리얼',id:'Ezreal',i:'ㅇㅈㄹㅇ'},{name:'아리',id:'Ahri',i:'ㅇㄹ'},{name:'요네',id:'Yone',i:'ㅇㄴ'}
 ];
 
 function getChoseong(str) {
@@ -49,19 +52,17 @@ function handleLaneChange(selectEl) {
     const s2 = row.querySelector('.s2');
 
     if (selectEl.value === '정글') {
-        // 만약 첫 번째 스펠이 점멸이라면, 두 번째 스펠을 강타로 변경
         if (s1.value === '점멸') {
             s2.value = '강타';
             updateSpellIcon(s2);
-        } else {
-            // 그 외의 경우(점멸이 없거나 두 번째에 점멸이 있는 경우 등)
-            // 첫 번째를 강타로 바꾸고 두 번째를 점멸로 세팅 (점멸 우선 순위)
+        } else if (s2.value === '점멸') {
             s1.value = '강타';
             updateSpellIcon(s1);
-            if (s2.value !== '점멸') {
-                s2.value = '점멸';
-                updateSpellIcon(s2);
-            }
+        } else {
+            s1.value = '강타';
+            s2.value = '점멸';
+            updateSpellIcon(s1);
+            updateSpellIcon(s2);
         }
     }
 }
@@ -135,25 +136,15 @@ async function startAnalysis() {
     });
     const redTeamInfo = redTeamArr.join(", ");
 
-    let prompt = `[시스템 지침: LOL.PS 전문 통계 데이터 기반 분석 모드]
-당신은 LOL.PS의 빅데이터 분석 엔진입니다. 2026년 최신 패치 및 마스터+ 구간의 승률 데이터를 기반으로 답변하세요.
+    let prompt = `[시스템: LOL.PS 전문 분석 모드]
+- 반드시 2026년 최신 아이템(예: 피즈-황혼의 새벽)을 기반으로 추천할 것.
+- 답변 시작 시 'LOL.PS 분석 리포트'나 날짜 같은 머리말은 절대 쓰지 마세요.
+- 바로 본론(핵심 요약)부터 시작하세요.
+- 승리 전략에는 몇 레벨까지 유리하고 언제부터 불리한지 타임라인을 명시하세요.
+- [응답은 반드시 한국어로만 하세요]
 
-1. **상성 그래프 분석**: 
-   - 상대 ${selectedLane} 라이너와의 '시간대별 승률'을 분석하세요.
-   - 예: "6레벨까지는 55%의 승률로 우위에 있으나, 11레벨 이후 상성이 역전됨"과 같은 구체적인 지표 포함.
-
-2. **LOL.PS 추천 룬/템트리**:
-   - 2026년 메타의 최적화 빌드를 추천하세요.
-
-3. **단계별 승리 전략**:
-   - Lvl 1~3 주도권 설계, Lvl 6 궁극기 타이밍, 한타 포지셔닝 및 타겟팅 우선순위.
-
-[현재 게임 상황]
-내 라인: ${selectedLane}
-우리팀 조합: ${blueTeamInfo}
-상대팀 조합: ${redTeamInfo}
-
-출력은 반드시 LOL.PS 리포트 형식으로, 가독성 좋게 '카드 형태'의 요약과 '상성 주의 구간'을 명시해서 답변해줘. [응답은 반드시 한국어로만 하세요]`;
+현재 라인: ${selectedLane}
+우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
 
     try {
         const response = await fetch('/analyze', { 
@@ -172,7 +163,7 @@ async function startAnalysis() {
             } else {
                 aiText = JSON.stringify(result);
             }
-            content.innerHTML = `<div class="result-header"><h3>LOL.PS 분석 리포트</h3><button class="copy-btn" onclick="copyResult()">복사</button></div><div class="analysis-text">${aiText}</div>`;
+            content.innerHTML = `<div class="result-header"><h3>분석 결과</h3><button class="copy-btn" onclick="copyResult()">복사</button></div><div class="analysis-text">${aiText}</div>`;
         }
     } catch (e) { 
         content.innerText = "Error: " + e.message; 

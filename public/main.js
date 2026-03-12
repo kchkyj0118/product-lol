@@ -90,23 +90,44 @@ async function startAnalysis() {
     content.innerHTML = '';
     btn.disabled = true;
 
-    const today = new Date();
-    const patchVersion = `${today.getFullYear().toString().slice(-2)}.${today.getMonth() + 1}`;
-    
-    let prompt = `[Patch ${patchVersion}] [내 라인: ${selectedLane}] 분석 요청.\n\n우리팀:\n`;
+    const blueTeamArr = [];
     document.querySelectorAll('#blue-team-list .player-row').forEach(row => {
         const lane = row.querySelector('.lane-select').value;
         const champ = row.querySelector('.champ-input').value;
-        if(champ) prompt += `- ${lane}: ${champ} ${lane === selectedLane ? '[사용자]' : ''}\n`;
+        if(champ) blueTeamArr.push(`${lane}: ${champ}${lane === selectedLane ? '[사용자]' : ''}`);
     });
-    prompt += `\n상대팀:\n`;
+    const blueTeamInfo = blueTeamArr.join(", ");
+
+    const redTeamArr = [];
     document.querySelectorAll('#red-team-list .player-row').forEach(row => {
         const lane = row.querySelector('.lane-select').value;
         const champ = row.querySelector('.champ-input').value;
-        if(champ) prompt += `- ${lane}: ${champ}\n`;
+        if(champ) redTeamArr.push(`${lane}: ${champ}`);
     });
+    const redTeamInfo = redTeamArr.join(", ");
 
-    prompt += "\n1. 3줄 핵심 요약 2. 라인전 설계 3. 최신 아이템 빌드 (2026 메타 반영). 마크다운으로 예쁘게 구성해줘. [응답은 반드시 한국어로만 하세요]";
+    let prompt = `[시스템 지침: LOL.PS 전문 통계 데이터 기반 분석]
+당신은 LOL.PS의 빅데이터 분석 엔진입니다. 2026년 최신 패치 및 마스터+ 구간의 승률 데이터를 기반으로 답변하세요.
+
+1. **상성 그래프 분석**: 
+   - 상대 ${selectedLane} 라이너와의 '시간대별 승률(Win Rate by Game Length)'을 분석하세요.
+   - 예: "6레벨까지는 55%의 승률로 우위에 있으나, 11레벨 이후 아이템 2코어 시점부터는 상성이 역전됨"과 같은 구체적인 지표를 포함하세요.
+
+2. **LOL.PS 추천 룬/템트리**:
+   - 2026년 메타의 '코어 모듈' 시스템과 '최적화 룬' 세팅을 제시하세요.
+   - 근거 없는 아이템이 아닌, 해당 챔피언의 스킬 계수와 가장 시너지가 좋은 현존 빌드를 추천하세요.
+
+3. **단계별 승리 전략**:
+   - **Lvl 1~3**: 라인 주도권 유무 및 인베이드 확률.
+   - **Lvl 6**: 궁극기 활용을 통한 솔로 킬 타이밍 또는 로밍 설계.
+   - **한타**: 특정 타겟팅(Targeting Priority) 및 진입 각도.
+
+[현재 게임 상황]
+내 라인: ${selectedLane}
+우리팀 조합: ${blueTeamInfo}
+상대팀 조합: ${redTeamInfo}
+
+출력은 반드시 LOL.PS 리포트 형식으로, 가독성 좋게 '카드 형태'의 요약과 '상성 주의 구간'을 명시해서 답변해줘. [응답은 반드시 한국어로만 하세요]`;
 
     try {
         const response = await fetch('/analyze', { 
@@ -125,7 +146,7 @@ async function startAnalysis() {
             } else {
                 aiText = JSON.stringify(result);
             }
-            content.innerHTML = `<div class="result-header"><h3>분석 결과 (Patch ${patchVersion})</h3><button class="copy-btn" onclick="copyResult()">복사</button></div><div class="analysis-text">${aiText}</div>`;
+            content.innerHTML = `<div class="result-header"><h3>LOL.PS 분석 리포트</h3><button class="copy-btn" onclick="copyResult()">복사</button></div><div class="analysis-text">${aiText}</div>`;
         }
     } catch (e) { 
         content.innerText = "Error: " + e.message; 

@@ -5,6 +5,15 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/analyze",
+        "function": "analyze"
+      }
     ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }

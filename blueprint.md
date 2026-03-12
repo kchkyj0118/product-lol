@@ -24,3 +24,4 @@
 3. [x] 프론트엔드 UI/UX 개발
 4. [ ] 챔피언 자동 완성 기능 추가 (향후)
 5. [ ] 과거 매치 데이터 연동 (향후)
+\n- Last deployment trigger: Thu Mar 12 02:36:36 AM UTC 2026

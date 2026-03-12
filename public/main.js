@@ -179,7 +179,7 @@ async function startAnalysis() {
                     상세 분석 및 템트리 보기 ↓
                 </button>
 
-                <div id="analysis-details" style="display: none; margin-top: 15px;">
+                <div id="analysis-details" class="hidden-details">
                     <div class="analysis-text">${details.replace(/\n/g, '<br>')}</div>
                 </div>
             `;

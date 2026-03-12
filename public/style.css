@@ -43,13 +43,38 @@ h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; 
 .result-area { margin-top: 20px; background: var(--card); padding: 20px; border-radius: 12px; line-height: 1.6; border-top: 4px solid var(--blue); }
 
 /* 핵심 요약 카드 */
-.summary-card { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left; }
+.summary-card {
+    background: #1e293b;
+    border-left: 4px solid #3b82f6;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: left;
+}
 .summary-card h4 { margin: 0 0 10px 0; color: var(--blue); font-size: 1.1rem; }
 .summary-text { font-size: 0.95rem; font-weight: 500; }
 
 /* 상세 보기 버튼 */
-.details-btn { width: 100%; padding: 10px; background: #334155; border: none; border-radius: 6px; color: white; cursor: pointer; transition: background 0.2s; }
+.details-btn {
+    width: 100%;
+    padding: 12px;
+    background: #334155;
+    color: #f1f5f9;
+    border: 1px dashed #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
 .details-btn:hover { background: #475569; }
+
+.hidden-details {
+    display: none; /* 기본적으로 숨김 */
+    margin-top: 15px;
+    padding: 15px;
+    background: #0f172a;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+}
 
 .analysis-text { white-space: pre-wrap; text-align: left; margin-top: 15px; font-size: 0.9rem; color: #cbd5e1; }
 .hidden { display: none; }

@@ -124,9 +124,17 @@
     };
 
     async function runAnalysis() {
+        // 1. 보안을 위해 환경 변수를 직접 코드에 적지 않고, 
+        // Cloudflare Pages에서 제공하는 환경 변수를 호출하도록 세팅해야 합니다.
+        
+        // 현재 방식(브라우저 직접 호출 시):
+        // 이미지에 등록된 실제 키 값을 아래 따옴표 안에 넣으세요.
+        const GEMINI_KEY = "AIzaSyD0uy5jfR7XYy..."; // 이미지의 실제 값 복사
+        const RIOT_KEY = "RGAPI-1fb3d879-0f3...";  // 이미지의 실제 값 복사
+
         const res = document.getElementById('result-display');
-        res.style.display = "block";
-        res.innerText = "🌀 프로 코치가 데이터 대조 중입니다...";
+        res.style.display = 'block';
+        res.innerText = "🌀 라이엇 데이터를 확인하고 AI 분석을 시작합니다...";
 
         const blueData = Array.from(document.querySelectorAll('.blue-side .lane-row')).map(row => {
             const name = row.querySelector('.blue-n').value;
@@ -148,16 +156,37 @@
             return;
         }
 
+        const prompt = `당신은 롤 프로팀 헤드 코치입니다. 다음 상황을 아주 전문적으로 분석하세요.
+        - 아군 조합: ${blueData}
+        - 적군 조합: ${redData}
+        
+        [요청 분석 리포트]
+        1. 팀 조합 상성 요약: 어느 쪽이 한타 기여도가 더 높은가?
+        2. 타겟 우선순위: 한타 발생 시 내가 무조건 먼저 잡아야 할 적 핵심 챔피언 2명.
+        3. 승리 전략: 우리 팀이 한타에서 이기기 위한 진입 시점과 포지셔닝.
+        4. 주의 사항: 적의 위협적인 스킬 콤보와 대처법.
+        
+        *전문적인 코칭 용어를 사용하고, JSON이나 불필요한 기호(*, #) 없이 깔끔한 텍스트로만 상세히 답변하세요.`;
+
         try {
-            const response = await fetch('/analyze', {
+            // 재미나이 분석 호출
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ myTeam: blueData, opTeam: redData })
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }]
+                })
             });
+
             const data = await response.json();
-            res.innerText = data.text;
+            if (data.error) throw new Error(data.error.message);
+            
+            const text = data.candidates[0].content.parts[0].text;
+            res.innerText = text.replace(/\{[\s\S]*?\}|\[[\s\S]*?\]/g, '').replace(/[\*#]/g, '').trim();
         } catch (e) {
-            res.innerText = "분석 중 오류가 발생했습니다. 서버 설정을 확인해주세요.";
+            res.innerText = "❌ 분석 중 오류 발생: " + e.message;
         }
     }
 </script>

@@ -5,7 +5,7 @@ const spellInfo = {
 };
 const lanes = ['탑', '정글', '미드', '원딜', '서포터'];
 let selectedLane = '탑';
-let language = 'ko'; // 기본 언어: 한국어
+let language = 'ko';
 
 function selectMyLane(lane, btn) {
     selectedLane = lane;
@@ -63,13 +63,17 @@ async function startAnalysis() {
     btn.disabled = true;
 
     const today = new Date();
-    // 2026년이면 패치 버전 앞자리가 26이어야 함을 명시
-    const patchVersion = `26.${today.getMonth() + 1}`; 
-    const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    
+    // [자동 계산 로직] 연도의 마지막 두 자리를 패치 버전 앞자리로 사용 (2026 -> 26)
+    const patchMajor = year.toString().slice(-2);
+    const patchVersion = `${patchMajor}.${month}`; 
+    const dateString = `${year}-${month}-${today.getDate()}`;
 
     let prompt = `[시스템 설정]
 - 현재 날짜: ${dateString}
-- 현재 시즌: Season 16 (Patch ${patchVersion})
+- 현재 패치 버전: Patch ${patchVersion}
 - 언어: ${language === 'ko' ? '한국어' : 'English'}
 - 내 라인: ${selectedLane}
 
@@ -88,9 +92,9 @@ async function startAnalysis() {
     });
 
     prompt += `\n분석 지침:
-1. 반드시 Patch ${patchVersion} 기준으로 분석하라. (절대 16.x 등 잘못된 버전을 언급하지 말 것)
-2. 3줄 요약 카드를 최상단에 배치하라.
-3. ${selectedLane} 라이너인 사용자에게 최적화된 최신 2026 메타 빌드를 추천하라. [응답은 반드시 선택된 언어(${language})로만 하세요]`;
+1. 반드시 Patch ${patchVersion} 메타를 기반으로 분석하라.
+2. 3줄 핵심 요약을 최상단에 배치하라.
+3. 2026년 이후의 최신 아이템 빌드 체계를 반영하여 추천하라. [응답은 반드시 선택된 언어(${language})로만 하세요]`;
 
     try {
         const response = await fetch('/analyze', { 

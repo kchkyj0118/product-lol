@@ -10,9 +10,9 @@
 
 ## 기술 스택
 - **Frontend**: Vanilla JS, Modern CSS (Baseline), HTML5
-- **Backend**: Firebase Functions (Node.js)
+- **Backend**: Cloudflare Pages Functions (Edge)
 - **AI API**: Google Gemini API
-- **Hosting**: Firebase Hosting
+- **Hosting**: Cloudflare Pages
 
 ## 디자인 가이드
 - **색상**: LoL 공식 테마(Gold & Dark Blue)를 사용하여 몰입감을 높였습니다.

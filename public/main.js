@@ -10,58 +10,50 @@ const getImg = {
     champ: (id) => `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${id}.png`
 };
 
-// --- [신규] 로컬 캐싱 시스템 ---
-const getCachedResult = (key) => {
-    const cached = localStorage.getItem(key);
-    if (cached) {
-        const item = JSON.parse(cached);
-        const now = new Date();
-        if (now.getTime() < item.expiry) return item.value;
-        localStorage.removeItem(key);
+// 1. 결과 캐싱 (localStorage 활용, 24시간 유지)
+const cacheAnalysis = (key, value) => {
+    const data = { value, timestamp: Date.now() };
+    localStorage.setItem(`lol_analysis_${key}`, JSON.stringify(data));
+};
+
+const getCachedAnalysis = (key) => {
+    const cached = localStorage.getItem(`lol_analysis_${key}`);
+    if (!cached) return null;
+    const { value, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > 1000 * 60 * 60 * 24) {
+        localStorage.removeItem(`lol_analysis_${key}`);
+        return null;
     }
-    return null;
+    return value;
 };
 
-const setCachedResult = (key, value) => {
-    const now = new Date();
-    const item = {
-        value: value,
-        expiry: now.getTime() + (24 * 60 * 60 * 1000), // 24시간 유지
-    };
-    localStorage.setItem(key, JSON.stringify(item));
-};
+// 2. 스마트 재시도 로직 (429 에러 대응)
+async function fetchWithRetry(prompt, maxRetries = 2) {
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            const response = await fetch('/analyze', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt }) 
+            });
 
-// --- [신규] 지수 백오프 기반 재시도 함수 ---
-async function fetchWithRetry(prompt, retries = 3, backoff = 2000) {
-    try {
-        const response = await fetch('/analyze', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt }) 
-        });
-
-        if (response.status === 429) {
-            if (retries > 0) {
-                console.log(`API 제한 발생. ${backoff/1000}초 후 재시도...`);
-                await new Promise(resolve => setTimeout(resolve, backoff));
-                return fetchWithRetry(prompt, retries - 1, backoff * 2);
-            } else {
-                throw new Error("API 사용량 제한이 지속되고 있습니다. 잠시 후 다시 시도해 주세요.");
+            if (response.status === 429 && i < maxRetries) {
+                const waitTime = (i + 1) * 3000;
+                console.warn(`제한 발생. ${waitTime/1000}초 후 재시도...`);
+                await new Promise(res => setTimeout(res, waitTime));
+                continue;
             }
-        }
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "분석 요청에 실패했습니다.");
-        }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "분석 요청에 실패했습니다.");
+            }
 
-        return await response.json();
-    } catch (error) {
-        if (retries > 0 && (error.message.includes('429') || error.message.includes('fetch'))) {
-            await new Promise(resolve => setTimeout(resolve, backoff));
-            return fetchWithRetry(prompt, retries - 1, backoff * 2);
+            return await response.json();
+        } catch (error) {
+            if (i === maxRetries) throw error;
+            await new Promise(res => setTimeout(res, 2000));
         }
-        throw error;
     }
 }
 
@@ -205,9 +197,9 @@ async function startAnalysis() {
         return;
     }
 
-    // 캐시 확인
-    const cacheKey = `analysis_${selectedLane}_${JSON.stringify(blueTeam)}_${JSON.stringify(redTeam)}`;
-    const cached = getCachedResult(cacheKey);
+    // 캐시 확인용 고유 키 생성
+    const cacheKey = btoa(encodeURIComponent(`${selectedLane}_${JSON.stringify(blueTeam)}_${JSON.stringify(redTeam)}`));
+    const cached = getCachedAnalysis(cacheKey);
     if (cached) {
         resultArea.classList.remove('hidden');
         content.innerHTML = cached;
@@ -220,26 +212,18 @@ async function startAnalysis() {
     content.innerHTML = '';
     btn.disabled = true;
 
-    // 프롬프트 최적화 (데이터 위주)
-    let prompt = `
-        [DATA]
-        User Lane: ${selectedLane}
-        Blue Team: ${JSON.stringify(blueTeam)}
-        Red Team: ${JSON.stringify(redTeam)}
-        
-        [RULE]
-        1. 2026 Season 메타 반영.
-        2. 리쉬(Leash) 언급 금지.
-        3. 타임라인별 강세(레벨/분) 1줄 요약.
-        4. 첫 코어템 시점 상성 변화 1줄 요약.
-        5. 전체 승리 플랜 3줄 요약.
-        6. '---' 구분자 사용하여 요약과 상세내용 분리.
-        7. 한국어로 짧고 명확하게 답변해.
-    `;
-
-    if (selectedLane === '정글') {
-        prompt += `\n8. 정글러 전용 JSON 동선 포함: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]`;
-    }
+    // 프롬프트 경량화 (토큰 절약 및 속도 향상)
+    const prompt = `
+[ROLE] 롤 전문 코치
+[DATA] Blue:${JSON.stringify(blueTeam)} / Red:${JSON.stringify(redTeam)}
+[ORDER] 
+1. 10초 내 읽게 요약.
+2. 리쉬(Leash) 언급 금지.
+3. 시간/레벨별 유리한 시점 명시.
+4. '---' 구분자로 요약과 상세 분리.
+5. 한국어로 짧고 명확하게 답변.
+${selectedLane === '정글' ? '6. 정글 전용 JSON 동선 포함: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "...", "desc": "..."}], "pathPoints": [{"x": 0, "y": 0}]}]' : ''}
+    `.trim();
 
     try {
         const result = await fetchWithRetry(prompt);
@@ -277,7 +261,7 @@ async function startAnalysis() {
         `;
 
         content.innerHTML = finalHtml;
-        setCachedResult(cacheKey, finalHtml); // 결과 저장
+        cacheAnalysis(cacheKey, finalHtml); // 결과 저장
 
         if (jungleDataMatch && selectedLane === '정글') {
             try {
@@ -288,7 +272,11 @@ async function startAnalysis() {
             }
         }
     } catch (e) { 
-        content.innerText = "Error: " + e.message; 
+        content.innerHTML = `
+            <div class="error-msg">
+                현재 분석 요청이 너무 많습니다. <br>
+                <button onclick="startAnalysis()" class="retry-btn" style="margin-top:10px; padding:8px 16px; background:#3b82f6; border:none; border-radius:6px; color:white; cursor:pointer;">다시 시도하기</button>
+            </div>`;
     } finally { 
         loading.classList.add('hidden'); 
         btn.disabled = false;

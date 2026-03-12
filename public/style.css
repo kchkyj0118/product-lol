@@ -3,7 +3,10 @@ body { background: var(--dark); color: #f1f5f9; font-family: 'Pretendard', sans-
 .container { max-width: 900px; width: 100%; }
 
 /* 헤더 & 모드 선택 */
-h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; }
+h1 { text-align: center; color: var(--blue); font-size: 1.5rem; margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.version { font-size: 12px; vertical-align: middle; color: #64748b; }
+.lang-toggle { background: var(--card); border: 1px solid #475569; color: #f1f5f9; padding: 4px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+
 .my-lane-selector { background: var(--card); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
 .lane-btns { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
 .lane-opt { padding: 6px 12px; font-size: 13px; border: 1px solid #475569; background: #0f172a; color: #94a3b8; border-radius: 15px; cursor: pointer; }

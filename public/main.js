@@ -5,11 +5,17 @@ const spellInfo = {
 };
 const lanes = ['탑', '정글', '미드', '원딜', '서포터'];
 let selectedLane = '탑';
+let language = 'ko'; // 기본 언어: 한국어
 
 function selectMyLane(lane, btn) {
     selectedLane = lane;
     document.querySelectorAll('.lane-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+}
+
+function toggleLanguage() {
+    language = language === 'ko' ? 'en' : 'ko';
+    document.getElementById('lang-status').innerText = language === 'ko' ? 'KR' : 'EN';
 }
 
 function getSpellImg(spellName) {
@@ -57,8 +63,18 @@ async function startAnalysis() {
     btn.disabled = true;
 
     const today = new Date();
+    // 2026년이면 패치 버전 앞자리가 26이어야 함을 명시
+    const patchVersion = `26.${today.getMonth() + 1}`; 
     const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-    let prompt = `[기준일: ${dateString}] [내 라인: ${selectedLane}] 최신 메타 분석.\n\n`;
+
+    let prompt = `[시스템 설정]
+- 현재 날짜: ${dateString}
+- 현재 시즌: Season 16 (Patch ${patchVersion})
+- 언어: ${language === 'ko' ? '한국어' : 'English'}
+- 내 라인: ${selectedLane}
+
+우리팀 조합:
+`;
     
     ['blue', 'red'].forEach(team => {
         prompt += `[${team === 'blue' ? '우리팀' : '상대팀'}]\n`;
@@ -67,11 +83,14 @@ async function startAnalysis() {
             const champ = row.querySelector('.champ-input').value;
             const s1 = row.querySelector('.s1').value;
             const s2 = row.querySelector('.s2').value;
-            if(champ) prompt += `- ${lane}: ${champ} (${s1}/${s2}) ${lane === selectedLane && team === 'blue' ? '[사용자]' : ''}\n`;
+            if(champ) prompt += `- ${lane}: ${champ} (${s1}/${s2}) ${lane === selectedLane && team === 'blue' ? '[USER]' : ''}\n`;
         });
     });
 
-    prompt += "\n출력형식: **1. 핵심 요약** (카드형 요약) / **2. 라인전/한타 전략** / **3. 최신 아이템 빌드**. 마크다운 기호를 적절히 섞어서 예쁘게 답변해줘. [응답은 반드시 한국어로만 하세요]";
+    prompt += `\n분석 지침:
+1. 반드시 Patch ${patchVersion} 기준으로 분석하라. (절대 16.x 등 잘못된 버전을 언급하지 말 것)
+2. 3줄 요약 카드를 최상단에 배치하라.
+3. ${selectedLane} 라이너인 사용자에게 최적화된 최신 2026 메타 빌드를 추천하라. [응답은 반드시 선택된 언어(${language})로만 하세요]`;
 
     try {
         const response = await fetch('/analyze', { 
@@ -82,7 +101,7 @@ async function startAnalysis() {
         const result = await response.json();
         
         if (result.error) {
-            content.innerText = "오류: " + result.error;
+            content.innerText = "Error: " + result.error;
         } else {
             let aiText = "";
             if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
@@ -93,14 +112,14 @@ async function startAnalysis() {
             
             content.innerHTML = `
                 <div class="result-header">
-                    <h3>분석 결과</h3>
+                    <h3>분석 결과 (Patch ${patchVersion})</h3>
                     <button class="copy-btn" onclick="copyResult()">결과 복사</button>
                 </div>
                 <div class="analysis-text">${aiText}</div>
             `;
         }
     } catch (e) { 
-        content.innerText = "오류: " + e.message; 
+        content.innerText = "Error: " + e.message; 
     } finally { 
         loading.classList.add('hidden'); 
         btn.disabled = false;
@@ -109,7 +128,7 @@ async function startAnalysis() {
 
 function copyResult() {
     const text = document.querySelector('.analysis-text').innerText;
-    navigator.clipboard.writeText(text).then(() => alert('분석 결과가 복사되었습니다!'));
+    navigator.clipboard.writeText(text).then(() => alert(language === 'ko' ? '복사되었습니다!' : 'Copied!'));
 }
 
 // 초기 기본 생성

@@ -157,7 +157,7 @@ async function startAnalysis() {
 - 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
 - 2단계: 그 아래에 상세 분석 및 템트리를 작성하세요.
 - 승리 전략에는 몇 레벨까지 유리하고 언제부터 불리한지 타임라인을 명시하세요.
-- 만약 사용자 라인이 '정글'이라면, JSON 형식으로 동선 데이터를 포함하세요: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "레드", "desc": "..."}], "pathPoints": [{"x": 100, "y": 100}]}]
+- 만약 사용자 라인이 '정글'이라면, "상대 정글과의 상성을 비교하여, 카정 위험이 낮고 갱킹 호응이 좋은 라인으로의 동선을 짜줘."라는 지침을 추가하여 JSON 형식으로 동선 데이터를 포함하세요: [JUNGLE_DATA: {"matchupTip": "...", "steps": [{"target": "레드", "desc": "..."}], "pathPoints": [{"x": 100, "y": 100}]}]
 - [응답은 반드시 한국어로만 하세요]
 
 현재 라인: ${selectedLane}
@@ -181,7 +181,6 @@ async function startAnalysis() {
                 fullText = JSON.stringify(result);
             }
 
-            // 정글 데이터 추출 시도
             const jungleDataMatch = fullText.match(/\[JUNGLE_DATA: (.*?)\]/);
             let cleanText = fullText.replace(/\[JUNGLE_DATA: .*?\]/, '');
 
@@ -250,33 +249,24 @@ function renderJungleStrategy(strategyData) {
         </div>
     `;
     analysisSection.insertAdjacentHTML('beforeend', jungleHtml);
-    setTimeout(() => drawPathOnCanvas(strategyData.pathPoints), 100);
+    setTimeout(() => drawJungleStrategy(strategyData.pathPoints), 100);
 }
 
-function drawPathOnCanvas(points) {
+function drawJungleStrategy(points) {
     const canvas = document.getElementById('jungle-path-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#f59e0b';
-    ctx.fillStyle = '#f59e0b';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([5, 5]);
+    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+    
+    ctx.strokeStyle = '#fbbf24'; 
+    ctx.lineWidth = 4;
+    ctx.lineJoin = 'round';
+    ctx.setLineDash([5, 5]); 
+    
+    ctx.beginPath();
     points.forEach((p, i) => {
-        if (i === 0) { ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-        else {
-            ctx.lineTo(p.x, p.y);
-            if (i === points.length - 1) {
-                const prev = points[i-1];
-                const angle = Math.atan2(p.y - prev.y, p.x - prev.x);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x - 10 * Math.cos(angle - Math.PI / 6), p.y - 10 * Math.sin(angle - Math.PI / 6));
-                ctx.lineTo(p.x - 10 * Math.cos(angle + Math.PI / 6), p.y - 10 * Math.sin(angle + Math.PI / 6));
-                ctx.closePath(); ctx.fill();
-            }
-        }
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
     });
     ctx.stroke();
 }

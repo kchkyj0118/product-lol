@@ -139,7 +139,8 @@ async function startAnalysis() {
     let prompt = `[시스템: LOL.PS 전문 분석 모드]
 - 반드시 2026년 최신 아이템(예: 피즈-황혼의 새벽)을 기반으로 추천할 것.
 - 답변 시작 시 'LOL.PS 분석 리포트'나 날짜 같은 머리말은 절대 쓰지 마세요.
-- 바로 본론(핵심 요약)부터 시작하세요.
+- 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
+- 2단계: 그 아래에 상세 분석 및 템트리를 작성하세요.
 - 승리 전략에는 몇 레벨까지 유리하고 언제부터 불리한지 타임라인을 명시하세요.
 - [응답은 반드시 한국어로만 하세요]
 
@@ -157,19 +158,49 @@ async function startAnalysis() {
         if (result.error) {
             content.innerText = "Error: " + result.error;
         } else {
-            let aiText = "";
+            let fullText = "";
             if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
-                aiText = result.candidates[0].content.parts[0].text;
+                fullText = result.candidates[0].content.parts[0].text;
             } else {
-                aiText = JSON.stringify(result);
+                fullText = JSON.stringify(result);
             }
-            content.innerHTML = `<div class="result-header"><h3>분석 결과</h3><button class="copy-btn" onclick="copyResult()">복사</button></div><div class="analysis-text">${aiText}</div>`;
+
+            const sections = fullText.split('---'); 
+            const summary = sections[0] || "요약 데이터를 불러오지 못했습니다.";
+            const details = sections[1] || "상세 분석 내용이 없습니다.";
+
+            content.innerHTML = `
+                <div class="summary-card">
+                    <h4>⚡ 핵심 요약</h4>
+                    <div class="summary-text">${summary.replace(/\n/g, '<br>')}</div>
+                </div>
+                
+                <button id="toggle-details" class="details-btn" onclick="toggleDetails()">
+                    상세 분석 및 템트리 보기 ↓
+                </button>
+
+                <div id="analysis-details" style="display: none; margin-top: 15px;">
+                    <div class="analysis-text">${details.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
         }
     } catch (e) { 
         content.innerText = "Error: " + e.message; 
     } finally { 
         loading.classList.add('hidden'); 
         btn.disabled = false;
+    }
+}
+
+function toggleDetails() {
+    const detailsDiv = document.getElementById('analysis-details');
+    const btn = document.getElementById('toggle-details');
+    if (detailsDiv.style.display === 'block') {
+        detailsDiv.style.display = 'none';
+        btn.innerText = '상세 분석 및 템트리 보기 ↓';
+    } else {
+        detailsDiv.style.display = 'block';
+        btn.innerText = '상세 내용 접기 ↑';
     }
 }
 

@@ -2,191 +2,122 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOL AI PRO COACH</title>
     <style>
         :root { --gold: #c89b3c; --blue: #3d8bff; --red: #ff4d4d; --dark: #0f1217; --panel: #1e232a; --input: #2a3039; }
         body { font-family: 'Pretendard', sans-serif; background: var(--dark); color: #ececec; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: var(--gold); font-size: 2.2rem; margin-bottom: 5px; }
-
         .matchup-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; margin-bottom: 20px; }
-        .team-panel { background: var(--panel); border-radius: 12px; padding: 20px; border-top: 5px solid #ccc; min-height: 250px; }
-        .blue-side { border-color: var(--blue); } 
-        .red-side { border-color: var(--red); }
-        
-        .team-label { font-weight: bold; text-align: center; margin-bottom: 20px; font-size: 1.2rem; letter-spacing: 1px; }
-        .blue-side .team-label { color: var(--blue); }
-        .red-side .team-label { color: var(--red); }
-
-        /* 레이아웃: 포지션 선택 | 챔피언 검색 | 스펠1 | 스펠2 | 삭제 */
-        .lane-row { position: relative; display: grid; grid-template-columns: 100px 1fr 85px 85px 40px; gap: 8px; margin-bottom: 15px; align-items: center; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        input, select { background: var(--input); color: white; border: 1px solid #3c4450; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; font-size: 0.9rem; }
-        input:focus { border-color: var(--gold); }
-        
-        /* 자동완성 목록 */
+        .team-panel { background: var(--panel); border-radius: 12px; padding: 20px; border-top: 5px solid #ccc; }
+        .blue-side { border-color: var(--blue); } .red-side { border-color: var(--red); }
+        .lane-row { position: relative; display: grid; grid-template-columns: 100px 1fr 85px 85px 40px; gap: 8px; margin-bottom: 15px; align-items: center; }
+        input, select { background: var(--input); color: white; border: 1px solid #3c4450; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         .search-results { position: absolute; top: 100%; left: 108px; right: 186px; background: #222; border: 1px solid var(--gold); z-index: 100; border-radius: 6px; max-height: 150px; overflow-y: auto; display: none; }
         .search-results div { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; }
         .search-results div:hover { background: var(--gold); color: black; }
-
-        .del-btn { background: #3d1a1a; color: #ff4d4d; border: 1px solid #632a2a; border-radius: 6px; cursor: pointer; height: 100%; font-weight: bold; transition: 0.2s; }
-        .del-btn:hover { background: #ff4d4d; color: white; }
-        
-        .add-btn { background: none; border: 1px dashed #555; color: #888; padding: 12px; cursor: pointer; width: 100%; border-radius: 8px; margin-top: 10px; transition: 0.3s; }
-        .add-btn:hover { border-color: var(--gold); color: var(--gold); }
-        
-        .analyze-btn { background: var(--gold); color: black; font-weight: bold; font-size: 1.2rem; padding: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; }
-        .analyze-btn:hover { background: #e1ad46; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(200, 155, 60, 0.3); }
-
-        #result { margin-top: 30px; padding: 25px; background: #161a20; border-radius: 12px; border-left: 6px solid var(--gold); white-space: pre-wrap; display: none; line-height: 1.8; text-align: left; }
-        
-        footer { text-align: center; padding: 40px 20px; font-size: 0.85rem; color: #666; }
+        .del-btn { background: #3d1a1a; color: #ff4d4d; border: 1px solid #632a2a; border-radius: 6px; cursor: pointer; font-weight: bold; height: 38px; }
+        .add-btn { background: none; border: 1px dashed #555; color: #888; padding: 12px; cursor: pointer; width: 100%; border-radius: 8px; margin-top: 10px; }
+        .analyze-btn { background: var(--gold); color: black; font-weight: bold; font-size: 1.2rem; padding: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; }
+        #result { margin-top: 30px; padding: 25px; background: #161a20; border-radius: 12px; border-left: 6px solid var(--gold); white-space: pre-wrap; display: none; line-height: 1.6; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <div class="header">
-        <h1>LOL AI PRO COACH</h1>
-        <p>포지션별 정밀 상성 분석 및 맞춤형 한타 전략</p>
-    </div>
-
+    <h1 style="text-align:center; color:var(--gold);">LOL AI PRO COACH</h1>
     <div class="matchup-grid">
         <div class="team-panel blue-side">
-            <div class="team-label">BLUE TEAM (우리팀)</div>
+            <h3 style="color:var(--blue); text-align:center;">BLUE TEAM</h3>
             <div id="blue-list"></div>
-            <button class="add-btn" onclick="addChamp('blue')">+ 아군 포지션 추가</button>
+            <button class="add-btn" onclick="addChamp('blue')">+ 아군 추가</button>
         </div>
-
-        <div style="display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:bold; font-size:1.5rem;">VS</div>
-
+        <div style="display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--gold); font-size:2rem;">VS</div>
         <div class="team-panel red-side">
-            <div class="team-label">RED TEAM (상대팀)</div>
+            <h3 style="color:var(--red); text-align:center;">RED TEAM</h3>
             <div id="red-list"></div>
-            <button class="add-btn" onclick="addChamp('red')">+ 적군 포지션 추가</button>
+            <button class="add-btn" onclick="addChamp('red')">+ 적군 추가</button>
         </div>
     </div>
-
-    <button class="analyze-btn" onclick="runAnalysis()">프로급 한타 분석 시작</button>
+    <button class="analyze-btn" onclick="runAnalysis()">프로급 전략 분석 시작</button>
     <div id="result"></div>
 </div>
 
-<footer>
-    <p>© 2026 lol-coaches.com | All Rights Reserved.</p>
-</footer>
-
 <script>
-    const CHAMPIONS = ["가렌", "갈리오", "강구", "갱플랭크", "그라가스", "그레이브즈", "나르", "나미", "나서스", "노틸러스", "녹턴", "누누와 월럼프", "니달리", "니코", "닐라", "다리우스", "다이애나", "드레이븐", "라이즈", "라칸", "람머스", "럭스", "럼블", "레나타 글라스크", "레넥톤", "레오나", "렉사이", "렐", "렌가", "루시안", "루루", "르블랑", "리 신", "리븐", "리산드라", "릴리아", "마스터 이", "마오카이", "말자하", "말파이트", "모데카이저", "모르가나", "문도 박사", "미스 포츈", "밀리오", "바드", "바루스", "바이", "베이가", "베인", "벨코즈", "벨베스", "볼리베어", "브라이어", "브랜드", "브라움", "블라디미르", "블리츠크랭크", "비에고", "빅토르", "뽀삐", "사미라", "사이온", "사일러스", "샤코", "세나", "세라핀", "세주아니", "세트", "소나", "소라카", "쉔", "쉬바나", "스웨인", "스카너", "스몰더", "시비르", "신 짜오", "신드라", "신지드", "쓰레쉬", "아리", "아무무", "아우렐리온 솔", "아이번", "아지르", "아칼리", "아크샨", "아트록스", "아펠리오스", "알리스타", "애니", "애니비아", "애쉬", "야스오", "에코", "엘리스", "오공", "오른", "오리아나", "올라프", "요네", "요릭", "우디르", "우르곳", "워윅", "유미", "이렐리아", "이베르", "이벨린", "이즈리얼", "일라오이", "자르반 4세", "자야", "자크", "잔나", "잭스", "제드", "제라스", "제이스", "제리", "조이", "직스", "진", "질리언", "징크스", "초가스", "카르마", "카밀", "카사딘", "카서스", "카시오페아", "카이사", "카직스", "카타리나", "칼리스타", "케넨", "케일", "케인", "케이틀린", "코그모", "코르키", "퀸", "클레드", "키아나", "킨드레드", "타릭", "탈론", "탈리야", "탐 켄치", "트런들", "트리스타나", "트린다미어", "트위스티드 페이트", "트위치", "티모", "파이크", "판테온", "피들스틱", "피오라", "피즈", "하이머딩거", "헤카림", "흐웨이"];
+    const CHAMPIONS = ["가렌", "갈리오", "갱플랭크", "그라가스", "그레이브즈", "나르", "나미", "나서스", "노틸러스", "녹턴", "다리우스", "다이애나", "드레이븐", "라이즈", "라칸", "람머스", "럭스", "럼블", "레넥톤", "레오나", "렉사이", "렐", "렌가", "루시안", "루루", "르블랑", "리 신", "리븐", "리산드라", "릴리아", "마스터 이", "마오카이", "말자하", "말파이트", "모데카이저", "모르가나", "문도 박사", "미스 포츈", "밀리오", "바드", "바루스", "바이", "베이가", "베인", "벨코즈", "벨베스", "볼리베어", "브라이어", "브랜드", "브라움", "블라디미르", "블리츠크랭크", "비에고", "빅토르", "뽀삐", "사미라", "사이온", "사일러스", "샤코", "세나", "세라핀", "세주아니", "세트", "소나", "소라카", "쉔", "쉬바나", "스웨인", "스카너", "스몰더", "시비르", "신 짜오", "신드라", "신지드", "쓰레쉬", "아리", "아무무", "아우렐리온 솔", "아이번", "아지르", "아칼리", "아크샨", "아트록스", "아펠리오스", "알리스타", "애니", "애니비아", "애쉬", "야스오", "에코", "엘리스", "오공", "오른", "오리아나", "올라프", "요네", "요릭", "우디르", "우르곳", "워윅", "유미", "이렐리아", "이벨린", "이즈리얼", "일라오이", "자르반 4세", "자야", "자크", "잔나", "잭스", "제드", "제라스", "제이스", "제리", "조이", "직스", "진", "질리언", "징크스", "초가스", "카르마", "카밀", "카사딘", "카서스", "카시오페아", "카이사", "카직스", "카타리나", "칼리스타", "케넨", "케일", "케인", "케이틀린", "코그모", "코르키", "퀸", "클레드", "키아나", "킨드레드", "타릭", "탈론", "탈리야", "탐 켄치", "트런들", "트리스타나", "트린다미어", "트위스티드 페이트", "트위치", "티모", "파이크", "판테온", "피들스틱", "피오라", "피즈", "하이머딩거", "헤카림", "흐웨이"];
     const lanes = ["TOP", "JUNGLE", "MID", "ADC", "SUP"];
     const spells = ["점멸", "강타", "점화", "텔포", "탈진", "유체화", "정화", "회복"];
+    
+    window.onload = () => { addChamp('blue'); addChamp('red'); };
 
     function addChamp(side) {
         const list = document.getElementById(side + '-list');
         const count = list.children.length;
-        if (count >= 5) return;
-        
+        if(count >= 5) return;
         const row = document.createElement('div');
         row.className = 'lane-row';
         row.innerHTML = `
-            <select class="p-pos">
-                ${lanes.map((l, i) => `<option ${i===count?'selected':''}>${l}</option>`).join('')}
+            <select class="pos-sel" onchange="checkJungle(this)">
+                ${lanes.map((l, i) => `<option value="${l}" ${i===count?'selected':''}>${l}</option>`).join('')}
             </select>
             <div style="position:relative;">
-                <input type="text" class="p-name" placeholder="챔피언 명" oninput="showAuto(this)">
+                <input type="text" class="champ-n" placeholder="챔피언 입력" oninput="handleSearch(this)">
                 <div class="search-results"></div>
             </div>
-            <select class="p-s1">
-                ${spells.map(s => `<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}
-            </select>
-            <select class="p-s2">
-                ${spells.map(s => `<option ${lanes[count]==='JUNGLE' && s==='강타' ? 'selected' : ''}>${s}</option>`).join('')}
-            </select>
-            <button class="del-btn" onclick="this.parentElement.remove()">X</button>
+            <select class="s1">${spells.map(s=>`<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}</select>
+            <select class="s2">${spells.map(s=>`<option ${lanes[count]==='JUNGLE'&&s==='강타'?'selected':''}>${s}</option>`).join('')}</select>
+            <button class="del-btn" onclick="removeRow(this)">X</button>
         `;
         list.appendChild(row);
     }
 
-    function showAuto(input) {
+    function handleSearch(input) {
         const val = input.value;
-        const list = input.nextElementSibling;
-        list.innerHTML = '';
-        if (!val) { list.style.display = 'none'; return; }
-        
-        const filtered = CHAMPIONS.filter(c => c.includes(val));
-        if (filtered.length === 0) { list.style.display = 'none'; return; }
-        
-        list.style.display = 'block';
-        filtered.slice(0, 5).forEach(c => {
-            const div = document.createElement('div');
-            div.innerText = c;
-            div.onclick = () => { input.value = c; list.style.display = 'none'; };
-            list.appendChild(div);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target !== input) list.style.display = 'none';
-        }, { once: true });
+        const resultsDiv = input.nextElementSibling;
+        resultsDiv.innerHTML = '';
+        if(!val) { resultsDiv.style.display = 'none'; return; }
+        const filtered = CHAMPIONS.filter(c => c.includes(val)).slice(0, 5);
+        if(filtered.length > 0) {
+            resultsDiv.style.display = 'block';
+            filtered.forEach(name => {
+                const div = document.createElement('div');
+                div.innerText = name;
+                div.onclick = () => { input.value = name; resultsDiv.style.display = 'none'; };
+                resultsDiv.appendChild(div);
+            });
+        } else { resultsDiv.style.display = 'none'; }
     }
 
-    // 초기 1명씩 생성
-    window.onload = () => { addChamp('blue'); addChamp('red'); };
+    function removeRow(btn) {
+        const list = btn.parentElement.parentElement;
+        if(list.children.length > 1) btn.parentElement.remove();
+    }
+
+    function checkJungle(el) {
+        const s2 = el.parentElement.querySelector('.s2');
+        if(el.value === "JUNGLE") s2.value = "강타";
+    }
 
     async function runAnalysis() {
         const res = document.getElementById('result');
-        res.style.display = "block";
-        res.innerText = "🌀 프로 코치가 팀 조합과 상성을 분석 중입니다. 잠시만 기다려주세요...";
-
-        const getTeamData = (side) => {
-            return Array.from(document.querySelectorAll(`.${side}-side .lane-row`)).map(row => {
-                const pos = row.querySelector('.p-pos').value;
-                const name = row.querySelector('.p-name').value;
-                const s1 = row.querySelector('.p-s1').value;
-                const s2 = row.querySelector('.p-s2').value;
-                return name ? `${pos}: ${name}(${s1}/${s2})` : '';
-            }).filter(t => t).join(', ');
-        };
-
-        const blueData = getTeamData('blue');
-        const redData = getTeamData('red');
-
-        if (!blueData || !redData) {
-            alert("아군과 적군 각각 1명 이상의 챔피언을 입력해주세요.");
-            res.style.display = "none";
-            return;
-        }
-
-        const prompt = `당신은 롤 프로팀 수석 분석관입니다. 다음 데이터를 기반으로 한타 전략 리포트를 작성하세요.
-        [아군]: ${blueData}
-        [적군]: ${redData}
+        res.style.display = 'block'; res.innerText = "🌀 전략 분석 중...";
         
-        분석 요청:
-        1. 라인별 주도권 및 상성 분석
-        2. 우리 팀의 정글 동선 제안
-        3. 한타 시 최우선 타겟팅 및 진입 순서
-        4. 경계해야 할 적의 핵심 스킬과 대처법
-        
-        *전문적인 코칭 용어를 사용하고, JSON이나 불필요한 기호(*, #) 없이 깔끔한 텍스트로만 답변하세요.`;
+        const getTeam = (side) => Array.from(document.querySelectorAll(`.${side}-side .lane-row`)).map(r => 
+            `${r.querySelector('.pos-sel').value}: ${r.querySelector('.champ-n').value}(${r.querySelector('.s1').value}/${r.querySelector('.s2').value})`).join(', ');
+
+        const fullPrompt = `롤 프로팀 코치로서 분석해줘. 아군: ${getTeam('blue')} vs 적군: ${getTeam('red')}. 승리를 위한 핵심 한타 전략을 짜줘.`;
 
         try {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt })
+                body: JSON.stringify({ prompt: fullPrompt })
             });
             const data = await response.json();
-            
             if (data.error) throw new Error(data.error);
-            
-            const text = data.text;
-            res.innerText = text.replace(/\{[\s\S]*?\}|\[[\s\S]*?\]/g, '').replace(/[\*#]/g, '').trim();
+            res.innerText = data.candidates[0].content.parts[0].text.trim();
         } catch (e) {
-            res.innerText = "❌ 분석 중 오류 발생: " + e.message;
+            res.innerText = "❌ 분석 오류: " + e.message;
         }
     }
 </script>
-
 </body>
 </html>

@@ -39,7 +39,13 @@ async function startAnalysis() {
     content.innerHTML = '';
     btn.disabled = true;
 
-    let prompt = `[현재 사용자의 라인: ${selectedLane}]\n\n우리팀 조합:\n`;
+    // [핵심] 현재 날짜를 실시간으로 가져오는 코드
+    const today = new Date();
+    const dateString = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+
+    let prompt = `[분석 기준 일자: ${dateString}]\n`;
+    prompt += `[현재 시즌 메타 및 최신 패치 노트 데이터 적용 요청]\n`;
+    prompt += `[사용자 라인: ${selectedLane}]\n\n우리팀 조합:\n`;
     
     document.querySelectorAll('#blue-team-list .player-row').forEach(row => {
         const lane = row.querySelector('.lane-select').value;
@@ -58,17 +64,16 @@ async function startAnalysis() {
         if(champ) prompt += `- ${lane}: ${champ} (스펠: ${s1}, ${s2})\n`;
     });
 
-    prompt += `\n요청: ${selectedLane} 라이너인 사용자 입장에서 승리 플랜을 짜줘. 
-    1. 3줄 핵심 요약 
-    2. 상대 ${selectedLane}와의 맞라이전 디테일 (스펠 활용) 
-    3. 전체 한타에서의 역할 
-    4. 아이템 트리 추천. 아주 간결하고 예쁘게 대답해줘. [응답은 반드시 한국어로만 하세요]`;
+    prompt += `\n분석 지침:
+1. 위 제공된 [분석 기준 일자]를 바탕으로, 해당 시점의 최신 롤 패치 버전과 메타를 반영해라.
+2. 구버전 아이템 빌드는 지양하고, 현재 가장 높은 승률을 기록 중인 1~3코어 빌드를 추천해라.
+3. 3줄 핵심 요약 / 상대 ${selectedLane} 라이너와의 상성 분석 / 추천 아이템 순서대로 답변해줘. [응답은 반드시 한국어로만 하세요]`;
 
     try {
         const response = await fetch('/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ prompt: prompt })
         });
         const result = await response.json();
         

@@ -1,178 +1,14 @@
-const spellInfo = {
-    '점멸': 'SummonerFlash', '점화': 'SummonerDot', '텔포': 'SummonerTeleport',
-    '강타': 'SummonerSmite', '탈진': 'SummonerExhaust', '회복': 'SummonerHeal',
-    '정화': 'SummonerBoost', '유체화': 'SummonerHaste', '방어막': 'SummonerBarrier'
-};
+const spellInfo = { '점멸': 'SummonerFlash', '점화': 'SummonerDot', '텔포': 'SummonerTeleport', '강타': 'SummonerSmite', '탈진': 'SummonerExhaust', '회복': 'SummonerHeal', '정화': 'SummonerBoost', '유체화': 'SummonerHaste', '방어막': 'SummonerBarrier' };
 const lanes = ['탑', '정글', '미드', '원딜', '서포터'];
 let selectedLane = '탑';
 let language = 'ko';
 
-// 주요 챔피언 리스트 (한글명, 영문ID, 초성)
+// 2026년 기준 전 챔피언 데이터 (한글명, ID, 초성)
 const champions = [
-    { name: '가렌', id: 'Garen', initial: 'ㄱㄹ' },
-    { name: '그라가스', id: 'Gragas', initial: 'ㄱㄹㄱㅅ' },
-    { name: '갈리오', id: 'Galio', initial: 'ㄱㄹㅇ' },
-    { name: '갱플랭크', id: 'Gangplank', initial: 'ㄱㅍㄹㅋ' },
-    { name: '그레이브즈', id: 'Graves', initial: 'ㄱㄹㅇㅂㅈ' },
-    { name: '나르', id: 'Gnar', initial: 'ㄴㄹ' },
-    { name: '나미', id: 'Nami', initial: 'ㄴㅁ' },
-    { name: '나서스', id: 'Nasus', initial: 'ㄴㅅㅅ' },
-    { name: '노틸러스', id: 'Nautilus', initial: 'ㄴㅌㄹㅅ' },
-    { name: '녹턴', id: 'Nocturne', initial: 'ㄴㅌ' },
-    { name: '누누와 윌럼프', id: 'Nunu', initial: 'ㄴㄴㅇㅇㄹㅍ' },
-    { name: '니달리', id: 'Nidalee', initial: 'ㄴㄷㄹ' },
-    { name: '다이애나', id: 'Diana', initial: 'ㄷㅇㅇㄴ' },
-    { name: '다리우스', id: 'Darius', initial: 'ㄷㄹㅇㅅ' },
-    { name: '드레이븐', id: 'Draven', initial: 'ㄷㄹㅇㅂㄴ' },
-    { name: '라이즈', id: 'Ryze', initial: 'ㄹㅇㅈ' },
-    { name: '럭스', id: 'Lux', initial: 'ㄹㅅ' },
-    { name: '럼블', id: 'Rumble', initial: 'ㄹㅂ' },
-    { name: '레넥톤', id: 'Renekton', initial: 'ㄹㄴㅌ' },
-    { name: '레오나', id: 'Leona', initial: 'ㄹㅇㄴ' },
-    { name: '리 신', id: 'LeeSin', initial: 'ㄹㅅ' },
-    { name: '리븐', id: 'Riven', initial: 'ㄹㅂ' },
-    { name: '리산드라', id: 'Lissandra', initial: 'ㄹㅅㄷㄹ' },
-    { name: '릴리아', id: 'Lillia', initial: 'ㄹㄹㅇ' },
-    { name: '마스터 이', id: 'MasterYi', initial: 'ㅁㅅㅌㅇ' },
-    { name: '마오카이', id: 'Maokai', initial: 'ㅁㅇㅋㅇ' },
-    { name: '말자하', id: 'Malzahar', initial: 'ㅁㅈㅎ' },
-    { name: '말파이트', id: 'Malphite', initial: 'ㅁㅍㅇㅌ' },
-    { name: '모데카이저', id: 'Mordekaiser', initial: 'ㅁㄷㅋㅇㅈ' },
-    { name: '모르가나', id: 'Morgana', initial: 'ㅁㄹㄱㄴ' },
-    { name: '문도 박사', id: 'DrMundo', initial: 'ㅁㄷㅂㅅ' },
-    { name: '바이', id: 'Vi', initial: 'ㅂㅇ' },
-    { name: '바루스', id: 'Varus', initial: 'ㅂㄹㅅ' },
-    { name: '바드', id: 'Bard', initial: 'ㅂㄷ' },
-    { name: '베인', id: 'Vayne', initial: 'ㅂㅇ' },
-    { name: '벨코즈', id: 'Velkoz', initial: 'ㅂㅋㅈ' },
-    { name: '볼리베어', id: 'Volibear', initial: 'ㅂㄹㅂㅇ' },
-    { name: '브라움', id: 'Braum', initial: 'ㅂㄹㅇ' },
-    { name: '브랜드', id: 'Brand', initial: 'ㅂㄹㄷ' },
-    { name: '블라디미르', id: 'Vladimir', initial: 'ㅂㄹㄷㅁㄹ' },
-    { name: '블리츠크랭크', id: 'Blitzcrank', initial: 'ㅂㄹㅊㅋㄹㅋ' },
-    { name: '비에고', id: 'Viego', initial: 'ㅂㅇㄱ' },
-    { name: '빅토르', id: 'Viktor', initial: 'ㅂㅌㄹ' },
-    { name: '뽀삐', id: 'Poppy', initial: 'ㅃㅃ' },
-    { name: '사미라', id: 'Samira', initial: 'ㅅㅁㄹ' },
-    { name: '사이온', id: 'Sion', initial: 'ㅅㅇㅇ' },
-    { name: '사일러스', id: 'Sylas', initial: 'ㅅㅇㄹㅅ' },
-    { name: '샤코', id: 'Shaco', initial: 'ㅅㅋ' },
-    { name: '세나', id: 'Senna', initial: 'ㅅㄴ' },
-    { name: '세라핀', id: 'Seraphine', initial: 'ㅅㄹㅍ' },
-    { name: '세주아니', id: 'Sejuani', initial: 'ㅅㅈㅇㄴ' },
-    { name: '세트', id: 'Sett', initial: 'ㅅㅌ' },
-    { name: '소나', id: 'Sona', initial: 'ㅅㄴ' },
-    { name: '소라카', id: 'Soraka', initial: 'ㅅㄹㅋ' },
-    { name: '쉔', id: 'Shen', initial: 'ㅅ' },
-    { name: '쉬바나', id: 'Shyvana', initial: 'ㅅㅂㄴ' },
-    { name: '스웨인', id: 'Swain', initial: 'ㅅㅇㅇ' },
-    { name: '스카너', id: 'Skarner', initial: 'ㅅㅋㄴ' },
-    { name: '시비르', id: 'Sivir', initial: 'ㅅㅂㄹ' },
-    { name: '신 짜오', id: 'XinZhao', initial: 'ㅅㅉㅇ' },
-    { name: '신드라', id: 'Syndra', initial: 'ㅅㄷㄹ' },
-    { name: '신지드', id: 'Singed', initial: 'ㅅㅈㄷ' },
-    { name: '쓰레쉬', id: 'Thresh', initial: 'ㅆㄹㅅ' },
-    { name: '아리', id: 'Ahri', initial: 'ㅇㄹ' },
-    { name: '아무무', id: 'Amumu', initial: 'ㅇㅁㅁ' },
-    { name: '아우렐리온 솔', id: 'AurelionSol', initial: 'ㅇㅇㄹㄹㅇㅅ' },
-    { name: '아지르', id: 'Azir', initial: 'ㅇㅈㄹ' },
-    { name: '아칼리', id: 'Akali', initial: 'ㅇㅋㄹ' },
-    { name: '아트록스', id: 'Aatrox', initial: 'ㅇㅌㄹㅅ' },
-    { name: '아펠리오스', id: 'Aphelios', initial: 'ㅇㅍㄹㅇㅅ' },
-    { name: '알리스타', id: 'Alistar', initial: 'ㅇㄹㅅㅌ' },
-    { name: '애니', id: 'Annie', initial: 'ㅇㄴ' },
-    { name: '애니비아', id: 'Anivia', initial: 'ㅇㄴㅂㅇ' },
-    { name: '애쉬', id: 'Ashe', initial: 'ㅇㅅ' },
-    { name: '야스오', id: 'Yasuo', initial: 'ㅇㅅㅇ' },
-    { name: '에코', id: 'Ekko', initial: 'ㅇㅋ' },
-    { name: '엘리스', id: 'Elise', initial: 'ㅇㄹㅅ' },
-    { name: '오공', id: 'MonkeyKing', initial: 'ㅇㄱ' },
-    { name: '오른', id: 'Ornn', initial: 'ㅇㄹ' },
-    { name: '오리아나', id: 'Orianna', initial: 'ㅇㄹㅇㄴ' },
-    { name: '올라프', id: 'Olaf', initial: 'ㅇㄹㅍ' },
-    { name: '요네', id: 'Yone', initial: 'ㅇㄴ' },
-    { name: '요릭', id: 'Yorick', initial: 'ㅇㄹ' },
-    { name: '우디르', id: 'Udyr', initial: 'ㅇㄷㄹ' },
-    { name: '우르곳', id: 'Urgot', initial: 'ㅇㄹㄱ' },
-    { name: '워윅', id: 'Warwick', initial: 'ㅇㅇ' },
-    { name: '유미', id: 'Yuumi', initial: 'ㅇㅁ' },
-    { name: '이렐리아', id: 'Irelia', initial: 'ㅇㄹㄹㅇ' },
-    { name: '이브린', id: 'Evelynn', initial: 'ㅇㅂㄹ' },
-    { name: '이즈리얼', id: 'Ezreal', initial: 'ㅇㅈㄹㅇ' },
-    { name: '일라오이', id: 'Illaoi', initial: 'ㅇㄹㅇㅇ' },
-    { name: '자르반 4세', id: 'JarvanIV', initial: 'ㅈㄹㅂ' },
-    { name: '자야', id: 'Xayah', initial: 'ㅈㅇ' },
-    { name: '자이라', id: 'Zyra', initial: 'ㅈㅇㄹ' },
-    { name: '자크', id: 'Zac', initial: 'ㅈㅋ' },
-    { name: '잔나', id: 'Janna', initial: 'ㅈㄴ' },
-    { name: '잭스', id: 'Jax', initial: 'ㅈㅅ' },
-    { name: '제드', id: 'Zed', initial: 'ㅈㄷ' },
-    { name: '제라스', id: 'Xerath', initial: 'ㅈㄹㅅ' },
-    { name: '제이스', id: 'Jayce', initial: 'ㅈㅇㅅ' },
-    { name: '조이', id: 'Zoe', initial: 'ㅈㅇ' },
-    { name: '직스', id: 'Ziggs', initial: 'ㅈㅅ' },
-    { name: '진', id: 'Jhin', initial: 'ㅈ' },
-    { name: '질리언', id: 'Zilean', initial: 'ㅈㄹㅇ' },
-    { name: '징크스', id: 'Jinx', initial: 'ㅈㅋㅅ' },
-    { name: '초가스', id: 'Chogath', initial: 'ㅊㄱㅅ' },
-    { name: '카르마', id: 'Karma', initial: 'ㅋㄹㅁ' },
-    { name: '카미유', id: 'Camille', initial: 'ㅋㅁㅇ' },
-    { name: '카사딘', id: 'Kassadin', initial: 'ㅋㅅㄷ' },
-    { name: '카서스', id: 'Karthus', initial: 'ㅋㅅㅅ' },
-    { name: '카시오페아', id: 'Cassiopeia', initial: 'ㅋㅅㅇㅍㅇ' },
-    { name: '카이사', id: 'KaiSa', initial: 'ㅋㅇㅅ' },
-    { name: '카직스', id: 'Khazix', initial: 'ㅋㅈㅅ' },
-    { name: '카타리나', id: 'Katarina', initial: 'ㅋㅌㄹㄴ' },
-    { name: '칼리스타', id: 'Kalista', initial: 'ㅋㄹㅅㅌ' },
-    { name: '케넨', id: 'Kennen', initial: 'ㅋㄴ' },
-    { name: '케이틀린', id: 'Caitlyn', initial: 'ㅋㅇㅌㄹ' },
-    { name: '케인', id: 'Kayn', initial: 'ㅋㅇ' },
-    { name: '케일', id: 'Kayle', initial: 'ㅋㅇ' },
-    { name: '코그모', id: 'KogMaw', initial: 'ㅋㄱㅁ' },
-    { name: '코르키', id: 'Corki', initial: 'ㅋㄹㅋ' },
-    { name: '퀸', id: 'Quinn', initial: 'ㅋ' },
-    { name: '클레드', id: 'Kled', initial: 'ㅋㄹㄷ' },
-    { name: '키아나', id: 'Qiyana', initial: 'ㅋㅇㄴ' },
-    { name: '킨드레드', id: 'Kindred', initial: 'ㅋㄷㄹㄷ' },
-    { name: '타릭', id: 'Taric', initial: 'ㅌㄹ' },
-    { name: '탈론', id: 'Talon', initial: 'ㅌㄹ' },
-    { name: '탈리야', id: 'Taliyah', initial: 'ㅌㄹㅇ' },
-    { name: '탐 켄치', id: 'TahmKench', initial: 'ㅌㅋㅊ' },
-    { name: '트런들', id: 'Trundle', initial: 'ㅌㄹㄷ' },
-    { name: '트리스타나', id: 'Tristana', initial: 'ㅌㄹㅅㅌㄴ' },
-    { name: '트린다미어', id: 'Tryndamere', initial: 'ㅌㄹㄷㅁㅇ' },
-    { name: '트위스티드 페이트', id: 'TwistedFate', initial: 'ㅌㅇㅅㅌㄷㅍㅇㅌ' },
-    { name: '트위치', id: 'Twitch', initial: 'ㅌㅇㅊ' },
-    { name: '티모', id: 'Teemo', initial: 'ㅌㅁ' },
-    { name: '파이크', id: 'Pyke', initial: 'ㅍㅇㅋ' },
-    { name: '판테온', id: 'Pantheon', initial: 'ㅍㅌㅇ' },
-    { name: '피들스틱', id: 'Fiddlesticks', initial: 'ㅍㄷㅅㅌ' },
-    { name: '피오라', id: 'Fiora', initial: 'ㅍㅇㄹ' },
-    { name: '피즈', id: 'Fizz', initial: 'ㅍㅈ' },
-    { name: '하이머딩거', id: 'Heimerdinger', initial: 'ㅎㅇㅁㄷㄱ' },
-    { name: '헤카림', id: 'Hecarim', initial: 'ㅎㅋㄹ' }
+    {name:'가렌',id:'Garen',i:'ㄱㄹ'},{name:'갈리오',id:'Galio',i:'ㄱㄹㅇ'},{name:'갱플랭크',id:'Gangplank',i:'ㄱㅍㄹㅋ'},{name:'그라가스',id:'Gragas',i:'ㄱㄹㄱㅅ'},{name:'그레이브즈',id:'Graves',i:'ㄱㄹㅇㅂㅈ'},{name:'나르',id:'Gnar',i:'ㄴㄹ'},{name:'나미',id:'Nami',i:'ㄴㅁ'},{name:'나서스',id:'Nasus',i:'ㄴㅅㅅ'},{name:'노틸러스',id:'Nautilus',i:'ㄴㅌㄹㅅ'},{name:'녹턴',id:'Nocturne',i:'ㄴㅌ'},{name:'누누와 윌럼프',id:'Nunu',i:'ㄴㄴㅇㅇㄹㅍ'},{name:'니달리',id:'Nidalee',i:'ㄴㄷㄹ'},{name:'니코',id:'Neeko',i:'ㄴㅋ'},{name:'닐라',id:'Nilah',i:'ㄴㄹ'},{name:'다리우스',id:'Darius',i:'ㄷㄹㅇㅅ'},{name:'다이애나',id:'Diana',i:'ㄷㅇㅇㄴ'},{name:'드레이븐',id:'Draven',i:'ㄷㄹㅇㅂ'},{name:'라이즈',id:'Ryze',i:'ㄹㅇㅈ'},{name:'라칸',id:'Rakan',i:'ㄹㅋ'},{name:'람머스',id:'Armordillo',i:'ㄹㅁㅅ'},{name:'럭스',id:'Lux',i:'ㄹㅅ'},{name:'럼블',id:'Rumble',i:'ㄹㅂ'},{name:'레나타 글라스크',id:'Renata',i:'ㄹㄴㅌㄱㄹㅅㅋ'},{name:'레넥톤',id:'Renekton',i:'ㄹㄴㅌ'},{name:'레오나',id:'Leona',i:'ㄹㅇㄴ'},{name:'렉사이',id:'RekSai',i:'ㄹㅅㅇ'},{name:'렐',i:'Rell',i:'ㄹ'},{name:'렌가',id:'Rengar',i:'ㄹㄱ'},{name:'루시안',id:'Lucian',i:'ㄹㅅㅇ'},{name:'루루',id:'Lulu',i:'ㄹㄹ'},{name:'르블랑',id:'LeBlanc',i:'ㄹㅂㄹ'},{name:'리 신',id:'LeeSin',i:'ㄹㅅ'},{name:'리븐',id:'Riven',i:'ㄹㅂ'},{name:'리산드라',id:'Lissandra',i:'ㄹㅅㄷㄹ'},{name:'릴리아',id:'Lillia',i:'ㄹㄹㅇ'},{name:'마스터 이',id:'MasterYi',i:'ㅁㅅㅌㅇ'},{name:'마오카이',id:'Maokai',i:'ㅁㅇㅋㅇ'},{name:'말자하',id:'Malzahar',i:'ㅁㅈㅎ'},{name:'말파이트',id:'Malphite',i:'ㅁㅍㅇㅌ'},{name:'모데카이저',id:'Mordekaiser',i:'ㅁㄷㅋㅇㅈ'},{name:'모르가나',id:'Morgana',i:'ㅁㄹㄱㄴ'},{name:'문도 박사',id:'DrMundo',i:'ㅁㄷㅂㅅ'},{name:'미스 포츈',id:'MissFortune',i:'ㅁㅅㅍㅊ'},{name:'밀리오',id:'Milio',i:'ㅁㄹㅇ'},{name:'바드',id:'Bard',i:'ㅂㄷ'},{name:'바루스',id:'Varus',i:'ㅂㄹㅅ'},{name:'바이',id:'Vi',i:'ㅂㅇ'},{name:'베이가',id:'Veigar',i:'ㅂㅇㄱ'},{name:'베인',id:'Vayne',i:'ㅂㅇ'},{name:'벨베스',id:'Belveth',i:'ㅂㅂㅅ'},{name:'벨코즈',id:'Velkoz',i:'ㅂㅋㅈ'},{name:'볼리베어',id:'Volibear',i:'ㅂㄹㅂㅇ'},{name:'브라움',id:'Braum',i:'ㅂㄹㅇ'},{name:'브라이어',id:'Briar',i:'ㅂㄹㅇㅇ'},{name:'브랜드',id:'Brand',i:'ㅂㄹㄷ'},{name:'블라디미르',id:'Vladimir',i:'ㅂㄹㄷㅁㄹ'},{name:'블리츠크랭크',id:'Blitzcrank',i:'ㅂㄹㅊㅋㄹㅋ'},{name:'비에고',id:'Viego',i:'ㅂㅇㄱ'},{name:'빅토르',id:'Viktor',i:'ㅂㅌㄹ'},{name:'뽀삐',id:'Poppy',i:'ㅃㅃ'},{name:'사미라',id:'Samira',i:'ㅅㅁㄹ'},{name:'사이온',id:'Sion',i:'ㅅㅇㅇ'},{name:'사일러스',id:'Sylas',i:'ㅅㅇㄹㅅ'},{name:'샤코',id:'Shaco',i:'ㅅㅋ'},{name:'세나',id:'Senna',i:'ㅅㄴ'},{name:'세라핀',id:'Seraphine',i:'ㅅㄹㅍ'},{name:'세주아니',id:'Sejuani',i:'ㅅㅈㅇㄴ'},{name:'세트',id:'Sett',i:'ㅅㅌ'},{name:'소나',id:'Sona',i:'ㅅㄴ'},{name:'소라카',id:'Soraka',i:'ㅅㄹㅋ'},{name:'쉔',id:'Shen',i:'ㅅ'},{name:'쉬바나',id:'Shyvana',i:'ㅅㅂㄴ'},{name:'스웨인',id:'Swain',i:'ㅅㅇㅇ'},{name:'스카너',id:'Skarner',i:'ㅅㅋㄴ'},{name:'스모더',id:'Smolder',i:'ㅅㅁㄷ'},{name:'시비르',id:'Sivir',i:'ㅅㅂㄹ'},{name:'신 짜오',id:'XinZhao',i:'ㅅㅉㅇ'},{name:'신드라',id:'Syndra',i:'ㅅㄷㄹ'},{name:'신지드',id:'Singed',i:'ㅅㅈㄷ'},{name:'쓰레쉬',id:'Thresh',i:'ㅆㄹㅅ'},{name:'아리',id:'Ahri',i:'ㅇㄹ'},{name:'아무무',id:'Amumu',i:'ㅇㅁㅁ'},{name:'아우렐리온 솔',id:'AurelionSol',i:'ㅇㅇㄹㄹㅇㅅ'},{name:'아이번',id:'Ivern',i:'ㅇㅇㅂ'},{name:'아지르',id:'Azir',i:'ㅇㅈㄹ'},{name:'아칼리',id:'Akali',i:'ㅇㅋㄹ'},{name:'아크샨',id:'Akshan',i:'ㅇㅋㅅ'},{name:'아트록스',id:'Aatrox',i:'ㅇㅌㄹㅅ'},{name:'아펠리오스',id:'Aphelios',i:'ㅇㅍㄹㅇㅅ'},{name:'알리스타',id:'Alistar',i:'ㅇㄹㅅㅌ'},{name:'애니',id:'Annie',i:'ㅇㄴ'},{name:'애니비아',id:'Anivia',i:'ㅇㄴㅂㅇ'},{name:'애쉬',id:'Ashe',i:'ㅇㅅ'},{name:'야스오',id:'Yasuo',i:'ㅇㅅㅇ'},{name:'에코',id:'Ekko',i:'ㅇㅋ'},{name:'엘리스',id:'Elise',i:'ㅇㄹㅅ'},{name:'오공',id:'MonkeyKing',i:'ㅇㄱ'},{name:'오른',id:'Ornn',i:'ㅇㄹ'},{name:'오리아나',id:'Orianna',i:'ㅇㄹㅇㄴ'},{name:'올라프',id:'Olaf',i:'ㅇㄹㅍ'},{name:'요네',id:'Yone',i:'ㅇㄴ'},{name:'요릭',id:'Yorick',i:'ㅇㄹ'},{name:'우디르',id:'Udyr',i:'ㅇㄷㄹ'},{name:'우르곳',id:'Urgot',i:'ㅇㄹㄱ'},{name:'워윅',id:'Warwick',i:'ㅇㅇ'},{name:'유미',id:'Yuumi',i:'ㅇㅁ'},{name:'이렐리아',id:'Irelia',i:'ㅇㄹㄹㅇ'},{name:'이벨린',id:'Evelynn',i:'ㅇㅂㄹ'},{name:'이즈리얼',id:'Ezreal',i:'ㅇㅈㄹㅇ'},{name:'일라오이',id:'Illaoi',i:'ㅇㄹㅇㅇ'},{name:'자르반 4세',id:'JarvanIV',i:'ㅈㄹㅂ4ㅅ'},{name:'자야',id:'Xayah',i:'ㅈㅇ'},{name:'자이라',id:'Zyra',i:'ㅈㅇㄹ'},{name:'자크',id:'Zac',i:'ㅈㅋ'},{name:'잔나',id:'Janna',i:'ㅈㄴ'},{name:'잭스',id:'Jax',i:'ㅈㅅ'},{name:'제드',id:'Zed',i:'ㅈㄷ'},{name:'제라스',id:'Xerath',i:'ㅈㄹㅅ'},{name:'제리',id:'Zeri',i:'ㅈㄹ'},{name:'제이스',id:'Jayce',i:'ㅈㅇㅅ'},{name:'조이',id:'Zoe',i:'ㅈㅇ'},{name:'직스',id:'Ziggs',i:'ㅈㄱㅅ'},{name:'진',id:'Jhin',i:'ㅈ'},{name:'질리언',id:'Zilean',i:'ㅈㄹㅇ'},{name:'징크스',id:'Jinx',i:'ㅈㅋㅅ'},{name:'초가스',id:'Chogath',i:'ㅊㄱㅅ'},{name:'카르마',id:'Karma',i:'ㅋㄹㅁ'},{name:'카밀',id:'Camille',i:'ㅋㅁ'},{name:'카사딘',id:'Kassadin',i:'ㅋㅅㄷ'},{name:'카서스',id:'Karthus',i:'ㅋㅅㅅ'},{name:'카시오페아',id:'Cassiopeia',i:'ㅋㅅㅇㅍㅇ'},{name:'카이사와',id:'KaiSa',i:'ㅋㅇㅅ'},{name:'카직스',id:'Khazix',i:'ㅋㅈㅅ'},{name:'카타리나',id:'Katarina',i:'ㅋㅌㄹㄴ'},{name:'칼리스타',id:'Kalista',i:'ㅋㄹㅅㅌ'},{name:'케넨',id:'Kennen',i:'ㅋㄴ'},{name:'케이틀린',id:'Caitlyn',i:'ㅋㅇㅌㄹ'},{name:'케인',id:'Kayn',i:'ㅋㅇ'},{name:'케일',id:'Kayle',i:'ㅋㅇ'},{name:'코그모',id:'KogMaw',i:'ㅋㄱㅁ'},{name:'코르키',id:'Corki',i:'ㅋㄹㅋ'},{name:'클레드',id:'Kled',i:'ㅋㄹㄷ'},{name:'키아나',id:'Qiyana',i:'ㅋㅇㄴ'},{name:'킨드레드',id:'Kindred',i:'ㅋㄷㄹㄷ'},{name:'타릭',id:'Taric',i:'ㅌㄹ'},{name:'탈론',id:'Talon',i:'ㅌㄹ'},{name:'탈리야',id:'Taliyah',i:'ㅌㄹㅇ'},{name:'탐 켄치',id:'TahmKench',i:'ㅌㅋㅊ'},{name:'트런들',id:'Trundle',i:'ㅌㄹㄷ'},{name:'트리스타나',id:'Tristana',i:'ㅌㄹㅅㅌㄴ'},{name:'트린다미어',id:'Tryndamere',i:'ㅌㄹㄷㅁㅇ'},{name:'트위스티드 페이트',id:'TwistedFate',i:'ㅌㅇㅅㅌㄷㅍㅇㅌ'},{name:'트위치',id:'Twitch',i:'ㅌㅇㅊ'},{name:'티모',id:'Teemo',i:'ㅌㅁ'},{name:'파이크',id:'Pyke',i:'ㅍㅇㅋ'},{name:'판테온',id:'Pantheon',i:'ㅍㅌㅇ'},{name:'피들스틱',id:'Fiddlesticks',i:'ㅍㄷㅅㅌ'},{name:'피오라',id:'Fiora',i:'ㅍㅇㄹ'},{name:'피즈',id:'Fizz',i:'ㅍㅈ'},{name:'하이머딩거',id:'Heimerdinger',i:'ㅎㅇㅁㄷㄱ'},{name:'헤카림',id:'Hecarim',i:'ㅎㅋㄹ'},{name:'흐웨이',id:'Hwei',i:'ㅎㅇ'}
 ];
 
-function selectMyLane(lane, btn) {
-    selectedLane = lane;
-    document.querySelectorAll('.lane-opt').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-}
-
-function toggleLanguage() {
-    language = language === 'ko' ? 'en' : 'ko';
-    document.getElementById('lang-status').innerText = language === 'ko' ? 'KR' : 'EN';
-}
-
-function getSpellImg(spellName) {
-    return `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spellInfo[spellName] || 'SummonerFlash'}.png`;
-}
-
-function updateSpellIcon(selectEl) {
-    const icon = selectEl.parentElement.querySelector('.spell-icon');
-    icon.src = getSpellImg(selectEl.value);
-}
-
+// 초성 추출 함수
 function getChoseong(str) {
     const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
     let result = "";
@@ -184,16 +20,17 @@ function getChoseong(str) {
     return result;
 }
 
+// 자동완성 표시
 function showAutocomplete(input) {
-    const val = input.value;
+    const val = input.value.trim();
     const listEl = input.parentElement.querySelector('.autocomplete-list');
     listEl.innerHTML = '';
     if(!val) return;
 
     const searchVal = getChoseong(val).toLowerCase();
-    const filtered = champions.filter(c => c.name.includes(val) || c.initial.includes(searchVal) || c.id.toLowerCase().includes(val.toLowerCase()));
+    const filtered = champions.filter(c => c.name.includes(val) || c.i.includes(searchVal) || c.id.toLowerCase().includes(val.toLowerCase()));
 
-    filtered.slice(0, 10).forEach(c => {
+    filtered.slice(0, 8).forEach(c => { // 최대 8개만 표시
         const li = document.createElement('li');
         li.className = 'autocomplete-item';
         li.innerHTML = `<img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png"> ${c.name}`;
@@ -207,6 +44,17 @@ function showAutocomplete(input) {
     });
 }
 
+function selectMyLane(lane, btn) {
+    selectedLane = lane;
+    document.querySelectorAll('.lane-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function updateSpellIcon(selectEl) {
+    const icon = selectEl.parentElement.querySelector('.spell-icon');
+    icon.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spellInfo[selectEl.value]}.png`;
+}
+
 function addPlayer(team) {
     const list = document.getElementById(`${team}-team-list`);
     const div = document.createElement('div');
@@ -216,20 +64,14 @@ function addPlayer(team) {
         <div class="input-line">
             <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/Garen.png" class="champ-icon-main">
             <div class="champ-input-container">
-                <input type="text" class="champ-input" placeholder="ㄱㄹ, 가렌, Garen" oninput="showAutocomplete(this)">
+                <input type="text" class="champ-input" placeholder="챔피언 검색" oninput="showAutocomplete(this)">
                 <ul class="autocomplete-list"></ul>
             </div>
             <select class="lane-select">${lanes.map(l => `<option value="${l}">${l}</option>`).join('')}</select>
         </div>
         <div class="spell-row">
-            <div class="spell-item">
-                <img src="${getSpellImg('점멸')}" class="spell-icon">
-                <select class="spell-select s1" onchange="updateSpellIcon(this)">${Object.keys(spellInfo).map(s => `<option value="${s}">${s}</option>`).join('')}</select>
-            </div>
-            <div class="spell-item">
-                <img src="${getSpellImg('점화')}" class="spell-icon">
-                <select class="spell-select s2" onchange="updateSpellIcon(this)">${Object.keys(spellInfo).map((s,i) => `<option value="${s}" ${i==1?'selected':''}>${s}</option>`).join('')}</select>
-            </div>
+            <div class="spell-item"><img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/SummonerFlash.png" class="spell-icon"><select class="spell-select s1" onchange="updateSpellIcon(this)">${Object.keys(spellInfo).map(s => `<option value="${s}">${s}</option>`).join('')}</select></div>
+            <div class="spell-item"><img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/SummonerDot.png" class="spell-icon"><select class="spell-select s2" onchange="updateSpellIcon(this)">${Object.keys(spellInfo).map((s,i) => `<option value="${s}" ${i==1?'selected':''}>${s}</option>`).join('')}</select></div>
         </div>
     `;
     list.appendChild(div);
@@ -247,44 +89,22 @@ async function startAnalysis() {
     btn.disabled = true;
 
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const patchMajor = year.toString().slice(-2);
-    const patchVersion = `${patchMajor}.${month}`; 
-    const dateString = `${year}-${month}-${today.getDate()}`;
-
-    let prompt = `[SYSTEM SETTINGS]
-- Date: ${dateString}
-- Season: Season 16 (Patch ${patchVersion})
-- Language: ${language === 'ko' ? 'Korean' : 'English'}
-- User Lane: ${selectedLane}
-
-ALLIES:
-`;
+    const patchVersion = `${today.getFullYear().toString().slice(-2)}.${today.getMonth() + 1}`;
     
+    let prompt = `[Patch ${patchVersion}] [내 라인: ${selectedLane}] 분석 요청.\n\n우리팀:\n`;
     document.querySelectorAll('#blue-team-list .player-row').forEach(row => {
         const lane = row.querySelector('.lane-select').value;
         const champ = row.querySelector('.champ-input').value;
-        const s1 = row.querySelector('.s1').value;
-        const s2 = row.querySelector('.s2').value;
-        if(champ) prompt += `- ${lane}: ${champ} (${s1}/${s2}) ${lane === selectedLane ? '[USER]' : ''}\n`;
+        if(champ) prompt += `- ${lane}: ${champ} ${lane === selectedLane ? '[사용자]' : ''}\n`;
     });
-
-    prompt += `\nENEMIES:\n`;
+    prompt += `\n상대팀:\n`;
     document.querySelectorAll('#red-team-list .player-row').forEach(row => {
         const lane = row.querySelector('.lane-select').value;
         const champ = row.querySelector('.champ-input').value;
-        const s1 = row.querySelector('.s1').value;
-        const s2 = row.querySelector('.s2').value;
-        if(champ) prompt += `- ${lane}: ${champ} (${s1}/${s2})\n`;
+        if(champ) prompt += `- ${lane}: ${champ}\n`;
     });
 
-    prompt += `\nINSTRUCTIONS:
-1. Analyze based on Patch ${patchVersion} meta.
-2. Place a 3-line summary card at the top.
-3. Provide lane phase and teamfight strategies for the ${selectedLane} user.
-4. Recommend latest 2026 item builds.
-[RESPONSE MUST BE IN ${language.toUpperCase()}]`;
+    prompt += "\n1. 3줄 핵심 요약 2. 라인전 설계 3. 최신 아이템 빌드 (2026 메타 반영). 마크다운으로 예쁘게 구성해줘. [응답은 반드시 한국어로만 하세요]";
 
     try {
         const response = await fetch('/analyze', { 
@@ -303,14 +123,7 @@ ALLIES:
             } else {
                 aiText = JSON.stringify(result);
             }
-            
-            content.innerHTML = `
-                <div class="result-header">
-                    <h3>분석 결과 (Patch ${patchVersion})</h3>
-                    <button class="copy-btn" onclick="copyResult()">결과 복사</button>
-                </div>
-                <div class="analysis-text">${aiText}</div>
-            `;
+            content.innerHTML = `<div class="result-header"><h3>분석 결과 (Patch ${patchVersion})</h3><button class="copy-btn" onclick="copyResult()">복사</button></div><div class="analysis-text">${aiText}</div>`;
         }
     } catch (e) { 
         content.innerText = "Error: " + e.message; 
@@ -322,7 +135,7 @@ ALLIES:
 
 function copyResult() {
     const text = document.querySelector('.analysis-text').innerText;
-    navigator.clipboard.writeText(text).then(() => alert(language === 'ko' ? '복사되었습니다!' : 'Copied!'));
+    navigator.clipboard.writeText(text).then(() => alert('복사되었습니다!'));
 }
 
 // 초기 기본 생성

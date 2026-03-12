@@ -2,52 +2,64 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL AI PRO COACH | lol-coaches.com</title>
-    <link rel="stylesheet" href="style.css">
+    <title>LOL AI PRO COACH</title>
+    <style>
+        :root { --gold: #c89b3c; --blue: #3d8bff; --red: #ff4d4d; --dark: #0f1217; --panel: #1e232a; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--dark); color: #ececec; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .matchup-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; margin-bottom: 30px; }
+        .team-panel { background: var(--panel); border-radius: 12px; padding: 20px; border-top: 5px solid #ccc; }
+        .lane-row { display: grid; grid-template-columns: 80px 1fr 90px 90px; gap: 8px; margin-bottom: 10px; align-items: center; }
+        input, select { background: #2a3039; color: white; border: 1px solid #3c4450; padding: 10px; border-radius: 6px; width: 100%; }
+        button { background: var(--gold); color: #000; font-weight: bold; font-size: 1.2rem; padding: 15px; width: 100%; border: none; border-radius: 8px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 20px; background: #161a20; border-radius: 12px; display: none; white-space: pre-wrap; line-height: 1.8; }
+    </style>
 </head>
 <body>
-
-<div class="container">
-    <div class="header">
-        <h1>LOL AI PRO COACH</h1>
-        <p>포지션별 자동 스펠 세팅 및 5:5 한타 정밀 분석</p>
-    </div>
-
-    <div class="matchup-grid">
-        <div class="team-panel blue-side">
-            <div class="team-label">BLUE TEAM</div>
-            <div id="blue-team-inputs">
-                <!-- JavaScript handles population -->
-            </div>
-        </div>
-
-        <div class="vs-divider">VS</div>
-
-        <div class="team-panel red-side">
-            <div class="team-label">RED TEAM</div>
-            <div id="red-team-inputs">
-                <!-- JavaScript handles population -->
-            </div>
-        </div>
-    </div>
-
-    <div class="bottom-controls">
+    <div class="container">
+        <h1 style="text-align:center; color:var(--gold);">LOL AI PRO COACH</h1>
+        <div class="matchup-grid" id="main-ui"></div>
         <button onclick="startAnalysis()">프로급 한타 분석 시작</button>
+        <div id="result"></div>
     </div>
+    <script>
+        const lanes = ["TOP", "JUNGLE", "MID", "ADC", "SUP"];
+        const spells = ["점멸", "강타", "점화", "텔포", "탈진", "유체화"];
 
-    <div id="result-display"></div>
-</div>
+        // UI 생성 및 정글 강타 자동 로직
+        const ui = document.getElementById('main-ui');
+        let html = '<div class="team-panel" style="border-color:var(--blue);"><div style="color:var(--blue); text-align:center; margin-bottom:15px; font-weight:bold;">BLUE TEAM</div>';
+        lanes.forEach(l => {
+            html += `<div class="lane-row"><span>${l}</span><input type="text" class="b-n" placeholder="챔피언">
+            <select class="b-s1">${spells.map(s=>`<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}</select>
+            <select class="b-s2">${spells.map(s=>`<option ${l==='JUNGLE'&&s==='강타'?'selected':''}>${s}</option>`).join('')}</select></div>`;
+        });
+        html += '</div><div style="display:flex; align-items:center; color:var(--gold); font-weight:bold;">VS</div>';
+        html += '<div class="team-panel" style="border-color:var(--red);"><div style="color:var(--red); text-align:center; margin-bottom:15px; font-weight:bold;">RED TEAM</div>';
+        lanes.forEach(l => { html += `<div class="lane-row" style="grid-template-columns:80px 1fr;"><span>${l}</span><input type="text" class="r-n" placeholder="챔피언"></div>`; });
+        html += '</div>';
+        ui.innerHTML = html;
 
-<footer>
-    <p>© 2026 lol-coaches.com | All Rights Reserved.</p>
-    <p>
-        <a href="/privacy">개인정보 처리방침</a> | 
-        <a href="/terms">이용약관</a>
-    </p>
-</footer>
+        async function startAnalysis() {
+            const res = document.getElementById('result');
+            res.style.display = "block"; res.innerText = "🌀 분석 중...";
 
-<script src="main.js"></script>
-
+            // 💡 중요: 클라우드플레어 환경 변수에서 키를 불러오는 API 호출
+            try {
+                const response = await fetch('/analyze', { // 서버측 Worker로 요청 전달
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        myTeam: Array.from(document.querySelectorAll('.b-n')).map(i=>i.value).join(','),
+                        opTeam: Array.from(document.querySelectorAll('.r-n')).map(i=>i.value).join(',')
+                    })
+                });
+                const data = await response.json();
+                res.innerText = data.text;
+            } catch (e) {
+                res.innerText = "오류 발생: 서버 설정을 확인해주세요.";
+            }
+        }
+    </script>
 </body>
 </html>

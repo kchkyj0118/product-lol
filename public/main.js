@@ -3,10 +3,11 @@ const G_KEY = "발급받으신_GEMINI_KEY";
 
 async function runGlobalAnalysis() {
     const myChamp = document.getElementById('my-champ').value;
-    const mySpell1 = document.getElementById('my-spell-1').value;
-    const mySpell2 = document.getElementById('my-spell-2').value;
-    
-    const allies = [
+    const s1 = document.getElementById('my-spell-1').value;
+    const s2 = document.getElementById('my-spell-2').value;
+
+    // 10명의 챔피언 정보 수집
+    const myTeam = [
         myChamp,
         document.getElementById('my-team-2').value,
         document.getElementById('my-team-3').value,
@@ -14,7 +15,7 @@ async function runGlobalAnalysis() {
         document.getElementById('my-team-5').value
     ].filter(name => name).join(', ');
 
-    const enemies = [
+    const enemyTeam = [
         document.getElementById('op-champ-1').value,
         document.getElementById('op-champ-2').value,
         document.getElementById('op-champ-3').value,
@@ -34,19 +35,20 @@ async function runGlobalAnalysis() {
     loading.style.display = "block";
     resultDiv.style.display = "none";
 
-    const prompt = `당신은 롤 프로팀 수석 분석관입니다. 다음 팀 조합을 바탕으로 ${scale} 상황에서의 승리 전략을 제시하세요.
+    // 유저가 요청한 상세 프롬프트 구조 적용
+    const prompt = `당신은 롤 프로팀 헤드 코치입니다.
+    [아군 구성]: ${myTeam} (나는 ${myChamp}, 스펠: ${s1}/${s2})
+    [적군 구성]: ${enemyTeam}
+    [상황]: ${scale} 상황.
 
-    [팀 구성]
-    - 아군: ${allies} (본인: ${myChamp} / 스펠: ${mySpell1}, ${mySpell2})
-    - 적군: ${enemies}
+    분석 요청 사항:
+    1. 양 팀의 한타 상성 (누가 더 한타가 유리한가?)
+    2. 한타 시 내가 1순위로 노려야 할 적군 챔피언 (타겟팅 최우선순위)
+    3. 우리 팀의 승리 플랜 (포지셔닝 및 스킬 연계 방법)
+    4. 주의해야 할 적의 광역 CC기 또는 변수 스킬.
 
-    [분석 요청 항목]
-    1. 조합 상성 분석 (이니시, 유지력, 포킹 등)
-    2. 본인(${myChamp})의 핵심 역할과 한타 포지셔닝
-    3. 반드시 마크해야 할 적군 핵심 챔피언과 대처법
-    4. ${scale} 시 승리를 위한 결정적 한 수 (스킬 연계 등)
-
-    *전문 용어를 사용하되, JSON/좌표/불필요한 기호는 생략하고 깔끔한 텍스트 리포트로 작성하세요.`;
+    *전문 용어를 섞어서 아주 상세하게 리포트하세요. 텍스트로만 답변하세요. 
+    JSON, 좌표, 불필요한 기호(*, #)는 절대 포함하지 마세요.`;
 
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${G_KEY}`, {

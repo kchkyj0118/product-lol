@@ -151,16 +151,17 @@ async function startAnalysis() {
     });
     const redTeamInfo = redTeamArr.join(", ");
 
-    let prompt = `[시스템: LOL.PS 전문 분석 모드]
-- 반드시 2026년 최신 아이템을 기반으로 추천할 것.
-- 답변 시작 시 'LOL.PS 분석 리포트'나 날짜 같은 머리말은 절대 쓰지 마세요.
-- 1단계: 핵심 요약(3줄)을 작성하고 바로 다음에 '---' 구분자를 넣으세요.
-- 2단계: 그 아래에 상세 분석 및 템트리를 작성하세요.
-- 승리 전략에는 몇 레벨까지 유리하고 언제부터 불리한지 타임라인을 명시하세요.
-- [응답은 반드시 한국어로만 하세요]
+    let prompt = `[명령: LOL.PS & DeepLoL 실시간 데이터 기반 분석]
+    - 모든 템트리는 2026년 3월 현재 마스터+ 구간 승률 1위 빌드로 구성할 것.
+    - 아이템 언급 시 반드시 이미지를 넣으세요: <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/item/[아이템ID].png" style="width:20px; vertical-align:middle; border-radius:3px;"> [아이템이름]
+    - 룬 언급 시에도 이미지를 포함하세요: <img src="https://ddragon.leagueoflegends.com/cdn/img/[룬경로]" style="width:20px; vertical-align:middle;"> [룬이름]
+    - 절대로 '분석 리포트' 같은 서론을 쓰지 마세요.
+    - 형식: 요약(3줄) --- 상세분석(템, 룬, 레벨별 우위 수치)
+    - [응답은 반드시 한국어로만 하세요]
 
-현재 라인: ${selectedLane}
-우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
+    현재 라인: ${selectedLane}
+    우리팀: ${blueTeamInfo} / 상대팀: ${redTeamInfo}`;
+
 
     try {
         const response = await fetch('/analyze', { 

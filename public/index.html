@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL AI PRO COACH</title>
+    <title>LOL AI PRO COACH | 팀 분석</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,42 +12,57 @@
     <div class="main-card">
         <div class="header">
             <h1>LOL AI PRO COACH</h1>
-            <p>프로팀 분석관의 실시간 교전 전략</p>
+            <p>전체 팀 구성 기반 정밀 한타 분석</p>
         </div>
 
-        <div class="section-title">CHAMPION MATCHUP</div>
-        <div class="flex-row">
-            <div class="input-item">
-                <input type="text" id="myChamp" placeholder="내 챔피언 (예: 리신)">
-            </div>
-            <div class="input-item">
-                <input type="text" id="opChamp" placeholder="상대 챔피언 (예: 카직스)">
-            </div>
-        </div>
-
-        <div class="section-title">BATTLE SETTING</div>
-        <div class="flex-row">
-            <div class="input-item">
-                <select id="fightScale">
-                    <option value="1대1">1대1 (라인전/카정)</option>
-                    <option value="2대2">2대2 (정글-라이너 교전)</option>
-                    <option value="3대3">3대3 (소규모 한타/오브젝트)</option>
-                    <option value="5대5">5대5 (정식 한타)</option>
+        <div class="section-title">MY TEAM (아군)</div>
+        <div class="team-grid">
+            <div class="champ-row">
+                <input type="text" id="my-champ" placeholder="내 챔피언" class="highlight">
+                <select id="my-spell-1">
+                    <option>점멸</option>
+                    <option>유체화</option>
+                    <option>정화</option>
+                    <option>탈진</option>
+                </select>
+                <select id="my-spell-2">
+                    <option>강타</option>
+                    <option>점화</option>
+                    <option>텔포</option>
+                    <option>탈진</option>
+                    <option>회복</option>
                 </select>
             </div>
-            <div class="input-item">
-                <select id="mySpell">
-                    <option value="점멸/강타">점멸 / 강타</option>
-                    <option value="점멸/점화">점멸 / 점화</option>
-                    <option value="점멸/텔포">점멸 / 텔포</option>
-                    <option value="점멸/탈진">점멸 / 탈진</option>
-                </select>
+            <div class="others-grid">
+                <input type="text" id="my-team-2" placeholder="아군 2">
+                <input type="text" id="my-team-3" placeholder="아군 3">
+                <input type="text" id="my-team-4" placeholder="아군 4">
+                <input type="text" id="my-team-5" placeholder="아군 5">
             </div>
         </div>
 
-        <button onclick="runProAnalysis()">프로 전략 분석 시작</button>
+        <div class="section-title">ENEMY TEAM (적군)</div>
+        <div class="team-grid">
+            <div class="others-grid">
+                <input type="text" id="op-champ-1" placeholder="적군 1 (상대)" class="highlight-op">
+                <input type="text" id="op-champ-2" placeholder="적군 2">
+                <input type="text" id="op-champ-3" placeholder="적군 3">
+                <input type="text" id="op-champ-4" placeholder="적군 4">
+                <input type="text" id="op-champ-5" placeholder="적군 5">
+            </div>
+        </div>
 
-        <div id="loading-bar" class="loading">🌀 프로 코치가 리플레이 데이터를 대조 중입니다...</div>
+        <div class="section-title">BATTLE OPTION</div>
+        <select id="fight-scale" style="margin-bottom: 20px;">
+            <option value="5대5">5대5 정식 한타 (드래곤/바론)</option>
+            <option value="1대1">1대1 라인전/사이드</option>
+            <option value="2대2">2대2 소규모 교전</option>
+            <option value="3대3">3대3 오브젝트 싸움</option>
+        </select>
+
+        <button onclick="runGlobalAnalysis()">프로급 팀 분석 시작</button>
+
+        <div id="loading-bar" class="loading">🌀 프로 코치가 팀 조합과 상성을 정밀 분석 중입니다...</div>
         <div id="analysis-result"></div>
     </div>
 </div>

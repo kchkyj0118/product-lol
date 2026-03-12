@@ -1,34 +1,52 @@
 // ⚠️ 본인의 API KEY를 입력하세요.
 const G_KEY = "발급받으신_GEMINI_KEY"; 
 
-async function runProAnalysis() {
-    const my = document.getElementById('myChamp').value;
-    const op = document.getElementById('opChamp').value;
-    const scale = document.getElementById('fightScale').value;
-    const spell = document.getElementById('mySpell').value;
+async function runGlobalAnalysis() {
+    const myChamp = document.getElementById('my-champ').value;
+    const mySpell1 = document.getElementById('my-spell-1').value;
+    const mySpell2 = document.getElementById('my-spell-2').value;
+    
+    const allies = [
+        myChamp,
+        document.getElementById('my-team-2').value,
+        document.getElementById('my-team-3').value,
+        document.getElementById('my-team-4').value,
+        document.getElementById('my-team-5').value
+    ].filter(name => name).join(', ');
+
+    const enemies = [
+        document.getElementById('op-champ-1').value,
+        document.getElementById('op-champ-2').value,
+        document.getElementById('op-champ-3').value,
+        document.getElementById('op-champ-4').value,
+        document.getElementById('op-champ-5').value
+    ].filter(name => name).join(', ');
+
+    const scale = document.getElementById('fight-scale').value;
     const resultDiv = document.getElementById('analysis-result');
     const loading = document.getElementById('loading-bar');
 
-    if(!my || !op) { 
-        alert("챔피언을 모두 입력해주세요."); 
+    if(!myChamp) { 
+        alert("내 챔피언을 입력해주세요."); 
         return; 
     }
 
     loading.style.display = "block";
     resultDiv.style.display = "none";
 
-    // 상세 프롬프트 (유저들이 감탄할 수 있게 구성)
-    const prompt = `당신은 롤 프로팀 수석 코치입니다.
-    데이터 분석: 내 챔피언 ${my}(${spell}) vs 상대 챔피언 ${op}
-    상황: ${scale} 교전 상황.
+    const prompt = `당신은 롤 프로팀 수석 분석관입니다. 다음 팀 조합을 바탕으로 ${scale} 상황에서의 승리 전략을 제시하세요.
 
-    다음 항목을 아주 상세하고 전문적으로 분석하세요:
-    1. [상성 분석] 초반 주도권과 스펠 유불리.
-    2. [교전 핵심] ${scale} 발생 시 반드시 지켜야 할 포지셔닝과 스킬 콤보.
-    3. [변수 차단] 상대 ${op}의 핵심 스킬 대처법.
-    4. [최종 결론] 이 교전의 승률과 추천 행동 방향.
+    [팀 구성]
+    - 아군: ${allies} (본인: ${myChamp} / 스펠: ${mySpell1}, ${mySpell2})
+    - 적군: ${enemies}
 
-    *불필요한 데이터(JSON, 좌표)는 출력하지 말고 오직 전략 리포트만 작성하세요.`;
+    [분석 요청 항목]
+    1. 조합 상성 분석 (이니시, 유지력, 포킹 등)
+    2. 본인(${myChamp})의 핵심 역할과 한타 포지셔닝
+    3. 반드시 마크해야 할 적군 핵심 챔피언과 대처법
+    4. ${scale} 시 승리를 위한 결정적 한 수 (스킬 연계 등)
+
+    *전문 용어를 사용하되, JSON/좌표/불필요한 기호는 생략하고 깔끔한 텍스트 리포트로 작성하세요.`;
 
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${G_KEY}`, {
@@ -48,7 +66,7 @@ async function runProAnalysis() {
         loading.style.display = "none";
         resultDiv.style.display = "block";
         
-        // 마크다운 형식이나 불필요한 기호 정제 (JSON/좌표 regex 포함)
+        // 정제 로직: JSON, 좌표, 마크다운 기호 제거
         resultDiv.innerText = text
             .replace(/\{[\s\S]*?\}|\[[\s\S]*?\]/g, '')
             .replace(/[\*#]/g, '')
@@ -58,6 +76,6 @@ async function runProAnalysis() {
         console.error(error);
         loading.style.display = "none";
         resultDiv.style.display = "block";
-        resultDiv.innerText = `분석 중 오류가 발생했습니다: ${error.message}\nAPI 키가 올바른지 확인해주세요.`;
+        resultDiv.innerText = `분석 중 오류가 발생했습니다: ${error.message}\nAPI 키를 확인해주세요.`;
     }
 }

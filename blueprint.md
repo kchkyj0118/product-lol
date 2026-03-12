@@ -4,18 +4,17 @@
 LoL AI Coach is a web-based application designed to provide real-time strategic advice for League of Legends players. It uses AI to analyze matchups and suggest optimal playstyles based on current meta data.
 
 ## Features implemented
-- **Polished PRO COACH UI**: Organized sections for "CHAMPION MATCHUP" and "BATTLE SETTING".
-- **Enhanced Context**: Support for detailed matchup inputs (My/Op Champion), Fight Scale (1v1 to 5v5), and Spell selection.
-- **Gemini Pro Integration**: Direct connection to the Gemini API for professional-grade coaching reports.
-- **Advanced Text Cleaning**: Regex-based cleaning to remove JSON, coordinates, and markdown characters (*, #) for a clean report look.
-- **Loading State**: Visual feedback with a loading bar while the AI processes data.
-- **Modern Dark Theme**: Optimized layout for readability and professional feel.
-- **Privacy & Terms**: Links to legal documentation.
+- **Full Team Analysis (5v5)**: Support for inputting all 10 champions in a match.
+- **Advanced UI Grids**: Specialized grid layouts for "MY TEAM" and "ENEMY TEAM" inputs.
+- **Main Champion Highlighting**: Clear visual distinction for the user's champion and their direct opponent.
+- **Dual Spell Support**: Added selection for both Summoner Spells.
+- **Global Coaching Prompt**: Enhanced prompt engineering that considers team composition (initiation, sustain, poke) for professional-grade analysis.
+- **Improved Data Cleaning**: Regex-based removal of code structures and markdown symbols for professional reports.
+- **Loading State**: Visual feedback during deep team analysis.
 
 ## Technical Details
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+).
-- **Design**: Gold-themed aesthetics with flexbox and responsive layouts.
-- **Data Processing**: Prompt engineering for "Pro Team Head Coach" persona.
+- **Frontend**: HTML5, CSS3 (Grid/Flexbox), JavaScript (ES6+).
+- **AI Integration**: Gemini Pro API with a "Pro Team Head Analyst" persona.
 
 ## Current Plan
 1. [x] Update project structure (Move files to `public/`).

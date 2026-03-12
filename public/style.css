@@ -46,14 +46,32 @@ body {
     letter-spacing: 1px;
 }
 
-.flex-row { 
+.team-grid { 
     display: flex; 
-    gap: 15px; 
-    margin-bottom: 20px; 
+    flex-direction: column; 
+    gap: 10px; 
+    margin-bottom: 25px; 
 }
 
-.input-item { 
-    flex: 1; 
+.others-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+}
+
+.champ-row { 
+    display: grid; 
+    grid-template-columns: 2fr 1fr 1fr; 
+    gap: 10px; 
+}
+
+.highlight { 
+    border: 2px solid var(--gold) !important; 
+    background: #2a3039;
+}
+
+.highlight-op { 
+    border: 2px solid #ff4d4d !important; 
 }
 
 input, select { 
@@ -64,7 +82,12 @@ input, select {
     background: #2a3039; 
     color: white; 
     box-sizing: border-box;
-    font-size: 1rem;
+    font-size: 0.9rem;
+}
+
+input:focus, select:focus {
+    border-color: var(--gold);
+    outline: none;
 }
 
 button { 

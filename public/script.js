@@ -1,17 +1,3 @@
-// Firebase Configuration (Empty placeholder - should be replaced with real config)
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const functions = firebase.functions();
-
 // State
 let selectedLane = null;
 
@@ -56,15 +42,26 @@ analyzeBtn.addEventListener('click', async () => {
     analyzeBtn.disabled = true;
 
     try {
-        const analyzeWinPlan = functions.httpsCallable('analyzeWinPlan');
-        const result = await analyzeWinPlan({
-            allies: allies,
-            enemies: enemies,
-            myLine: selectedLane
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                allies: allies,
+                enemies: enemies,
+                myLine: selectedLane
+            })
         });
 
-        // Simple Markdown-like formatting (real projects should use a library like 'marked')
-        const formattedText = result.data.text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        const result = await response.json();
+
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        // Simple Markdown-like formatting
+        const formattedText = result.text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         analysisContent.innerHTML = formattedText;
     } catch (error) {
         console.error("Analysis failed:", error);

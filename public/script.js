@@ -57,6 +57,15 @@ analyzeBtn.addEventListener('click', async () => {
         return;
     }
 
+    // Construct prompt for the new backend
+    const modeText = analysisMode === 'LANE' ? '1:1 라인전 집중' : analysisMode === 'SKIRMISH' ? '2:2 교전 집중' : '5:5 전체 승리 플랜';
+    const fullPrompt = `[응답은 반드시 한국어로만 하세요] 당신은 LoL 전문 분석가입니다.
+분석 모드: ${modeText}
+내 라인: ${selectedLane}
+우리팀: ${allies.join(", ")}
+상대팀: ${enemies.join(", ")}
+최적의 승리 플랜을 알려줘.`;
+
     // Show loading state
     resultArea.classList.remove('hidden');
     loading.classList.remove('hidden');
@@ -70,21 +79,25 @@ analyzeBtn.addEventListener('click', async () => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                allies: allies,
-                enemies: enemies,
-                myLine: selectedLane,
-                analysisMode: analysisMode
+                prompt: fullPrompt
             })
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
-        if (result.error) {
-            throw new Error(result.error);
+        if (data.error) {
+            throw new Error(data.error);
         }
 
-        // Simple Markdown-like formatting
-        const formattedText = result.text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Parsing Gemini's standard response format
+        let aiText = "";
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+            aiText = data.candidates[0].content.parts[0].text;
+        } else {
+            aiText = "AI 응답을 가져오지 못했습니다.";
+        }
+
+        const formattedText = aiText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         analysisContent.innerHTML = formattedText;
     } catch (error) {
         console.error("Analysis failed:", error);

@@ -8,80 +8,45 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>AI 롤 승리 플랜 코치</h1>
-            <p>최신 패치 기반의 전문 분석 시스템</p>
-        </header>
+        <h1>AI 롤 승리 플랜 코치</h1>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('5v5', event)">5대5 (전체)</button>
+            <button class="mode-btn" onclick="setMode('2v2', event)">2대2 (바텀/정글)</button>
+            <button class="mode-btn" onclick="setMode('1v1', event)">1대1 (라인전)</button>
+        </div>
 
-        <main>
-            <section class="selection-area">
-                <div class="team-selection">
+        <div class="input-section">
+            <div class="team-container">
+                <div class="team blue-team">
                     <h3>우리 팀 (Allies)</h3>
-                    <div class="inputs" id="ally-inputs">
-                        <input type="text" list="champion-list" placeholder="탑 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="정글 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="미드 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="원딜 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="서포터 챔피언" class="champion-input">
-                    </div>
+                    <div id="blue-inputs"></div>
                 </div>
-
-                <div class="team-selection">
+                <div class="team red-team">
                     <h3>상대 팀 (Enemies)</h3>
-                    <div class="inputs" id="enemy-inputs">
-                        <input type="text" list="champion-list" placeholder="탑 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="정글 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="미드 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="원딜 챔피언" class="champion-input">
-                        <input type="text" list="champion-list" placeholder="서포터 챔피언" class="champion-input">
-                    </div>
+                    <div id="red-inputs"></div>
                 </div>
-            </section>
+            </div>
 
-            <!-- Champion Datalist -->
-            <datalist id="champion-list"></datalist>
+            <div class="my-info">
+                <label>내 라인:</label>
+                <select id="my-lane" onchange="updateView()">
+                    <option value="탑">탑</option>
+                    <option value="정글">정글</option>
+                    <option value="미드">미드</option>
+                    <option value="원딜">원딜</option>
+                    <option value="서포터">서포터</option>
+                </select>
+            </div>
 
-            <section class="lane-selection">
-                <h3>내 라인 선택</h3>
-                <div class="lane-buttons">
-                    <button class="lane-btn" data-lane="TOP">탑</button>
-                    <button class="lane-btn" data-lane="JUNGLE">정글</button>
-                    <button class="lane-btn" data-lane="MID">미드</button>
-                    <button class="lane-btn" data-lane="ADC">원딜</button>
-                    <button class="lane-btn" data-lane="SUPPORT">서포터</button>
-                </div>
-            </section>
+            <button id="analyze-btn" onclick="startAnalysis()">승리 플랜 분석 시작</button>
+        </div>
 
-            <section class="analysis-mode-selection">
-                <h3>분석 범위 선택</h3>
-                <div class="mode-options">
-                    <label class="mode-label">
-                        <input type="radio" name="analysis-mode" value="FULL" checked>
-                        <span>전체 5:5 승리 플랜</span>
-                    </label>
-                    <label class="mode-label">
-                        <input type="radio" name="analysis-mode" value="LANE">
-                        <span>우리 라인 1:1 집중 분석</span>
-                    </label>
-                    <label class="mode-label">
-                        <input type="radio" name="analysis-mode" value="SKIRMISH">
-                        <span>정글 포함 2:2 교전 분석</span>
-                    </label>
-                </div>
-            </section>
-
-            <button id="analyze-btn" class="main-btn">승리 플랜 분석하기</button>
-
-            <section id="result-area" class="result-area hidden">
-                <h2>분석 결과</h2>
-                <div id="loading" class="loading hidden">
-                    <div class="spinner"></div>
-                    <p>AI 코치가 조합을 분석 중입니다...</p>
-                </div>
-                <div id="analysis-content" class="markdown-body"></div>
-            </section>
-        </main>
+        <div id="result" class="result-area hidden">
+            <div id="loading" class="hidden">분석 중... (최대 30초 소요)</div>
+            <div id="analysis-content"></div>
+        </div>
     </div>
-    <script src="script.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>

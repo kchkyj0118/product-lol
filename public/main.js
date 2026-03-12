@@ -37,9 +37,9 @@ function showAutocomplete(input) {
         li.onclick = () => {
             input.value = c.name;
             const row = input.closest('.player-row');
-            const iconMain = row.querySelector('.champ-icon-main');
-            iconMain.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png`;
-            iconMain.classList.add('active');
+            const iconImg = row.querySelector('.champ-icon-main');
+            iconImg.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${c.id}.png`;
+            iconImg.classList.add('active'); // 이미지를 보여줌
             listEl.innerHTML = '';
         };
         listEl.appendChild(li);

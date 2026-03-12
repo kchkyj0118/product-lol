@@ -18,25 +18,28 @@
                 <div class="team-selection">
                     <h3>우리 팀 (Allies)</h3>
                     <div class="inputs" id="ally-inputs">
-                        <input type="text" placeholder="탑 챔피언" class="champion-input">
-                        <input type="text" placeholder="정글 챔피언" class="champion-input">
-                        <input type="text" placeholder="미드 챔피언" class="champion-input">
-                        <input type="text" placeholder="원딜 챔피언" class="champion-input">
-                        <input type="text" placeholder="서포터 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="탑 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="정글 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="미드 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="원딜 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="서포터 챔피언" class="champion-input">
                     </div>
                 </div>
 
                 <div class="team-selection">
                     <h3>상대 팀 (Enemies)</h3>
                     <div class="inputs" id="enemy-inputs">
-                        <input type="text" placeholder="탑 챔피언" class="champion-input">
-                        <input type="text" placeholder="정글 챔피언" class="champion-input">
-                        <input type="text" placeholder="미드 챔피언" class="champion-input">
-                        <input type="text" placeholder="원딜 챔피언" class="champion-input">
-                        <input type="text" placeholder="서포터 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="탑 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="정글 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="미드 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="원딜 챔피언" class="champion-input">
+                        <input type="text" list="champion-list" placeholder="서포터 챔피언" class="champion-input">
                     </div>
                 </div>
             </section>
+
+            <!-- Champion Datalist -->
+            <datalist id="champion-list"></datalist>
 
             <section class="lane-selection">
                 <h3>내 라인 선택</h3>
@@ -46,6 +49,24 @@
                     <button class="lane-btn" data-lane="MID">미드</button>
                     <button class="lane-btn" data-lane="ADC">원딜</button>
                     <button class="lane-btn" data-lane="SUPPORT">서포터</button>
+                </div>
+            </section>
+
+            <section class="analysis-mode-selection">
+                <h3>분석 범위 선택</h3>
+                <div class="mode-options">
+                    <label class="mode-label">
+                        <input type="radio" name="analysis-mode" value="FULL" checked>
+                        <span>전체 5:5 승리 플랜</span>
+                    </label>
+                    <label class="mode-label">
+                        <input type="radio" name="analysis-mode" value="LANE">
+                        <span>우리 라인 1:1 집중 분석</span>
+                    </label>
+                    <label class="mode-label">
+                        <input type="radio" name="analysis-mode" value="SKIRMISH">
+                        <span>정글 포함 2:2 교전 분석</span>
+                    </label>
                 </div>
             </section>
 

@@ -185,6 +185,12 @@ async function startAnalysis() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt }) 
         });
+
+        if (response.status === 429) {
+            alert("API 사용량 제한에 걸렸습니다. 약 1분 뒤에 다시 시도해 주세요!");
+            return;
+        }
+
         const result = await response.json();
         
         if (result.error) {
@@ -265,26 +271,43 @@ function renderJungleStrategy(strategyData) {
         </div>
     `;
     analysisSection.insertAdjacentHTML('beforeend', jungleHtml);
-    setTimeout(() => drawJungleStrategy(strategyData.pathPoints), 100);
+    setTimeout(() => drawJungleStrategy(strategyData.pathPoints, strategyData.matchupTip.includes('카정') ? '카정' : '일반'), 100);
 }
 
-function drawJungleStrategy(points) {
+function drawJungleStrategy(points, strategyType) {
     const canvas = document.getElementById('jungle-path-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
-    
-    ctx.strokeStyle = '#fbbf24'; 
-    ctx.lineWidth = 4;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 선 스타일 설정
+    ctx.strokeStyle = strategyType === '카정' ? '#ef4444' : '#fbbf24'; // 카정은 빨간색, 일반은 노란색
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.setLineDash([5, 5]); 
-    
+    ctx.setLineDash([8, 8]); // 점선 효과로 동선 느낌 강조
+
+    // 경로 그리기
     ctx.beginPath();
     points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
+        // 미니맵 크기(320px)에 맞춰 좌표 변환 로직
+        const targetX = (p.x / 100) * canvas.width;
+        const targetY = (p.y / 100) * canvas.height;
+        
+        if (i === 0) ctx.moveTo(targetX, targetY);
+        else ctx.lineTo(targetX, targetY);
     });
     ctx.stroke();
+
+    // 갱킹 지점(마지막 포인트)에 마커 표시
+    const last = points[points.length - 1];
+    if (last) {
+        ctx.fillStyle = '#ef4444';
+        ctx.setLineDash([]); // 마커는 실선
+        ctx.beginPath();
+        ctx.arc((last.x/100)*canvas.width, (last.y/100)*canvas.height, 8, 0, Math.PI*2);
+        ctx.fill();
+    }
 }
 
 function toggleDetails() {

@@ -1,111 +1,104 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8"><title>AI 롤 전략 코치</title>
+    <meta charset="UTF-8"><title>LoL AI 코치 & 시뮬레이터</title>
     <style>
         body { background: #0f1014; color: white; font-family: sans-serif; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; }
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; justify-content: center; }
-        .tab { padding: 10px 20px; background: #1c1c1f; border: none; color: #9e9eb1; cursor: pointer; border-radius: 4px 4px 0 0; }
+        .tab { padding: 12px 24px; background: #1c1c1f; border: none; color: #9e9eb1; cursor: pointer; border-radius: 8px 8px 0 0; }
         .tab.active { background: #e8a93a; color: black; font-weight: bold; }
-        .search-box { display: none; gap: 10px; justify-content: center; background: #1c1c1f; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .search-box { display: none; gap: 10px; justify-content: center; background: #1c1c1f; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         .search-box.active { display: flex; }
         input { padding: 12px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 4px; }
         button { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        .sim-area { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .sim-team { background: #1c1c1f; padding: 15px; border-radius: 8px; min-height: 100px; }
-        .sim-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .sim-item { background: #0f1014; padding: 5px 10px; border-radius: 4px; border: 1px solid #e8a93a; font-size: 14px; display: flex; align-items: center; gap: 5px; }
-        .remove-btn { color: #e84057; cursor: pointer; font-weight: bold; }
-        .strategy { background: #1c1c1f; padding: 20px; border-radius: 8px; border-left: 5px solid #e8a93a; white-space: pre-wrap; display: none; line-height: 1.6; }
-        #loading { text-align: center; display: none; color: #e8a93a; margin-bottom: 10px; }
+        .sim-area { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .team { background: #1c1c1f; padding: 15px; border-radius: 8px; border-top: 4px solid #323232; }
+        .blue { border-color: #4171d6; } .red { border-color: #e84057; }
+        .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; }
+        .c-img { width: 40px; height: 40px; border-radius: 50%; }
+        .strategy { margin-top: 30px; background: #1c1c1f; padding: 20px; border-radius: 8px; border-left: 5px solid #e8a93a; white-space: pre-wrap; line-height: 1.6; display: none; }
+        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px 0; }
+        .sim-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .sim-tag { background: #0f1014; padding: 5px 10px; border-radius: 4px; border: 1px solid #e8a93a; font-size: 13px; }
+        .remove { color: #e84057; margin-left: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('live')">실시간 검색</button>
-            <button class="tab" onclick="switchTab('sim')">시뮬레이션</button>
+            <button id="tab-live" class="tab active" onclick="switchMode('live')">실시간 분석</button>
+            <button id="tab-sim" class="tab" onclick="switchMode('sim')">조합 시뮬레이션</button>
         </div>
 
         <div id="live-box" class="search-box active">
             <input type="text" id="name" placeholder="소환사명">
             <input type="text" id="tag" placeholder="태그 (#제외)">
-            <button onclick="analyzeLive()">분석 시작</button>
+            <button onclick="runLive()">게임 분석</button>
         </div>
 
         <div id="sim-box" class="search-box">
-            <input type="text" id="champ-input" placeholder="챔피언명 (한글)">
-            <button onclick="addChamp('Blue')" style="background:#4171d6; color:white;">우리팀 추가</button>
-            <button onclick="addChamp('Red')" style="background:#e84057; color:white;">상대팀 추가</button>
-            <button onclick="analyzeSim()" style="margin-left:20px;">조합 분석</button>
+            <input type="text" id="champ-in" placeholder="챔피언명 (한글)">
+            <button onclick="add('Blue')" style="background:#4171d6; color:white;">우리팀 추가</button>
+            <button onclick="add('Red')" style="background:#e84057; color:white;">상대팀 추가</button>
+            <button onclick="runSim()" style="margin-left:10px;">시뮬레이션 시작</button>
         </div>
 
-        <div id="sim-display" class="sim-area" style="display:none;">
-            <div class="sim-team">
-                <strong style="color:#4171d6;">우리팀</strong>
-                <div id="blue-list" class="sim-list"></div>
-            </div>
-            <div class="sim-team">
-                <strong style="color:#e84057;">상대팀</strong>
-                <div id="red-list" class="sim-list"></div>
-            </div>
-        </div>
-
-        <div id="loading">🚀 챌린저 코치가 전략 수립 중...</div>
-        <div id="board" class="sim-area"></div>
+        <div id="loading">🚀 챌린저 코치가 데이터를 분석 중입니다...</div>
+        <div id="display" class="sim-area"></div>
         <div id="strategy" class="strategy"></div>
     </div>
 
     <script>
         let simData = { Blue: [], Red: [] };
-
-        function switchTab(type) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.search-box').forEach(b => b.classList.remove('active'));
-            document.getElementById(`${type}-box`).classList.add('active');
-            event.target.classList.add('active');
-            document.getElementById('sim-display').style.display = type === 'sim' ? 'grid' : 'none';
+        function switchMode(m) {
+            document.querySelectorAll('.tab, .search-box').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${m}`).classList.add('active');
+            document.getElementById(`${m}-box`).classList.add('active');
+            document.getElementById('display').innerHTML = '';
+            document.getElementById('strategy').style.display = 'none';
         }
-
-        function addChamp(team) {
-            const name = document.getElementById('champ-input').value.trim();
-            if(!name) return;
-            simData[team].push(name);
-            document.getElementById('champ-input').value = '';
-            renderSimList();
+        function add(t) {
+            const val = document.getElementById('champ-in').value.trim();
+            if(val) { simData[t].push(val); document.getElementById('champ-in').value = ''; renderSim(); }
         }
-
-        function renderSimList() {
-            ['Blue', 'Red'].forEach(side => {
-                const el = document.getElementById(`${side.toLowerCase()}-list`);
-                el.innerHTML = simData[side].map((c, i) => `
-                    <div class="sim-item">${c} <span class="remove-btn" onclick="simData['${side}'].splice(${i},1); renderSimList();">×</span></div>
-                `).join('');
-            });
+        function renderSim() {
+            const disp = document.getElementById('display');
+            disp.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
+                <div class="sim-list">${simData[side].map((c,i) => `<span class="sim-tag">${c}<span class="remove" onclick="simData['${side}'].splice(${i},1);renderSim();">×</span></span>`).join('')}</div></div>
+            `).join('');
         }
-
-        async function analyzeLive() {
+        async function runLive() {
             const n = document.getElementById('name').value.trim();
             const t = document.getElementById('tag').value.trim().replace('#','');
-            callApi({ mode: 'live', summonerName: n, tagLine: t });
+            api({ mode: 'live', name: n, tag: t });
         }
-
-        async function analyzeSim() {
-            if(simData.Blue.length === 0 || simData.Red.length === 0) return alert('양팀에 최소 1명씩 추가하세요!');
-            callApi({ mode: 'sim', teams: simData });
+        async function runSim() {
+            if(!simData.Blue.length || !simData.Red.length) return alert('양팀에 챔피언을 추가하세요!');
+            api({ mode: 'sim', teams: simData });
         }
-
-        async function callApi(body) {
+        async function api(body) {
             document.getElementById('loading').style.display = 'block';
             try {
                 const res = await fetch('/analyze', { method:'POST', body:JSON.stringify(body) });
                 const d = await res.json();
                 if(d.error) throw new Error(d.error);
+                if(d.teams) renderLive(d.teams);
                 document.getElementById('strategy').innerText = d.strategy;
                 document.getElementById('strategy').style.display = 'block';
             } catch(e) { alert(e.message); }
             document.getElementById('loading').style.display = 'none';
+        }
+        function renderLive(teams) {
+            const disp = document.getElementById('display');
+            disp.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
+                ${teams[side].map(p => `<div class="p-row" style="${p.isMe?'background:rgba(232,169,58,0.1)':''}">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champId}.png" class="c-img">
+                    <div style="font-size:13px;"><b>${p.summonerName}${p.isMe?' ⭐':''}</b><br><small>${p.champKName}</small></div>
+                </div>`).join('')}</div>
+            `).join('');
         }
     </script>
 </body>

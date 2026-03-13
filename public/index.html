@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL.ANALYZE - ⚡ 무결점 분석</title>
+    <title>LOL.ANALYZE - ⚡ 1타 강사 승리 공식</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* 가독성 1순위: 무조건 블랙 배경, 화이트 글씨 */
-        body { background-color: #000000 !important; color: #ffffff !important; font-family: sans-serif; }
-        .card { background-color: #0a0a0a; border: 1px solid #222; padding: 20px; border-radius: 12px; }
-        .user-nick { font-size: 1.25rem; font-weight: 900; color: #3b82f6; text-transform: none; } /* 닉네임 강조 */
-        .champ-label { font-size: 0.75rem; color: #666; font-weight: bold; text-transform: uppercase; }
-        .strategy-box { border-left: 4px solid #3b82f6; padding-left: 20px; margin-top: 20px; }
-        .strategy-text { white-space: pre-line; line-height: 1.8; color: #eeeeee; font-size: 1rem; }
+        /* 가독성 디자인: 블랙 & 황금 포인트 */
+        body { background-color: #000000 !important; color: #ffffff !important; font-family: 'Inter', sans-serif; }
+        .user-nick { font-size: 1.1rem; font-weight: 900; color: #3b82f6; }
+        .champion-label { font-size: 0.75rem; color: #666; font-weight: bold; text-transform: uppercase; }
+        .summary-card { border-left: 4px solid #fbbf24; background: #0a0a0a; padding: 24px; border-radius: 0 16px 16px 0; }
+        .detail-box { background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 12px; color: #aaa; line-height: 1.7; font-size: 0.9rem; margin-top: 20px; }
         input { background: #111 !important; color: #fff !important; border: 1px solid #333 !important; }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="antialiased">
@@ -25,34 +25,40 @@
                 <input type="text" id="name" placeholder="닉네임" class="px-4 py-2 outline-none w-32 md:w-48 text-sm rounded-l-xl">
                 <span class="text-gray-600 self-center font-bold px-1">#</span>
                 <input type="text" id="tag" placeholder="KR1" class="px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400">
-                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all active:scale-95 text-sm uppercase">분석</button>
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all active:scale-95 text-sm">분석</button>
             </div>
         </header>
 
-        <!-- 로딩 표시 -->
         <div id="loader" class="hidden text-center py-24">
             <div class="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-6"></div>
-            <p class="text-blue-400 font-black uppercase text-sm tracking-widest">Lightning Fast Engine Running...</p>
+            <p class="text-blue-400 font-black tracking-widest uppercase text-sm">Pro Analyst is formulating strategy...</p>
         </div>
 
-        <div id="dashboard" class="hidden space-y-8 animate-in fade-in duration-500">
-            <!-- 팀 리스트 -->
+        <div id="dashboard" class="hidden space-y-8 animate-in fade-in duration-700">
+            <!-- 챔피언 리스트 -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div id="blue-list" class="space-y-2"></div>
                 <div id="red-list" class="space-y-2"></div>
             </div>
 
-            <!-- 분석 리포트 -->
-            <div id="report-card" class="card shadow-2xl">
-                <h2 id="strat-title" class="text-xl font-black text-yellow-500 italic uppercase mb-6">Pro Analysis Report</h2>
-                <div class="strategy-box">
-                    <div id="analysis-content" class="strategy-text"></div>
+            <!-- 분석 리포트 영역 -->
+            <div id="analysis-container" class="mt-10">
+                <div class="summary-card shadow-2xl">
+                    <h2 id="strat-title" class="text-xl font-black text-yellow-500 italic mb-4 uppercase">⚡ Winning Formula</h2>
+                    <div id="summary-box" class="text-white text-lg font-bold leading-relaxed whitespace-pre-wrap"></div>
+                    
+                    <button onclick="toggleDetail()" id="detail-btn" class="mt-6 w-full py-3 bg-[#111] border border-gray-800 text-gray-400 text-xs font-black tracking-widest rounded-xl hover:bg-gray-900 transition-all uppercase">Detail Analysis +</button>
+                    
+                    <div id="detail-section" class="hidden detail-box whitespace-pre-wrap italic"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
+        const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
+
         function renderTeams(pList, ver) {
             const blue = document.getElementById('blue-list');
             const red = document.getElementById('red-list');
@@ -61,12 +67,16 @@
 
             pList.forEach(p => {
                 const isBlue = p.team === 100;
+                const rIcon = rMap[p.r] || "7200_Domination";
                 const html = `
                     <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a]">
                         <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-12 h-12 rounded-lg border border-[#222]">
                         <div class="mx-4 flex-1 ${isBlue ? 'text-left' : 'text-right'}">
                             <div class="user-nick truncate">${p.nick}</div>
-                            <div class="champ-label">${p.cName}</div>
+                            <div class="champion-label">${p.cName}</div>
+                        </div>
+                        <div class="flex gap-1 opacity-80">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rIcon}.png" class="w-6 h-6">
                         </div>
                     </div>`;
                 (isBlue ? blue : red).innerHTML += html;
@@ -76,10 +86,12 @@
         async function fetchGame() {
             const n = document.getElementById('name').value.trim();
             const t = document.getElementById('tag').value.trim();
-            if (!n || !t) return alert("닉네임과 태그를 입력하세요.");
+            if (!n || !t) return alert("닉네임#태그를 입력하세요.");
 
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('detail-section').classList.add('hidden');
+            document.getElementById('detail-btn').innerText = "Detail Analysis +";
 
             try {
                 const res = await fetch('/analyze', {
@@ -89,24 +101,31 @@
                 });
                 
                 const data = await res.json();
-                if (data.error) {
-                    alert(data.error);
-                    document.getElementById('loader').classList.add('hidden');
-                    return;
-                }
+                if (data.error) throw new Error(data.error);
 
-                // UI 결과 출력
                 renderTeams(data.pList, data.ver);
-                
-                // 데이터 매핑 및 Undefined 방지
-                document.getElementById('strat-title').innerText = `⚡ ${data.myChamp || 'PLAYER'} PRO ANALYSIS (G3F)`;
-                document.getElementById('analysis-content').innerText = data.strategy;
+                document.getElementById('strat-title').innerText = `⚡ ${data.myC} Pro Analysis`;
+                document.getElementById('summary-box').innerText = data.summary;
+                document.getElementById('detail-section').innerText = data.detail;
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
             } catch (err) {
-                alert("분석 서버 연결 실패");
+                alert(err.message || "연결 실패");
                 document.getElementById('loader').classList.add('hidden');
+            }
+        }
+
+        function toggleDetail() {
+            const section = document.getElementById('detail-section');
+            const btn = document.getElementById('detail-btn');
+            const isHidden = section.classList.contains('hidden');
+            if (isHidden) {
+                section.classList.remove('hidden');
+                btn.innerText = "Close Analysis -";
+            } else {
+                section.classList.add('hidden');
+                btn.innerText = "Detail Analysis +";
             }
         }
     </script>

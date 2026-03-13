@@ -95,39 +95,42 @@
         }
 
         async function fetchGame() {
-            const nameInput = document.getElementById('name').value.trim();
-            const tagInput = document.getElementById('tag').value.trim();
-            if(!nameInput || !tagInput) return alert("닉네임과 태그를 입력하세요.");
+            const n = document.getElementById('name').value.trim();
+            const t = document.getElementById('tag').value.trim();
+            if (!n || !t) return alert("닉네임#태그를 입력하세요.");
 
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('dashboard').classList.add('hidden');
 
             try {
-                // 경로를 명시적으로 표시하여 404 방지 시도
                 const res = await fetch('/analyze', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name: nameInput, tag: tagInput })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: n, tag: t })
                 });
                 
                 const data = await res.json();
-                if(data.error) {
+                if (data.error) {
                     alert(data.error);
                     document.getElementById('loader').classList.add('hidden');
                     return;
                 }
 
-                renderTeams(data.pList, data.ver);
-                fullStrat = data.strategy;
-                document.getElementById('strat-title').innerText = "⚡ " + data.myChampName + " 핵심 훈수";
-                
-                showSummary();
+                // 'reading 0' 방어 로직 및 데이터 필드명 일치 (pList, ver, myC)
+                if (data.pList && data.pList.length > 0) {
+                    renderTeams(data.pList, data.ver);
+                    fullStrat = data.strategy;
+                    document.getElementById('strat-title').innerText = "⚡ " + (data.myC || "챔피언") + " 핵심 훈수";
+                    showSummary();
+                } else {
+                    alert("데이터를 불러오는 데 실패했습니다.");
+                }
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
             } catch (err) {
                 console.error(err);
-                alert("연결 오류가 발생했습니다. 잠시 후 다시 시도해 주세요. (404 오류 시 배포 설정을 확인하세요)");
+                alert("연결 오류가 발생했습니다.");
                 document.getElementById('loader').classList.add('hidden');
             }
         }

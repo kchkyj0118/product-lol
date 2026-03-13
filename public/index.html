@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL.ANALYZE - 맞춤형 훈수</title>
+    <title>LOL.ANALYZE</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#0b0d0f] text-white">
+<body class="bg-[#0b0d0f] text-white font-sans">
     <div class="max-w-5xl mx-auto p-4 md:p-10">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-black italic text-blue-500 mb-8 tracking-tighter">LOL.ANALYZE</h1>
             <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2">
-                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-32 md:w-48 text-sm">
+                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-32 md:w-48">
                 <span class="text-gray-600 self-center font-bold">#</span>
-                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400">
-                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all">전략 분석</button>
+                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-16 md:w-24 font-bold text-blue-400">
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2">전략 분석</button>
             </div>
         </header>
 
-        <div id="loader" class="hidden text-center py-20 text-blue-400 animate-pulse font-bold text-lg">최신 메타 데이터를 바탕으로 승리 시나리오를 짜는 중...</div>
+        <div id="loader" class="hidden text-center py-20 text-blue-400 animate-pulse font-bold text-lg">메타 데이터를 분석하고 있습니다...</div>
 
         <div id="dashboard" class="hidden space-y-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -27,12 +27,9 @@
             </div>
 
             <div class="bg-[#14171a] border border-gray-800 p-8 rounded-3xl shadow-2xl">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 id="strat-title" class="text-2xl font-black text-yellow-500 italic mb-1">WINNING STRATEGY</h3>
-                        <p class="text-xs text-gray-500 uppercase tracking-widest font-bold">Based on Real-time Matchup Data</p>
-                    </div>
-                    <button id="toggle-btn" onclick="toggleDetail()" class="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/20">상세 리포트 보기 +</button>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="strat-title" class="text-xl font-black text-yellow-500 italic uppercase">Winning Plan</h3>
+                    <button id="toggle-btn" onclick="toggleDetail()" class="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-bold transition-all">상세 리포트 보기 +</button>
                 </div>
                 <div id="strategy-box" class="text-gray-300 text-[15px] leading-relaxed whitespace-pre-wrap pt-4 border-t border-gray-800"></div>
             </div>
@@ -40,15 +37,15 @@
     </div>
 
     <script>
-        let fullStrategy = "";
+        let fullStrat = "";
         let isDetail = false;
-        const spellMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
-        const runeMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
+        const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
+        const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
 
         async function fetchGame() {
             const name = document.getElementById('name').value;
             const tag = document.getElementById('tag').value;
-            if(!name || !tag) return alert("닉네임과 태그를 입력하세요.");
+            if(!name || !tag) return alert("닉네임#태그를 입력하세요.");
 
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('dashboard').classList.add('hidden');
@@ -57,16 +54,16 @@
                 const res = await fetch('/analyze', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, tag })
+                    body: JSON.stringify({ name, tag }) // 최소한의 데이터만 전송
                 });
                 const data = await res.json();
                 if(!res.ok) throw new Error(data.error);
 
-                renderTeam('blue-list', data.blueTeam, data.version, true);
-                renderTeam('red-list', data.redTeam, data.version, false);
+                renderTeam('blue-list', data.blue, data.version, true);
+                renderTeam('red-list', data.red, data.version, false);
                 
-                fullStrategy = data.fullText;
-                document.getElementById('strat-title').innerText = "⚡ " + data.myChamp + " 승리 플랜";
+                fullStrat = data.strategy;
+                document.getElementById('strat-title').innerText = "⚡ " + data.myChamp + " 핵심 전략";
                 showSummary();
 
                 document.getElementById('loader').classList.add('hidden');
@@ -78,41 +75,38 @@
         }
 
         function showSummary() {
-            const summary = fullStrategy.split("[상세]")[0].replace("[요약]", "").trim();
-            document.getElementById('strategy-box').innerText = summary;
+            const sum = fullStrat.split("[상세]")[0].replace("[요약]", "").trim();
+            document.getElementById('strategy-box').innerText = sum;
             document.getElementById('toggle-btn').innerText = "상세 리포트 보기 +";
             isDetail = false;
         }
 
         function toggleDetail() {
-            if(isDetail) {
-                showSummary();
-            } else {
-                document.getElementById('strategy-box').innerText = fullStrategy.replace("[요약]", "").replace("[상세]", "\n\n────────────────\n[상세 전략 리포트]\n");
-                document.getElementById('toggle-btn').innerText = "요약 다시 보기 -";
+            if(isDetail) showSummary();
+            else {
+                document.getElementById('strategy-box').innerText = fullStrat.replace("[요약]", "").replace("[상세]", "\n\n────────────────\n[상세 리포트]\n");
+                document.getElementById('toggle-btn').innerText = "요약 보기 -";
                 isDetail = true;
             }
         }
 
         function renderTeam(id, players, ver, isBlue) {
             const list = document.getElementById(id);
-            list.innerHTML = '<h2 class="text-[10px] font-black uppercase tracking-widest mb-3 ' + (isBlue?'text-blue-500':'text-red-500 text-right') + '">' + (isBlue?'Blue Team':'Red Team') + '</h2>';
+            list.innerHTML = '<h2 class="text-[10px] font-black uppercase mb-3 ' + (isBlue?'text-blue-500':'text-red-500 text-right') + '">' + (isBlue?'Blue side':'Red side') + '</h2>';
             players.forEach(p => {
-                const rPath = runeMap[p.subStyleId] || "7200_Domination";
-                const s1 = spellMap[p.spell1] || "SummonerFlash";
-                const s2 = spellMap[p.spell2] || "SummonerDot";
+                const rPath = rMap[p.rune] || "7200_Domination";
                 list.innerHTML += '<div class="flex ' + (isBlue ? 'flex-row' : 'flex-row-reverse') + ' items-center bg-[#1a1d20] p-3 rounded-2xl border border-gray-800">' +
-                    '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/champion/' + p.championName + '.png" class="w-12 h-12 rounded-xl border border-gray-700 shadow-md">' +
+                    '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/champion/' + p.cName + '.png" class="w-12 h-12 rounded-xl border border-gray-700">' +
                     '<div class="mx-4 flex-1 overflow-hidden ' + (isBlue ? 'text-left' : 'text-right') + '">' +
-                        '<div class="text-[13px] font-bold truncate text-white">' + p.realName + '</div>' +
-                        '<div class="text-[10px] text-gray-400">' + p.championName + '</div>' +
+                        '<div class="text-[13px] font-bold truncate text-white">' + p.nick + '</div>' + // 실제 닉네임 표시
+                        '<div class="text-[10px] text-gray-500">' + p.cName + '</div>' +
                     '</div>' +
                     '<div class="flex gap-2">' +
                         '<div class="flex flex-col gap-1">' +
-                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + s1 + '.png" class="w-5 h-5 rounded shadow-sm shadow-black">' +
-                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + s2 + '.png" class="w-5 h-5 rounded shadow-sm shadow-black">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + (sMap[p.s1]||'SummonerFlash') + '.png" class="w-5 h-5 rounded">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + (sMap[p.s2]||'SummonerDot') + '.png" class="w-5 h-5 rounded">' +
                         '</div>' +
-                        '<div class="w-10 h-10 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center">' +
+                        '<div class="w-10 h-10 bg-black/50 rounded-full border border-gray-700 flex items-center justify-center">' +
                             '<img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/' + rPath + '.png" class="w-6 h-6">' +
                         '</div>' +
                     '</div>' +

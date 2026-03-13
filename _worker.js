@@ -2,6 +2,19 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // 1. Handle CORS Preflight (OPTIONS)
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
+
+    // 2. Handle API Request
     if (url.pathname === "/api/analyze" && request.method === "POST") {
       try {
         const { summonerName, tagLine } = await request.json();
@@ -9,29 +22,28 @@ export default {
         const RIOT_API_KEY = env.RIOT_API_KEY;
 
         if (!GEMINI_API_KEY || !RIOT_API_KEY) {
-          return new Response(JSON.stringify({ error: "API 키(GEMINI or RIOT)가 설정되지 않았습니다." }), { 
-            status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
-          });
+          throw new Error("API 키(GEMINI or RIOT)가 설정되지 않았습니다.");
         }
 
-        // 1. Account-V1: Get PUUID
+        // --- Riot API Logic ---
+        // Account-V1: Get PUUID
         const accountRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
         if (!accountRes.ok) throw new Error("소환사를 찾을 수 없습니다. (이름/태그 확인)");
         const { puuid } = await accountRes.json();
 
-        // 2. Spectator-V5: Get Active Game
+        // Spectator-V5: Get Active Game
         const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${puuid}?api_key=${RIOT_API_KEY}`);
         if (gameRes.status === 404) throw new Error("현재 진행 중인 게임이 없습니다.");
         if (!gameRes.ok) throw new Error("게임 정보를 가져오는데 실패했습니다.");
         const gameData = await gameRes.json();
 
-        // 3. Champion ID to Name Mapping (Data Dragon)
+        // Champion ID to Name Mapping
         const champDataRes = await fetch("https://ddragon.leagueoflegends.com/cdn/14.5.1/data/ko_KR/champion.json");
         const champJson = await champDataRes.json();
         const champMap = {};
         Object.values(champJson.data).forEach(c => { champMap[c.key] = c.name; });
 
-        // 4. Organize Teams
+        // Organize Teams
         const targetPlayer = gameData.participants.find(p => p.puuid === puuid);
         const myTeamId = targetPlayer.teamId;
         const myTeam = [];
@@ -43,7 +55,7 @@ export default {
           else enemyTeam.push(name);
         });
 
-        // 5. Gemini Prompt
+        // --- Gemini API Logic ---
         const prompt = `
           리그 오브 레전드 최고 수준의 분석가로서 답변해줘.
           상황: 현재 실시간 게임 진행 중.
@@ -68,16 +80,24 @@ export default {
         const strategyText = geminiData.candidates[0].content.parts[0].text;
 
         return new Response(JSON.stringify({ strategy: strategyText }), { 
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
+          headers: { 
+            "Content-Type": "application/json", 
+            "Access-Control-Allow-Origin": "*" 
+          } 
         });
 
       } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), { 
-          status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+          status: 500, 
+          headers: { 
+            "Content-Type": "application/json", 
+            "Access-Control-Allow-Origin": "*" 
+          }
         });
       }
     }
 
+    // 3. Serve Static Assets (Frontend)
     return env.ASSETS.fetch(request);
   }
 };

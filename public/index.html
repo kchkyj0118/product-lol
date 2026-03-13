@@ -9,13 +9,14 @@
     <!-- Production Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        input::placeholder {
-            color: #6b7280;
-        }
-        /* 입력 중인 글씨가 잘 보이도록 배경색 명시 및 색상 고정 */
-        input {
+        /* 입력창 글씨 색상 및 배경색 강제 설정 (가독성 문제 해결) */
+        input#name, input#tag {
             background-color: #1a1d20 !important;
             color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important; /* iOS/Chrome 대응 */
+        }
+        input::placeholder {
+            color: #6b7280 !important;
         }
     </style>
 </head>
@@ -25,8 +26,8 @@
             <h1 class="text-4xl font-black italic text-blue-500 mb-8 tracking-tighter uppercase">Lol.Analyze</h1>
             <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2 shadow-2xl">
                 <input type="text" id="name" placeholder="닉네임" class="px-4 py-2 outline-none w-32 md:w-48 text-sm rounded-l-xl">
-                <span class="text-gray-600 self-center font-bold bg-[#1a1d20] py-2 px-1">#</span>
-                <input type="text" id="tag" placeholder="KR1" class="px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400 rounded-r-none">
+                <span class="text-gray-600 self-center font-bold px-1">#</span>
+                <input type="text" id="tag" placeholder="KR1" class="px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400">
                 <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all active:scale-95">전략 분석</button>
             </div>
         </header>
@@ -102,6 +103,7 @@
             document.getElementById('dashboard').classList.add('hidden');
 
             try {
+                // 경로를 명시적으로 표시하여 404 방지 시도
                 const res = await fetch('/analyze', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -119,19 +121,21 @@
                 fullStrat = data.strategy;
                 document.getElementById('strat-title').innerText = "⚡ " + data.myChampName + " 핵심 훈수";
                 
-                // 초기 요약만 표시
                 showSummary();
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
             } catch (err) {
-                alert("연결 오류가 발생했습니다. (서버 응답 없음)");
+                console.error(err);
+                alert("연결 오류가 발생했습니다. 잠시 후 다시 시도해 주세요. (404 오류 시 배포 설정을 확인하세요)");
                 document.getElementById('loader').classList.add('hidden');
             }
         }
 
         function showSummary() {
-            const summary = fullStrat.split('[상세]')[0].replace('[요약]', '').trim();
+            if (!fullStrat) return;
+            const parts = fullStrat.split('[상세]');
+            const summary = parts[0].replace('[요약]', '').trim();
             document.getElementById('strategy-box').innerText = summary;
             document.getElementById('toggle-btn').innerText = "상세 훈수 보기 +";
             isDetail = false;

@@ -1,31 +1,103 @@
-// 스펠 및 룬 매핑 테이블 (이미지 경로용)
-const spellMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
-const runeMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
-
-function renderTeam(id, players, ver, isBlue) {
-    const list = document.getElementById(id);
-    list.innerHTML = players.map(p => {
-        // 룬 이미지 경로 (데이터 드래곤의 빌드 스타일 경로)
-        const runePath = runeMap[p.subStyleId] || "7200_Domination";
-        
-        return `
-        <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#1a1d20] p-3 rounded-xl border border-gray-800 mb-2">
-            <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.championName}.png" class="w-12 h-12 rounded-lg border border-gray-700">
-            
-            <div class="mx-4 flex-1 overflow-hidden ${isBlue ? 'text-left' : 'text-right'}">
-                <div class="text-[13px] font-bold truncate text-gray-100">${p.realName}</div>
-                <div class="text-[10px] text-gray-500 font-mono italic">${p.championName}</div>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOL.ANALYZE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0d0f] text-white font-sans">
+    <div class="max-w-4xl mx-auto p-6">
+        <header class="text-center py-10">
+            <h1 class="text-4xl font-black text-blue-500 italic mb-8">LOL.ANALYZE</h1>
+            <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2">
+                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-40">
+                <span class="text-gray-600 self-center">#</span>
+                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-20">
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2">분석</button>
             </div>
+        </header>
 
-            <div class="flex gap-1.5 items-center">
-                <div class="flex flex-col gap-0.5">
-                    <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${spellMap[p.spell1] || 'SummonerFlash'}.png" class="w-5 h-5 rounded border border-black">
-                    <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${spellMap[p.spell2] || 'SummonerDot'}.png" class="w-5 h-5 rounded border border-black">
+        <div id="loader" class="hidden text-center py-10 text-blue-400 animate-pulse">게임 데이터를 가져오는 중...</div>
+
+        <div id="dashboard" class="hidden space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-blue-400 font-bold mb-4">BLUE TEAM</h2>
+                    <div id="blue-list" class="space-y-3"></div>
                 </div>
-                <div class="w-8 h-8 bg-[#0b0d0f] rounded-full border border-gray-700 flex items-center justify-center">
-                    <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${runePath}.png" class="w-6 h-6">
+                <div>
+                    <h2 class="text-red-400 font-bold mb-4 text-right">RED TEAM</h2>
+                    <div id="red-list" class="space-y-3"></div>
                 </div>
             </div>
-        </div>`;
-    }).join('');
-}
+            <div class="bg-[#14171a] p-6 rounded-2xl border border-gray-800">
+                <h3 class="text-yellow-500 font-bold mb-3">⚡ AI 전략 리포트</h3>
+                <div id="strategy-box" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const spellMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
+        const runeMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
+
+        async function fetchGame() {
+            const name = document.getElementById('name').value;
+            const tag = document.getElementById('tag').value;
+            if(!name || !tag) return alert("닉네임과 태그를 입력하세요.");
+
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: name, tag: tag })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error);
+
+                renderTeam('blue-list', data.blueTeam, data.version, true);
+                renderTeam('red-list', data.redTeam, data.version, false);
+                document.getElementById('strategy-box').innerText = data.strategy;
+
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+            } catch (err) {
+                alert(err.message);
+                document.getElementById('loader').classList.add('hidden');
+            }
+        }
+
+        function renderTeam(id, players, ver, isBlue) {
+            const list = document.getElementById(id);
+            let html = "";
+            players.forEach(p => {
+                const runePath = runeMap[p.subStyleId] || "7200_Domination";
+                const spell1 = spellMap[p.spell1] || "SummonerFlash";
+                const spell2 = spellMap[p.spell2] || "SummonerDot";
+                
+                html += '<div class="flex ' + (isBlue ? 'flex-row' : 'flex-row-reverse') + ' items-center bg-[#1a1d20] p-3 rounded-xl border border-gray-800">' +
+                    '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/champion/' + p.championName + '.png" class="w-10 h-10 rounded-lg shadow-lg">' +
+                    '<div class="mx-3 flex-1 ' + (isBlue ? 'text-left' : 'text-right') + '">' +
+                        '<div class="text-sm font-bold truncate">' + p.realName + '</div>' +
+                        '<div class="text-[10px] text-gray-500">' + p.championName + '</div>' +
+                    '</div>' +
+                    '<div class="flex gap-1">' +
+                        '<div class="flex flex-col gap-0.5">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + spell1 + '.png" class="w-4 h-4 rounded">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + spell2 + '.png" class="w-4 h-4 rounded">' +
+                        '</div>' +
+                        '<div class="w-8 h-8 bg-black rounded-full flex items-center justify-center border border-gray-700">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/' + runePath + '.png" class="w-5 h-5">' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            });
+            list.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

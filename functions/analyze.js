@@ -1,36 +1,56 @@
 export async function onRequestPost(context) {
+  const RIOT_API_KEY = "여기에_실제_라이엇_API_키를_넣으세요"; // 필수!
+  
   try {
     const body = await context.request.json();
     
-    // 시뮬레이션인지 실시간 분석인지 구분해서 데이터 추출
-    let teams = body.isSim ? body.teams : null;
-
-    // 만약 실시간 분석이면 라이엇 API 등을 통해 데이터를 가져오는 로직이 여기 들어갑니다.
-    // 현재는 테스트를 위해 기본 구조를 잡아줍니다.
-    if (!teams) {
-      // 실시간 분석 요청 시 응답 구조 (에러 방지용 임시 데이터)
-      teams = {
-        Blue: [{ name: body.summonerName || "플레이어", cName: "챔피언", champId: "Aali", pos: "TOP", spell1: "SummonerFlash", spell2: "SummonerTeleport" }],
-        Red: [{ name: "상대", cName: "챔피언", champId: "Garen", pos: "TOP", spell1: "SummonerFlash", spell2: "SummonerIgnite" }]
-      };
+    // 1. 시뮬레이션 모드 처리
+    if (body.isSim) {
+      return new Response(JSON.stringify({
+        teams: body.teams,
+        strategy: "조합 시뮬레이션 결과: 팀의 밸런스가 매우 훌륭합니다."
+      }), { headers: { "Content-Type": "application/json" } });
     }
 
-    // AI 전략 생성 (이 부분에 Gemini API 연결 로직이 들어갑니다)
-    const strategy = body.isSim 
-      ? "시뮬레이션 분석 결과: 조합의 밸런스가 좋습니다. 초반 라인전에 집중하세요."
-      : `${body.summonerName}님의 게임을 분석한 결과, 상대 탑 가렌의 초반 압박을 주의해야 합니다.`;
+    // 2. 실시간 게임 분석 로직 (소환사명 + 태그 이용)
+    const { summonerName, tagLine } = body;
+    
+    // [STEP 1] PUUID 가져오기
+    const accountRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
+    const accountData = await accountRes.json();
+    const puuid = accountData.puuid;
 
-    return new Response(JSON.stringify({
-      teams: teams,
-      strategy: strategy
-    }), {
+    // [STEP 2] 현재 게임 정보 가져오기
+    const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${puuid}?api_key=${RIOT_API_KEY}`);
+    if (gameRes.status === 404) {
+      return new Response(JSON.stringify({ error: "현재 게임 중이 아닙니다." }), { status: 400 });
+    }
+    const gameData = await gameRes.json();
+
+    // [STEP 3] 10명의 유저 데이터를 우리 팀(Blue) / 상대 팀(Red)으로 정리
+    const teams = { Blue: [], Red: [] };
+    gameData.participants.forEach(p => {
+      const side = p.teamId === 100 ? 'Blue' : 'Red';
+      teams[side].push({
+        name: p.summonerName,
+        champId: p.championId, // 나중에 챔피언 이름으로 변환 필요
+        spell1: p.spell1Id,
+        spell2: p.spell2Id,
+        pos: "포지션 분석중"
+      });
+    });
+
+    // 3. AI 전략 생성 (가져온 실시간 데이터를 바탕으로 질문)
+    const strategy = `${summonerName}님의 현재 게임을 분석했습니다. 상대 팀의 조합이 강력하니 초반 교전을 피하세요.`;
+
+    return new Response(JSON.stringify({ teams, strategy }), {
       headers: { "Content-Type": "application/json" }
     });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { 
+    return new Response(JSON.stringify({ error: "API 연결 실패: " + err.message }), { 
       status: 500,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" } 
     });
   }
 }

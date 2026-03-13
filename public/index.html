@@ -1,39 +1,23 @@
-async function fetchGame() {
-    const n = document.getElementById('name').value.trim();
-    const t = document.getElementById('tag').value.trim();
-    if(!n || !t) return alert("닉네임#태그를 입력하세요.");
-
-    // 화면 초기화 및 로딩 표시
-    document.getElementById('loader').classList.remove('hidden');
-    document.getElementById('dashboard').classList.add('hidden');
-
-    try {
-        const res = await fetch('/analyze', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ name: n, tag: t })
-        });
-        
-        const data = await res.json();
-        
-        // 백엔드에서 보낸 커스텀 에러 처리
-        if(data.error) {
-            alert(data.error);
-            document.getElementById('loader').classList.add('hidden');
-            return;
-        }
-
-        // 닉네임이 포함된 리스트 렌더링
-        renderTeams(data.pList, data.ver);
-        
-        fullStrat = data.strategy;
-        document.getElementById('strat-title').innerText = `⚡ ${data.myChamp} 실전 훈수`;
-        showSummary();
-
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-    } catch (err) {
-        alert("연결 오류가 발생했습니다.");
-        document.getElementById('loader').classList.add('hidden');
-    }
+function renderSide(id, players, ver, isBlue) {
+    const list = document.getElementById(id);
+    list.innerHTML = `<h2 class="text-[10px] font-black mb-3 ${isBlue?'text-blue-400':'text-red-400 text-right'}">${isBlue?'BLUE TEAM':'RED TEAM'}</h2>`;
+    players.forEach(p => {
+        const rPath = rMap[p.r] || "7200_Domination";
+        list.innerHTML += `<div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#1a1d20] p-3 rounded-2xl border border-gray-800 mb-2">
+            <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-11 h-11 rounded-xl border border-gray-700">
+            <div class="mx-3 flex-1 overflow-hidden ${isBlue ? 'text-left' : 'text-right'}">
+                <div class="text-[13px] font-bold truncate text-white">${p.nick}</div>
+                <div class="text-[10px] text-gray-500 italic">${p.cName}</div>
+            </div>
+            <div class="flex gap-1.5">
+                <div class="flex flex-col gap-0.5">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]]||'SummonerFlash'}.png" class="w-4 h-4 rounded-sm">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]]||'SummonerDot'}.png" class="w-4 h-4 rounded-sm">
+                </div>
+                <div class="w-9 h-9 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rPath}.png" class="w-5 h-5">
+                </div>
+            </div>
+        </div>`;
+    });
 }

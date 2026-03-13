@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL.ANALYZE - 맞춤형 훈수</title>
-    <!-- Favicon (Emoji) -->
+    <title>LOL.ANALYZE - 승리 공식</title>
+    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <!-- Production Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* 입력창 글씨 색상 및 배경색 강제 설정 (가독성 문제 해결) */
         input#name, input#tag {
             background-color: #1a1d20 !important;
             color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important; /* iOS/Chrome 대응 */
+            -webkit-text-fill-color: #ffffff !important;
         }
-        input::placeholder {
-            color: #6b7280 !important;
-        }
+        input::placeholder { color: #6b7280 !important; }
+        .detail-box { display: none; }
+        .detail-box.active { display: block; }
     </style>
 </head>
 <body class="bg-[#0b0d0f] text-white">
@@ -34,7 +33,7 @@
 
         <div id="loader" class="hidden text-center py-20">
             <div class="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-blue-400 font-bold animate-pulse">최신 메타 상성을 분석하여 훈수를 준비 중입니다...</p>
+            <p class="text-blue-400 font-bold animate-pulse text-lg">AI 분석관이 승리 공식을 수립 중입니다...</p>
         </div>
 
         <div id="dashboard" class="hidden space-y-8 animate-in fade-in duration-500">
@@ -43,49 +42,49 @@
                 <div id="red-list" class="space-y-3"></div>
             </div>
 
-            <div class="bg-[#14171a] border border-gray-800 p-8 rounded-3xl shadow-2xl">
+            <div class="bg-[#14171a] border border-gray-800 p-8 rounded-3xl shadow-2xl relative">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 id="strat-title" class="text-xl font-black text-yellow-500 italic uppercase">Winning Strategy</h3>
-                    <button id="toggle-btn" onclick="toggleDetail()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full text-xs font-bold transition-all shadow-lg">상세 훈수 보기 +</button>
+                    <h3 id="strat-title" class="text-xl font-black text-yellow-500 italic uppercase">Win Strategy</h3>
+                    <button onclick="toggleDetail()" class="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest">Detail +</button>
                 </div>
-                <div id="strategy-box" class="text-gray-300 text-[15px] leading-relaxed whitespace-pre-wrap pt-4 border-t border-gray-800 font-medium"></div>
+                
+                <!-- 3줄 요약 영역 -->
+                <div id="summary-box" class="text-white text-lg font-bold leading-relaxed whitespace-pre-wrap border-l-4 border-blue-500 pl-6 mb-6"></div>
+                
+                <!-- 상세 전략 영역 (기본 숨김) -->
+                <div id="detail-box" class="detail-box text-gray-400 text-sm leading-relaxed whitespace-pre-wrap pt-6 border-t border-gray-800 italic"></div>
             </div>
         </div>
     </div>
 
     <script>
-        let fullStrat = "";
-        let isDetail = false;
-
+        let currentDetail = "";
         const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
         const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
 
         function renderTeams(pList, ver) {
             const blueBox = document.getElementById('blue-list');
             const redBox = document.getElementById('red-list');
-            blueBox.innerHTML = '<h2 class="text-blue-500 font-bold mb-4 text-xs">BLUE SIDE</h2>';
-            redBox.innerHTML = '<h2 class="text-red-500 font-bold mb-4 text-xs text-right">RED SIDE</h2>';
+            blueBox.innerHTML = '<h2 class="text-blue-500 font-bold mb-4 text-xs tracking-tighter">BLUE SIDE (TOP → SUP)</h2>';
+            redBox.innerHTML = '<h2 class="text-red-500 font-bold mb-4 text-xs tracking-tighter text-right">RED SIDE (TOP → SUP)</h2>';
 
             pList.forEach(p => {
                 const isBlue = p.team === 100;
                 const target = isBlue ? blueBox : redBox;
                 const rIcon = rMap[p.r] || "7200_Domination";
-
                 const html = `
-                    <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 mb-3 shadow-md hover:border-gray-600 transition-all">
+                    <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 mb-3 shadow-md">
                         <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-12 h-12 rounded-xl border border-gray-700">
-                        
                         <div class="mx-4 flex-1 ${isBlue ? 'text-left' : 'text-right'}">
                             <div class="text-[13px] font-bold text-white truncate">${p.nick}</div>
                             <div class="text-[11px] text-gray-500 font-medium">${p.cName}</div>
                         </div>
-
                         <div class="flex gap-2">
                             <div class="flex flex-col gap-1">
                                 <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]] || 'SummonerFlash'}.png" class="w-5 h-5 rounded-md">
                                 <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]] || 'SummonerDot'}.png" class="w-5 h-5 rounded-md">
                             </div>
-                            <div class="w-11 h-11 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center overflow-hidden">
+                            <div class="w-11 h-11 bg-black/40 rounded-full border border-gray-800 flex items-center justify-center">
                                 <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rIcon}.png" class="w-6 h-6">
                             </div>
                         </div>
@@ -95,18 +94,19 @@
         }
 
         async function fetchGame() {
-            const n = document.getElementById('name').value.trim();
-            const t = document.getElementById('tag').value.trim();
-            if (!n || !t) return alert("닉네임#태그를 입력하세요.");
+            const name = document.getElementById('name').value.trim();
+            const tag = document.getElementById('tag').value.trim();
+            if (!name || !tag) return alert("닉네임과 태그를 입력하세요.");
 
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('detail-box').classList.remove('active');
 
             try {
                 const res = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: n, tag: t })
+                    body: JSON.stringify({ name, tag })
                 });
                 
                 const data = await res.json();
@@ -116,42 +116,29 @@
                     return;
                 }
 
-                // 'reading 0' 방어 로직 및 데이터 필드명 일치 (pList, ver, myC)
                 if (data.pList && data.pList.length > 0) {
                     renderTeams(data.pList, data.ver);
-                    fullStrat = data.strategy;
-                    document.getElementById('strat-title').innerText = "⚡ " + (data.myC || "챔피언") + " 핵심 훈수";
-                    showSummary();
+                    document.getElementById('strat-title').innerText = `⚡ ${data.myC} 분석 리포트`;
+                    document.getElementById('summary-box').innerText = data.summary;
+                    currentDetail = data.detail;
+                    document.getElementById('detail-box').innerText = data.detail;
                 } else {
-                    alert("데이터를 불러오는 데 실패했습니다.");
+                    alert("데이터를 분석할 수 없습니다.");
                 }
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
             } catch (err) {
-                console.error(err);
                 alert("연결 오류가 발생했습니다.");
                 document.getElementById('loader').classList.add('hidden');
             }
         }
 
-        function showSummary() {
-            if (!fullStrat) return;
-            const parts = fullStrat.split('[상세]');
-            const summary = parts[0].replace('[요약]', '').trim();
-            document.getElementById('strategy-box').innerText = summary;
-            document.getElementById('toggle-btn').innerText = "상세 훈수 보기 +";
-            isDetail = false;
-        }
-
         function toggleDetail() {
-            isDetail = !isDetail;
-            if (isDetail) {
-                document.getElementById('strategy-box').innerText = fullStrat.replace('[요약]', '').replace('[상세]', '\n\n[상세]').trim();
-                document.getElementById('toggle-btn').innerText = "요약 보기 -";
-            } else {
-                showSummary();
-            }
+            const box = document.getElementById('detail-box');
+            box.classList.toggle('active');
+            const btn = event.currentTarget;
+            btn.innerText = box.classList.contains('active') ? "Detail -" : "Detail +";
         }
     </script>
 </body>

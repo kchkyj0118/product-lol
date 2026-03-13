@@ -6,32 +6,32 @@
     <title>LOL.ANALYZE</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#0b0d0f] text-white">
+<body class="bg-[#0b0d0f] text-white font-sans">
     <div class="max-w-5xl mx-auto p-4 md:p-10">
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-black italic text-blue-500 mb-8">LOL.ANALYZE</h1>
-            <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2">
-                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-32 md:w-48">
-                <span class="text-gray-600 self-center">#</span>
-                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-16 md:w-24 font-bold">
-                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2">분석</button>
+            <h1 class="text-4xl font-black italic text-blue-500 mb-8 tracking-tighter">LOL.ANALYZE</h1>
+            <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2 shadow-2xl">
+                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-32 md:w-48 text-sm">
+                <span class="text-gray-600 self-center font-bold">#</span>
+                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400">
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all">분석</button>
             </div>
         </header>
 
-        <div id="loader" class="hidden text-center py-20 text-blue-400 animate-pulse font-bold">AI 전략 수립 중...</div>
+        <div id="loader" class="hidden text-center py-20 text-blue-400 animate-pulse font-bold">AI가 전략을 수립하고 있습니다...</div>
 
         <div id="dashboard" class="hidden space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div><h2 class="text-blue-400 font-black text-xs mb-4 uppercase">Blue Side</h2><div id="blue-list" class="space-y-3"></div></div>
-                <div><h2 class="text-red-400 font-black text-xs mb-4 text-right uppercase">Red Side</h2><div id="red-list" class="space-y-3"></div></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div id="blue-list" class="space-y-3"></div>
+                <div id="red-list" class="space-y-3"></div>
             </div>
 
-            <div class="bg-[#14171a] border border-gray-800 p-6 rounded-2xl shadow-2xl relative">
+            <div class="bg-[#14171a] border border-gray-800 p-6 rounded-3xl shadow-2xl relative">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 id="strategy-title" class="text-yellow-500 font-bold italic">⚡ 승리 전략 요약</h3>
-                    <button id="detail-btn" onclick="toggleDetail()" class="text-[11px] bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded-lg transition-all border border-gray-600">상세 보기 +</button>
+                    <h3 id="strat-title" class="text-yellow-500 font-bold italic text-lg">⚡ 승리 전략 요약</h3>
+                    <button id="toggle-btn" onclick="toggleDetail()" class="bg-blue-600/20 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">상세 보기 +</button>
                 </div>
-                <div id="strategy-box" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap"></div>
+                <div id="strategy-box" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap border-t border-gray-800 pt-4"></div>
             </div>
         </div>
     </div>
@@ -39,7 +39,6 @@
     <script>
         let fullStrategy = "";
         let isDetail = false;
-
         const spellMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
         const runeMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
 
@@ -64,6 +63,7 @@
                 renderTeam('red-list', data.redTeam, data.version, false);
                 
                 fullStrategy = data.fullText;
+                document.getElementById('strat-title').innerText = "⚡ " + data.userChamp + " 중심 전략 요약";
                 showSummary();
 
                 document.getElementById('loader').classList.add('hidden');
@@ -75,35 +75,37 @@
         }
 
         function showSummary() {
-            const lines = fullStrategy.split('\n').filter(l => l.trim() !== "");
-            document.getElementById('strategy-box').innerText = lines.slice(0, 4).join('\n');
-            document.getElementById('detail-btn').innerText = "상세 보기 +";
+            // [상세] 문자열 이전까지만 잘라서 보여줌
+            const summary = fullStrategy.split("[상세]")[0].replace("[요약]", "").trim();
+            document.getElementById('strategy-box').innerText = summary;
+            document.getElementById('toggle-btn').innerText = "상세 보기 +";
             isDetail = false;
         }
 
         function toggleDetail() {
-            if (isDetail) {
+            if(isDetail) {
                 showSummary();
             } else {
-                document.getElementById('strategy-box').innerText = fullStrategy;
-                document.getElementById('detail-btn').innerText = "요약 보기 -";
+                document.getElementById('strategy-box').innerText = fullStrategy.replace("[요약]", "").replace("[상세]", "\n\n[상세 전략]\n");
+                document.getElementById('toggle-btn').innerText = "요약 보기 -";
                 isDetail = true;
             }
         }
 
         function renderTeam(id, players, ver, isBlue) {
             const list = document.getElementById(id);
-            let html = "";
+            list.innerHTML = '<h2 class="text-[10px] font-black uppercase tracking-widest mb-3 ' + (isBlue?'text-blue-500':'text-red-500 text-right') + '">' + (isBlue?'Blue Team':'Red Team') + '</h2>';
+            
             players.forEach(p => {
                 const rPath = runeMap[p.subStyleId] || "7200_Domination";
                 const s1 = spellMap[p.spell1] || "SummonerFlash";
                 const s2 = spellMap[p.spell2] || "SummonerDot";
                 
-                html += '<div class="flex ' + (isBlue ? 'flex-row' : 'flex-row-reverse') + ' items-center bg-[#1a1d20] p-3 rounded-2xl border border-gray-800">' +
+                list.innerHTML += '<div class="flex ' + (isBlue ? 'flex-row' : 'flex-row-reverse') + ' items-center bg-[#1a1d20] p-3 rounded-2xl border border-gray-800">' +
                     '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/champion/' + p.championName + '.png" class="w-12 h-12 rounded-xl border border-gray-700">' +
-                    '<div class="mx-4 flex-1 ' + (isBlue ? 'text-left' : 'text-right') + '">' +
-                        '<div class="text-[13px] font-bold text-white">' + (p.realName !== "소환사" ? p.realName : p.championName) + '</div>' +
-                        '<div class="text-[10px] text-gray-500">' + p.championName + '</div>' +
+                    '<div class="mx-4 flex-1 overflow-hidden ' + (isBlue ? 'text-left' : 'text-right') + '">' +
+                        '<div class="text-[13px] font-bold truncate text-white">' + p.realName + '</div>' + // 닉네임 크게 표시
+                        '<div class="text-[10px] text-gray-500 italic">' + p.championName + '</div>' +
                     '</div>' +
                     '<div class="flex gap-2">' +
                         '<div class="flex flex-col gap-1">' +
@@ -116,7 +118,6 @@
                     '</div>' +
                 '</div>';
             });
-            list.innerHTML = html;
         }
     </script>
 </body>

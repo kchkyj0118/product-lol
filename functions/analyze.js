@@ -8,15 +8,15 @@ export async function onRequestPost(context) {
       const name = body.name;
       const tag = body.tag;
   
-      // 1. 계정 정보 (PUUID) 조회
+      // 1. 계정 정보 조회
       const accRes = await fetch("https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" + encodeURIComponent(name) + "/" + encodeURIComponent(tag) + "?api_key=" + API_KEY);
-      const account = await accRes.json();
       if (!accRes.ok) throw new Error("플레이어를 찾을 수 없습니다.");
+      const account = await accRes.json();
   
-      // 2. 실시간 게임 정보 조회
+      // 2. 실시간 게임 조회
       const gameRes = await fetch("https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/" + account.puuid + "?api_key=" + API_KEY);
-      const game = await gameRes.json();
       if (!gameRes.ok) throw new Error("현재 게임 중이 아닙니다.");
+      const game = await gameRes.json();
   
       // 3. 챔피언 데이터 매핑
       const verRes = await fetch("https://ddragon.leagueoflegends.com/api/versions.json");
@@ -27,35 +27,38 @@ export async function onRequestPost(context) {
       const idToName = {};
       for (const key in champData) { idToName[champData[key].key] = champData[key].id; }
   
-      // 4. 참가자 리스트 생성 (PUUID로 실제 닉네임 매핑 시도)
-      let userChampion = "플레이어";
-      const participants = await Promise.all(game.participants.map(async (p) => {
+      // 4. 참가자 데이터 정리 (닉네임 추출 강화)
+      let userChamp = "Unknown";
+      const participants = game.participants.map(p => {
         const cName = idToName[p.championId] || "Unknown";
-        if (p.puuid === account.puuid) userChampion = cName;
+        if (p.puuid === account.puuid) userChamp = cName;
+        
+        // 실제 닉네임 구성: riotIdGameName#riotIdTagline
+        let displayName = p.riotIdGameName ? p.riotIdGameName : cName;
+        if (p.riotIdTagline) displayName += " #" + p.riotIdTagline;
   
-        // 실시간 게임 API의 summonerId로 닉네임 가져오기
         return {
-          realName: p.summonerId ? (p.riotIdGameName || "소환사") : "소환사",
+          realName: displayName,
           championName: cName,
           teamId: p.teamId,
           spell1: p.spell1Id,
           spell2: p.spell2Id,
           subStyleId: p.perks.perkSubStyle
         };
-      }));
+      });
   
       const blueTeam = participants.filter(p => p.teamId === 100);
       const redTeam = participants.filter(p => p.teamId === 200);
   
-      // 5. Gemini AI 전략 생성 (요약+상세)
-      const prompt = "LoL 분석가. [본인 챔피언: " + userChampion + "]. " +
-                     "블루팀: " + blueTeam.map(p => p.championName).join() + ". " +
-                     "레드팀: " + redTeam.map(p => p.championName).join() + ". " +
-                     "1. " + userChampion + " 중심의 핵심 전략 3줄 요약. " +
-                     "2. 라인전, 한타, 아이템 빌드를 포함한 상세 전략. " +
-                     "두 구분을 명확히 해서 답변해줘.";
+      // 5. Gemini 분석 (3줄 요약과 상세 내용을 구분하도록 요청)
+      const prompt = "LoL 전문 분석가. 내 챔피언: " + userChamp + ". " +
+                     "블루팀: " + blueTeam.map(p => p.championName).join(", ") + ". " +
+                     "레드팀: " + redTeam.map(p => p.championName).join(", ") + ". " +
+                     "반드시 다음 형식을 지켜줘: " +
+                     "[요약] 부분에 " + userChamp + " 중심 승리 전략 3줄 요약. " +
+                     "[상세] 부분에 라인전과 한타 상세 운영법 작성.";
   
-      const aiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + GEMINI_KEY, {
+      const aiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_KEY, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -63,11 +66,13 @@ export async function onRequestPost(context) {
       const aiData = await aiRes.json();
       const fullText = aiData.candidates[0].content.parts[0].text;
   
-      return new Response(JSON.stringify({ blueTeam, redTeam, fullText, version, userChampion }), {
+      return new Response(JSON.stringify({ blueTeam, redTeam, fullText, version, userChamp }), {
         headers: { "Content-Type": "application/json" }
       });
   
     } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: err.message }), { 
+        status: 400, headers: { "Content-Type": "application/json" } 
+      });
     }
   }

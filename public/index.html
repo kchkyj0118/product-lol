@@ -2,127 +2,71 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>LOL AI PRO COACH</title>
+    <title>LoL Win Plan AI</title>
     <style>
-        :root { --gold: #c89b3c; --blue: #3d8bff; --red: #ff4d4d; --dark: #0f1217; --panel: #1e232a; --input: #2a3039; }
-        body { font-family: 'Pretendard', sans-serif; background: var(--dark); color: #ececec; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .matchup-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; margin-bottom: 20px; }
-        .team-panel { background: var(--panel); border-radius: 12px; padding: 20px; border-top: 5px solid #ccc; }
-        .blue-side { border-color: var(--blue); } .red-side { border-color: var(--red); }
-        .lane-row { position: relative; display: grid; grid-template-columns: 100px 1fr 85px 85px 40px; gap: 8px; margin-bottom: 15px; align-items: center; }
-        input, select { background: var(--input); color: white; border: 1px solid #3c4450; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .search-results { position: absolute; top: 100%; left: 108px; right: 186px; background: #222; border: 1px solid var(--gold); z-index: 100; border-radius: 6px; max-height: 150px; overflow-y: auto; display: none; }
-        .search-results div { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; }
-        .search-results div:hover { background: var(--gold); color: black; }
-        .del-btn { background: #3d1a1a; color: #ff4d4d; border: 1px solid #632a2a; border-radius: 6px; cursor: pointer; font-weight: bold; height: 38px; }
-        .add-btn { background: none; border: 1px dashed #555; color: #888; padding: 12px; cursor: pointer; width: 100%; border-radius: 8px; margin-top: 10px; }
-        .analyze-btn { background: var(--gold); color: black; font-weight: bold; font-size: 1.2rem; padding: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; }
-        #result { margin-top: 30px; padding: 25px; background: #161a20; border-radius: 12px; border-left: 6px solid var(--gold); white-space: pre-wrap; display: none; line-height: 1.6; }
+        body { font-family: 'Pretendard', sans-serif; background: #0f1217; color: white; text-align: center; margin: 0; padding: 0; }
+        .container { margin-top: 80px; padding: 20px; }
+        h1 { color: #c89b3c; font-size: 2.5rem; margin-bottom: 10px; }
+        p { color: #a0a0a0; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; }
+        input { padding: 15px; width: 250px; border-radius: 8px; border: 1px solid #3c4450; background: #1e232a; color: white; font-size: 1rem; margin-right: 10px; }
+        button { padding: 15px 30px; cursor: pointer; background: #c89b3c; color: #0f1217; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; transition: background 0.3s; }
+        button:hover { background: #e5b34c; }
+        #result { margin-top: 40px; padding: 30px; background: #1e232a; border-radius: 12px; border-left: 6px solid #c89b3c; display: none; width: 80%; max-width: 800px; margin-left: auto; margin-right: auto; text-align: left; line-height: 1.8; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .loading { color: #c89b3c; font-weight: bold; font-size: 1.1rem; }
+        .strategy-content { white-space: pre-wrap; font-size: 1.1rem; }
+        .error-msg { color: #ff4d4d; font-weight: bold; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1 style="text-align:center; color:var(--gold);">LOL AI PRO COACH</h1>
-    <div class="matchup-grid">
-        <div class="team-panel blue-side">
-            <h3 style="color:var(--blue); text-align:center;">BLUE TEAM</h3>
-            <div id="blue-list"></div>
-            <button class="add-btn" onclick="addChamp('blue')">+ 아군 추가</button>
-        </div>
-        <div style="display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--gold); font-size:2rem;">VS</div>
-        <div class="team-panel red-side">
-            <h3 style="color:var(--red); text-align:center;">RED TEAM</h3>
-            <div id="red-list"></div>
-            <button class="add-btn" onclick="addChamp('red')">+ 적군 추가</button>
-        </div>
-    </div>
-    <button class="analyze-btn" onclick="runAnalysis()">프로급 전략 분석 시작</button>
-    <div id="result"></div>
-</div>
-
-<script>
-    const CHAMPIONS = ["가렌", "갈리오", "갱플랭크", "그라가스", "그레이브즈", "나르", "나미", "나서스", "노틸러스", "녹턴", "다리우스", "다이애나", "드레이븐", "라이즈", "라칸", "람머스", "럭스", "럼블", "레넥톤", "레오나", "렉사이", "렐", "렌가", "루시안", "루루", "르블랑", "리 신", "리븐", "리산드라", "릴리아", "마스터 이", "마오카이", "말자하", "말파이트", "모데카이저", "모르가나", "문도 박사", "미스 포츈", "밀리오", "바드", "바루스", "바이", "베이가", "베인", "벨코즈", "벨베스", "볼리베어", "브라이어", "브랜드", "브라움", "블라디미르", "블리츠크랭크", "비에고", "빅토르", "뽀삐", "사미라", "사이온", "사일러스", "샤코", "세나", "세라핀", "세주아니", "세트", "소나", "소라카", "쉔", "쉬바나", "스웨인", "스카너", "스몰더", "시비르", "신 짜오", "신드라", "신지드", "쓰레쉬", "아리", "아무무", "아우렐리온 솔", "아이번", "아지르", "아칼리", "아크샨", "아트록스", "아펠리오스", "알리스타", "애니", "애니비아", "애쉬", "야스오", "에코", "엘리스", "오공", "오른", "오리아나", "올라프", "요네", "요릭", "우디르", "우르곳", "워윅", "유미", "이렐리아", "이벨린", "이즈리얼", "일라오이", "자르반 4세", "자야", "자크", "잔나", "잭스", "제드", "제라스", "제이스", "제리", "조이", "직스", "진", "질리언", "징크스", "초가스", "카르마", "카밀", "카사딘", "카서스", "카시오페아", "카이사", "카직스", "카타리나", "칼리스타", "케넨", "케일", "케인", "케이틀린", "코그모", "코르키", "퀸", "클레드", "키아나", "킨드레드", "타릭", "탈론", "탈리야", "탐 켄치", "트런들", "트리스타나", "트린다미어", "트위스티드 페이트", "트위치", "티모", "파이크", "판테온", "피들스틱", "피오라", "피즈", "하이머딩거", "헤카림", "흐웨이"];
-    const lanes = ["TOP", "JUNGLE", "MID", "ADC", "SUP"];
-    const spells = ["점멸", "강타", "점화", "텔포", "탈진", "유체화", "정화", "회복"];
-    
-    window.onload = () => { addChamp('blue'); addChamp('red'); };
-
-    function addChamp(side) {
-        const list = document.getElementById(side + '-list');
-        const count = list.children.length;
-        if(count >= 5) return;
-        const row = document.createElement('div');
-        row.className = 'lane-row';
-        row.innerHTML = `
-            <select class="pos-sel" onchange="checkJungle(this)">
-                ${lanes.map((l, i) => `<option value="${l}" ${i===count?'selected':''}>${l}</option>`).join('')}
-            </select>
-            <div style="position:relative;">
-                <input type="text" class="champ-n" placeholder="챔피언 입력" oninput="handleSearch(this)">
-                <div class="search-results"></div>
-            </div>
-            <select class="s1">${spells.map(s=>`<option ${s==='점멸'?'selected':''}>${s}</option>`).join('')}</select>
-            <select class="s2">${spells.map(s=>`<option ${lanes[count]==='JUNGLE'&&s==='강타'?'selected':''}>${s}</option>`).join('')}</select>
-            <button class="del-btn" onclick="removeRow(this)">X</button>
-        `;
-        list.appendChild(row);
-    }
-
-    function handleSearch(input) {
-        const val = input.value;
-        const resultsDiv = input.nextElementSibling;
-        resultsDiv.innerHTML = '';
-        if(!val) { resultsDiv.style.display = 'none'; return; }
-        const filtered = CHAMPIONS.filter(c => c.includes(val)).slice(0, 5);
-        if(filtered.length > 0) {
-            resultsDiv.style.display = 'block';
-            filtered.forEach(name => {
-                const div = document.createElement('div');
-                div.innerText = name;
-                div.onclick = () => { input.value = name; resultsDiv.style.display = 'none'; };
-                resultsDiv.appendChild(div);
-            });
-        } else { resultsDiv.style.display = 'none'; }
-    }
-
-    function removeRow(btn) {
-        const list = btn.parentElement.parentElement;
-        if(list.children.length > 1) btn.parentElement.remove();
-    }
-
-    function checkJungle(el) {
-        const s2 = el.parentElement.querySelector('.s2');
-        if(el.value === "JUNGLE") s2.value = "강타";
-    }
-
-    async function runAnalysis() {
-        const res = document.getElementById('result');
-        res.style.display = 'block'; res.innerText = "🌀 전략 분석 중...";
+    <div class="container">
+        <h1>🏆 LoL 실시간 승리 전략 분석기</h1>
+        <p>현재 게임 중인 소환사 명과 태그를 입력하세요.</p>
         
-        const getTeamArray = (side) => Array.from(document.querySelectorAll(`.${side}-side .lane-row`)).map(r => 
-            `${r.querySelector('.pos-sel').value}: ${r.querySelector('.champ-n').value}(${r.querySelector('.s1').value}/${r.querySelector('.s2').value})`);
+        <div class="input-group">
+            <input type="text" id="summoner" placeholder="소환사명" value="">
+            <input type="text" id="tag" placeholder="태그 (예: KR1)" value="KR1">
+            <button onclick="analyzeGame()">실시간 분석 시작</button>
+        </div>
 
-        const myTeam = getTeamArray('blue');
-        const enemyTeam = getTeamArray('red');
+        <div id="result"></div>
+    </div>
 
-        try {
-            const response = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    mode: "5대5 소환사의 협곡", 
-                    myTeam: myTeam, 
-                    enemyTeam: enemyTeam 
-                })
-            });
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            res.innerText = data.strategy.trim();
-        } catch (e) {
-            res.innerText = "❌ 분석 오류: " + e.message;
+    <script>
+        async function analyzeGame() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="loading">🌀 현재 진행 중인 매치 정보를 가져오는 중...</p>';
+
+            const name = document.getElementById('summoner').value.trim();
+            const tag = document.getElementById('tag').value.trim();
+
+            if (!name || !tag) {
+                resultDiv.innerHTML = '<p class="error-msg">❌ 소환사 명과 태그를 모두 입력해주세요.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summonerName: name, tagLine: tag })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<p class="error-msg">❌ 오류: ${data.error}</p>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 style="color:#c89b3c; margin-top:0;">🤖 Gemini의 실시간 승리 제언:</h3>
+                        <div class="strategy-content">${data.strategy}</div>
+                    `;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = '<p class="error-msg">❌ 서버 연결에 실패했습니다. (네트워크 확인)</p>';
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>

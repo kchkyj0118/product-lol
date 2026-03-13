@@ -1,34 +1,37 @@
-async function fetchGame() {
-    const name = document.getElementById('name').value.trim();
-    const tag = document.getElementById('tag').value.trim();
-    if(!name || !tag) return alert("닉네임#태그를 입력하세요.");
+// 스펠 및 룬 이미지 매핑 (이게 틀리면 이미지가 안 나옵니다)
+const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
+const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
 
-    document.getElementById('loader').classList.remove('hidden');
-    document.getElementById('dashboard').classList.add('hidden');
+function renderTeams(pList, ver) {
+    const blueBox = document.getElementById('blue-list');
+    const redBox = document.getElementById('red-list');
+    blueBox.innerHTML = '<h2 class="text-blue-500 font-bold mb-4 uppercase text-xs tracking-widest">Blue Side</h2>';
+    redBox.innerHTML = '<h2 class="text-red-500 font-bold mb-4 uppercase text-xs tracking-widest text-right">Red Side</h2>';
 
-    try {
-        const res = await fetch('/analyze', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ name, tag })
-        });
-        
-        const data = await res.json();
-        if(data.error) {
-            alert(data.error);
-            document.getElementById('loader').classList.add('hidden');
-            return;
-        }
+    pList.forEach(p => {
+        const isBlue = p.team === 100;
+        const target = isBlue ? blueBox : redBox;
+        const rIcon = rMap[p.r] || "7200_Domination";
 
-        renderTeams(data.pList, data.ver);
-        fullStrat = data.strategy;
-        document.getElementById('strat-title').innerText = `⚡ ${data.myChamp} 실전 훈수`;
-        showSummary();
+        const html = `
+            <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 mb-3 shadow-lg">
+                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-12 h-12 rounded-xl border border-gray-700">
+                
+                <div class="mx-4 flex-1 ${isBlue ? 'text-left' : 'text-right'}">
+                    <div class="text-[13px] font-bold text-gray-100 truncate">${p.nick}</div>
+                    <div class="text-[11px] text-gray-500 font-medium">${p.cName}</div>
+                </div>
 
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-    } catch (err) {
-        alert("분석 서버와 통신할 수 없습니다.");
-        document.getElementById('loader').classList.add('hidden');
-    }
+                <div class="flex gap-2">
+                    <div class="flex flex-col gap-1">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]] || 'SummonerFlash'}.png" class="w-5 h-5 rounded-md border border-black">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]] || 'SummonerDot'}.png" class="w-5 h-5 rounded-md border border-black">
+                    </div>
+                    <div class="w-11 h-11 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rIcon}.png" class="w-6 h-6">
+                    </div>
+                </div>
+            </div>`;
+        target.innerHTML += html;
+    });
 }

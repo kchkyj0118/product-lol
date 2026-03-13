@@ -1,25 +1,24 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const headers = { "Content-Type": "application/json" };
+  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
   
   try {
     const { name, tag } = await request.json();
     const RIOT_KEY = env.RIOT_API_KEY;
     const GEMINI_KEY = env.GEMINI_API_KEY;
 
-    // [1단계: 병렬 호출] 계정 정보와 데이터 드래곤 버전을 동시에 가져옵니다.
+    // [병렬 호출 1] 계정 정보와 데이터 드래곤 버전 동시 조회
     const [accRes, vRes] = await Promise.all([
       fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(name)}/${encodeURIComponent(tag)}?api_key=${RIOT_KEY}`),
       fetch("https://ddragon.leagueoflegends.com/api/versions.json")
     ]);
 
     const account = await accRes.json();
-    const versions = await vRes.json();
-    const ver = versions[0];
+    const ver = (await vRes.json())[0];
 
-    if (!account.puuid) return new Response(JSON.stringify({ error: "라이엇 계정을 찾을 수 없습니다." }), { status: 200, headers });
+    if (!account.puuid) return new Response(JSON.stringify({ error: "존재하지 않는 유저입니다." }), { status: 200, headers });
 
-    // [2단계: 병렬 호출] 실시간 게임 정보와 챔피언 데이터를 동시에 가져옵니다.
+    // [병렬 호출 2] 게임 정보와 챔피언 데이터 동시 조회
     const [gameRes, cRes] = await Promise.all([
       fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${account.puuid}?api_key=${RIOT_KEY}`),
       fetch(`https://ddragon.leagueoflegends.com/cdn/${ver}/data/ko_KR/champion.json`)
@@ -30,16 +29,17 @@ export async function onRequestPost(context) {
 
     if (!game.participants) return new Response(JSON.stringify({ error: "현재 게임 중이 아닙니다." }), { status: 200, headers });
 
-    // 챔피언 ID 매핑
     const idToName = {};
     for (const k in cData) { idToName[cData[k].key] = cData[k].id; }
 
     let myC = "";
-    const pListRaw = game.participants.map(p => {
+    const pList = game.participants.map(p => {
       const n = idToName[p.championId] || "Unknown";
       if (p.puuid === account.puuid) myC = n;
+      // 유저 닉네임 우선 추출
+      const userNick = p.riotIdGameName || n;
       return { 
-        nick: p.riotIdGameName || n, 
+        nick: userNick, 
         cName: n, 
         team: p.teamId, 
         s: [p.spell1Id, p.spell2Id], 
@@ -47,25 +47,17 @@ export async function onRequestPost(context) {
       };
     });
 
-    // [3단계: AI 분석] 검색된 유저(myC)를 주인공으로 한 전략 생성
-    // lol.ps, op.gg 등의 데이터 스타일을 차용하도록 페르소나 강화
-    const prompt = `당신은 lol.ps, op.gg, deeplol의 데이터를 분석하고 유튜브 메타 영상을 꿰고 있는 프로 팀 수석 분석가입니다.
-검색한 주인공 챔피언: [${myC}]
+    // [AI 프롬프트] 1타 강사 모드, 라인별 구체적 훈수
+    const prompt = `당신은 lol.ps, op.gg 메타를 완벽 분석한 LoL 1타 강사입니다. 
+    주인공 챔피언: [${myC}]
+    블루팀: ${pList.filter(p=>p.team===100).map(p=>p.cName).join(", ")}
+    레드팀: ${pList.filter(p=>p.team===200).map(p=>p.cName).join(", ")}
 
-블루팀: ${pListRaw.filter(p=>p.team===100).map(p=>p.cName).join(", ")}
-레드팀: ${pListRaw.filter(p=>p.team===200).map(p=>p.cName).join(", ")}
-
-명령:
-1. 아이템 및 룬 추천은 절대 하지 마십시오.
-2. 주인공인 [${myC}]의 시점에서 게임을 어떻게 터뜨려야 할지 분석하십시오.
-3. 응답 형식을 반드시 지키십시오:
-   [정렬] 블루:탑챔프,정글챔프,미드챔프,원딜챔프,서폿챔프 레드:탑챔프,정글챔프,미드챔프,원딜챔프,서폿챔프
-   [요약]
-   - 1행: ${myC}가 강해지는 타이밍 (레벨, 스킬 유무)
-   - 2행: 라인전 핵심 운영법 (상성에 따른 딜교 타이밍)
-   - 3행: 한타 또는 중후반 승리 공식
-   [상세]
-   - 라인별 상성 및 주의사항, 정글 동선 설계, 팀원과의 시너지, 한타 시 최우선 타겟팅 등 구체적인 훈수를 챌린저 급 시야로 작성하십시오.`;
+    명령:
+    1. 룬과 아이템 추천은 절대 하지 마십시오.
+    2. [요약]: [${myC}]가 강해지는 타이밍과 당장 실천해야 할 핵심 플레이 3줄 요약.
+    3. [상세]: 라인별 상성 및 주의사항을 '탑은 ~해라', '정글은 ~해라' 식으로 아주 구체적으로 작성.
+    구분자 [상세]를 반드시 사용하여 요약과 상세를 나누십시오.`;
 
     const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
       method: "POST", 
@@ -73,26 +65,14 @@ export async function onRequestPost(context) {
     });
     
     const aiData = await aiRes.json();
-    const fullText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const fullText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "분석 실패";
     
-    // 정렬 정보 파싱
-    let sortedPList = pListRaw;
-    try {
-      const sortMatch = fullText.match(/\[정렬\] 블루:(.*) 레드:(.*)/);
-      if (sortMatch) {
-        const bOrder = sortMatch[1].split(",").map(s => s.trim());
-        const rOrder = sortMatch[2].split(",").map(s => s.trim());
-        const sortByOrder = (list, order) => [...list].sort((a, b) => (order.indexOf(a.cName) === -1 ? 99 : order.indexOf(a.cName)) - (order.indexOf(b.cName) === -1 ? 99 : order.indexOf(b.cName)));
-        sortedPList = [...sortByOrder(pListRaw.filter(p=>p.team===100), bOrder), ...sortByOrder(pListRaw.filter(p=>p.team===200), rOrder)];
-      }
-    } catch (e) {}
+    const [summaryPart, detailPart] = fullText.split('[상세]');
+    const summary = summaryPart.replace('[요약]', '').trim();
+    const detail = detailPart ? detailPart.trim() : "상세 분석을 생성하지 못했습니다.";
 
-    // 요약과 상세 분리
-    const summary = fullText.split('[요약]')[1]?.split('[상세]')[0]?.trim() || "분석 완료";
-    const detail = fullText.split('[상세]')[1]?.trim() || "상세 정보 없음";
-
-    return new Response(JSON.stringify({ pList: sortedPList, summary, detail, ver, myC }), { status: 200, headers });
+    return new Response(JSON.stringify({ pList, summary, detail, ver, myC }), { status: 200, headers });
   } catch (e) {
-    return new Response(JSON.stringify({ error: "분석 중 오류 발생: " + e.message }), { status: 200, headers });
+    return new Response(JSON.stringify({ error: "분석 오류: " + e.message }), { status: 200, headers });
   }
 }

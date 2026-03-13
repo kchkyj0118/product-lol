@@ -3,38 +3,47 @@ export async function onRequestPost(context) {
   const { summonerName, tagLine } = await context.request.json();
 
   try {
-      // 1. PUUID 조회
-      const userRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
-      const userData = await userRes.json();
+      // 1. 유저 정보 가져오기 (Asia 서버)
+      const accountRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
+      if (!accountRes.ok) return new Response(JSON.stringify({ error: `유저를 찾을 수 없습니다. (에러코드: ${accountRes.status})` }));
+      const accountData = await accountRes.json();
+
+      // 2. 실시간 게임 정보 가져오기 (KR 서버)
+      // 중요: Spectator-v5는 kr.api.riotgames.com 주소를 사용해야 합니다.
+      const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${accountData.puuid}?api_key=${RIOT_API_KEY}`);
       
-      // 2. 현재 게임 데이터(10명 정보) 가져오기
-      const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${userData.puuid}?api_key=${RIOT_API_KEY}`);
+      if (gameRes.status === 404) {
+          return new Response(JSON.stringify({ error: "현재 게임 중이 아닙니다. (인게임 진입 후 1분 뒤 시도하세요)" }));
+      } else if (!gameRes.ok) {
+          return new Response(JSON.stringify({ error: `게임 정보를 가져오지 못했습니다. (라이엇 에러: ${gameRes.status})` }));
+      }
+      
       const gameData = await gameRes.json();
 
-      // 3. 10명 데이터 정리 (챔피언, 룬, 스펠 ID 포함)
+      // 3. 10명 데이터 정리
       const participants = gameData.participants.map(p => ({
-          name: p.riotId || "Unknown",
+          name: p.riotId || p.summonerId, // 닉네임
           team: p.teamId === 100 ? 'Blue' : 'Red',
           champId: p.championId,
           spell1: p.spell1Id,
           spell2: p.spell2Id,
-          perks: p.perks.perkIds[0] // 핵심 룬
+          perk: p.perks.perkIds[0] // 핵심 룬
       }));
 
-      // 4. Gemini에게 승리 플랜 요청
-      const aiPrompt = `LoL 분석: 내가 검색한 유저(${summonerName})를 중심으로, 양 팀의 10명 챔피언 조합을 보고 구체적인 승리 플랜(운영, 한타)을 짜줘. 데이터: ${JSON.stringify(participants)}`;
+      // 4. Gemini AI 승리 플랜 ( participants 데이터를 문장으로 변환 )
+      const prompt = `${summonerName} 중심으로 분석해줘. 우리팀/상대팀 조합: ${JSON.stringify(participants)}`;
       const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
-          body: JSON.stringify({ contents: [{ parts: [{ text: aiPrompt }] }] })
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
-      const aiResult = await aiRes.json();
+      const aiData = await aiRes.json();
 
       return new Response(JSON.stringify({ 
           participants, 
-          strategy: aiResult.candidates[0].content.parts[0].text 
-      }), { headers: { "Content-Type": "application/json" } });
+          strategy: aiData.candidates[0].content.parts[0].text 
+      }));
 
   } catch (err) {
-      return new Response(JSON.stringify({ error: "게임을 찾을 수 없거나 오류가 발생했습니다." }), { status: 200 });
+      return new Response(JSON.stringify({ error: `서버 내부 오류: ${err.message}` }));
   }
 }

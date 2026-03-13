@@ -100,20 +100,25 @@
         const res = document.getElementById('result');
         res.style.display = 'block'; res.innerText = "🌀 전략 분석 중...";
         
-        const getTeam = (side) => Array.from(document.querySelectorAll(`.${side}-side .lane-row`)).map(r => 
-            `${r.querySelector('.pos-sel').value}: ${r.querySelector('.champ-n').value}(${r.querySelector('.s1').value}/${r.querySelector('.s2').value})`).join(', ');
+        const getTeamArray = (side) => Array.from(document.querySelectorAll(`.${side}-side .lane-row`)).map(r => 
+            `${r.querySelector('.pos-sel').value}: ${r.querySelector('.champ-n').value}(${r.querySelector('.s1').value}/${r.querySelector('.s2').value})`);
 
-        const fullPrompt = `롤 프로팀 코치로서 분석해줘. 아군: ${getTeam('blue')} vs 적군: ${getTeam('red')}. 승리를 위한 핵심 한타 전략을 짜줘.`;
+        const myTeam = getTeamArray('blue');
+        const enemyTeam = getTeamArray('red');
 
         try {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: fullPrompt })
+                body: JSON.stringify({ 
+                    mode: "5대5 소환사의 협곡", 
+                    myTeam: myTeam, 
+                    enemyTeam: enemyTeam 
+                })
             });
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-            res.innerText = data.candidates[0].content.parts[0].text.trim();
+            res.innerText = data.strategy.trim();
         } catch (e) {
             res.innerText = "❌ 분석 오류: " + e.message;
         }

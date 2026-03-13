@@ -3,44 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LoLTip | 롤팁</title>
+    <title>롤팁 | LoLTip</title>
     <style>
+        /* 디자인 유지 및 개선 */
         body { background: #0f1014; color: white; font-family: 'Pretendard', sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 52px; font-weight: 900; letter-spacing: -3px; margin: 0; color: #fff; }
+        .logo { font-size: 52px; font-weight: 900; color: #fff; margin: 0; }
         .logo span { color: #e8a93a; }
         
-        /* 탭 메뉴 */
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 10px 20px; background: #1c1c1f; border: none; color: #9e9eb1; cursor: pointer; border-radius: 6px; font-weight: bold; }
         .tab-btn.active { background: #e8a93a; color: black; }
 
-        /* 검색/입력 박스 */
-        .search-box { display: flex; gap: 10px; justify-content: center; background: #1c1c1f; padding: 25px; border-radius: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+        .search-box { background: #1c1c1f; padding: 25px; border-radius: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
         input, select { padding: 12px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 6px; }
         .main-btn { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: black; }
         
-        /* 결과 보드 */
         .board { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .team { background: #1c1c1f; padding: 15px; border-radius: 10px; border-top: 4px solid #323232; min-height: 200px; }
         .blue { border-color: #4171d6; } .red { border-color: #e84057; }
         
-        .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; position: relative; }
+        .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; }
         .c-img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #444; }
         .spell-stack { display: flex; flex-direction: column; gap: 2px; }
-        .s-img { width: 20px; height: 20px; border-radius: 3px; border: 1px solid #222; }
+        .s-img { width: 18px; height: 18px; border-radius: 3px; }
         
-        .remove-btn { color: #e84057; cursor: pointer; font-weight: bold; margin-left: auto; }
+        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px; }
         .strategy { margin-top: 20px; background: #1c1c1f; padding: 20px; border-radius: 10px; border-left: 5px solid #e8a93a; display: none; white-space: pre-wrap; }
-        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1 class="logo">롤<span>팁</span></h1>
-            <p style="color:#9e9eb1; font-size: 14px;">AI STRATEGIC COACHING SERVICE</p>
+            <p style="color:#9e9eb1;">AI STRATEGIC COACHING SERVICE</p>
         </header>
 
         <div class="tabs">
@@ -65,14 +62,14 @@
                     <option value="BOTTOM">ADC</option>
                     <option value="UTILITY">SPT</option>
                 </select>
-                <input type="text" id="champName" placeholder="챔피언 영문">
-                <button onclick="addToTeam('Blue')" class="tab-btn" style="background:#4171d6; color:white;">Blue +</button>
-                <button onclick="addToTeam('Red')" class="tab-btn" style="background:#e84057; color:white;">Red +</button>
+                <input type="text" id="champName" placeholder="챔피언 영문명">
+                <button onclick="addToSim('Blue')" class="tab-btn" style="background:#4171d6; color:white;">Blue +</button>
+                <button onclick="addToSim('Red')" class="tab-btn" style="background:#e84057; color:white;">Red +</button>
                 <button onclick="runSim()" class="main-btn">결과 보기</button>
             </div>
         </div>
 
-        <div id="loading">✨ 롤팁 AI가 데이터를 불러오고 있습니다...</div>
+        <div id="loading">🚀 AI가 데이터를 분석 중입니다...</div>
         
         <div id="display" class="board">
             <div class="team blue" id="blue-team"><strong>BLUE TEAM</strong></div>
@@ -85,12 +82,12 @@
     <script>
         const SPELL_URL = "https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/";
         const CHAMP_URL = "https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/";
-        let simTeams = { Blue: [], Red: [] };
+        let simData = { Blue: [], Red: [] };
 
         function switchTab(tab) {
             document.getElementById('analyze-section').style.display = tab === 'analyze' ? 'block' : 'none';
             document.getElementById('sim-section').style.display = tab === 'sim' ? 'block' : 'none';
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.includes(tab === 'analyze' ? '실시간' : '시뮬레이션')));
+            document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0 && tab === 'analyze') || (i === 1 && tab === 'sim')));
         }
 
         async function runLiveAnalysis() {
@@ -98,59 +95,58 @@
             const tag = document.getElementById('tagLine').value.trim().replace('#', '');
             if(!name || !tag) return alert("닉네임과 태그를 입력해주세요.");
 
-            showLoading(true);
+            toggleLoading(true);
             try {
+                // 405 및 JSON 에러 방지를 위한 처리
                 const res = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ summonerName: name, tagLine: tag })
                 });
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error || "분석 실패");
                 
+                if (!res.ok) {
+                    const errorMsg = await res.text();
+                    throw new Error(errorMsg || "서버 응답 오류가 발생했습니다.");
+                }
+
+                const data = await res.json();
                 renderTeam('blue', data.teams.Blue);
                 renderTeam('red', data.teams.Red);
                 showStrategy(data.strategy);
             } catch (err) {
-                alert(err.message);
+                alert("분석 중 오류: " + err.message);
             } finally {
-                showLoading(false);
+                toggleLoading(false);
             }
         }
 
-        function addToTeam(side) {
-            const champ = document.getElementById('champName').value.trim();
-            const pos = document.getElementById('pos').value;
-            if(!champ) return alert("챔피언 이름을 입력하세요.");
-            
-            simTeams[side].push({ name: 'User', cName: champ, champId: champ, pos: pos });
-            renderTeam(side.toLowerCase(), simTeams[side], true);
+        function addToSim(side) {
+            const cName = document.getElementById('champName').value.trim();
+            if(!cName) return alert("챔피언 이름을 입력하세요.");
+            simData[side].push({ name: 'User', cName: cName, champId: cName, pos: document.getElementById('pos').value });
+            renderTeam(side.toLowerCase(), simData[side]);
         }
 
-        function renderTeam(side, players, isSim = false) {
+        function renderTeam(side, players) {
             const container = document.getElementById(`${side}-team`);
             container.innerHTML = `<strong>${side.toUpperCase()} TEAM</strong>`;
-            players.forEach((p, idx) => {
+            players.forEach(p => {
                 container.innerHTML += `
                     <div class="p-row">
                         <img src="${CHAMP_URL}${p.champId}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
-                        ${p.spell1 ? `<div class="spell-stack"><img src="${SPELL_URL}${p.spell1}.png" class="s-img"><img src="${SPELL_URL}${p.spell2}.png" class="s-img"></div>` : ''}
+                        <div class="spell-stack">
+                            ${p.spell1 ? `<img src="${SPELL_URL}${p.spell1}.png" class="s-img">` : ''}
+                            ${p.spell2 ? `<img src="${SPELL_URL}${p.spell2}.png" class="s-img">` : ''}
+                        </div>
                         <div>
                             <div style="font-weight:bold; font-size:14px;">${p.name}</div>
                             <div style="font-size:12px; color:#9e9eb1;">${p.pos} - ${p.cName}</div>
                         </div>
-                        ${isSim ? `<span class="remove-btn" onclick="removePlayer('${side}', ${idx})">✕</span>` : ''}
                     </div>`;
             });
         }
 
-        function removePlayer(side, idx) {
-            const teamKey = side.charAt(0).toUpperCase() + side.slice(1);
-            simTeams[teamKey].splice(idx, 1);
-            renderTeam(side, simTeams[teamKey], true);
-        }
-
-        function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
+        function toggleLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
         function showStrategy(text) {
             const box = document.getElementById('strategy-box');
             box.innerText = text;

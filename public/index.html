@@ -8,20 +8,21 @@
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; justify-content: center; }
         .tab { padding: 12px 24px; background: #1c1c1f; border: none; color: #9e9eb1; cursor: pointer; border-radius: 8px 8px 0 0; }
         .tab.active { background: #e8a93a; color: black; font-weight: bold; }
-        .search-box { display: none; gap: 10px; justify-content: center; background: #1c1c1f; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .search-box { display: none; gap: 10px; justify-content: center; background: #1c1c1f; padding: 20px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .search-box.active { display: flex; }
-        input { padding: 12px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 4px; }
-        button { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        input, select { padding: 10px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 4px; }
+        button { padding: 10px 20px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
         .sim-area { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .team { background: #1c1c1f; padding: 15px; border-radius: 8px; border-top: 4px solid #323232; }
         .blue { border-color: #4171d6; } .red { border-color: #e84057; }
-        .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; }
-        .c-img { width: 40px; height: 40px; border-radius: 50%; }
+        .p-row { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #2d2d31; gap: 10px; position: relative; }
+        .c-img { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #444; }
+        .s-img { width: 18px; height: 18px; border-radius: 2px; }
         .strategy { margin-top: 30px; background: #1c1c1f; padding: 20px; border-radius: 8px; border-left: 5px solid #e8a93a; white-space: pre-wrap; line-height: 1.6; display: none; }
-        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px 0; }
-        .sim-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .sim-tag { background: #0f1014; padding: 5px 10px; border-radius: 4px; border: 1px solid #e8a93a; font-size: 13px; }
-        .remove { color: #e84057; margin-left: 5px; cursor: pointer; }
+        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px 0; font-weight: bold; }
+        .remove { position: absolute; right: 10px; color: #e84057; cursor: pointer; font-weight: bold; }
+        .pos-btn { background: #2d2d31; border: 1px solid #444; color: white; padding: 5px 8px; cursor: pointer; border-radius: 4px; }
+        .pos-btn.selected { background: #e8a93a; color: black; border-color: #e8a93a; }
     </style>
 </head>
 <body>
@@ -38,13 +39,19 @@
         </div>
 
         <div id="sim-box" class="search-box">
-            <input type="text" id="champ-in" placeholder="챔피언명 (한글)">
-            <button onclick="add('Blue')" style="background:#4171d6; color:white;">우리팀 추가</button>
-            <button onclick="add('Red')" style="background:#e84057; color:white;">상대팀 추가</button>
-            <button onclick="runSim()" style="margin-left:10px;">시뮬레이션 시작</button>
+            <select id="pos-sel">
+                <option value="TOP">TOP</option><option value="JNG">JNG</option>
+                <option value="MID">MID</option><option value="ADC">ADC</option><option value="SUP">SUP</option>
+            </select>
+            <input type="text" id="champ-in" placeholder="챔피언 영문명 (예: LeeSin)">
+            <select id="s1"><option value="SummonerFlash">점멸</option><option value="SummonerSmite">강타</option><option value="SummonerTeleport">텔포</option><option value="SummonerDot">점화</option></select>
+            <select id="s2"><option value="SummonerTeleport">텔포</option><option value="SummonerFlash">점멸</option><option value="SummonerDot">점화</option><option value="SummonerExhaust">탈진</option></select>
+            <button onclick="add('Blue')" style="background:#4171d6; color:white;">우리팀+</button>
+            <button onclick="add('Red')" style="background:#e84057; color:white;">상대팀+</button>
+            <button onclick="runSim()" style="background:#e8a93a;">분석</button>
         </div>
 
-        <div id="loading">🚀 챌린저 코치가 데이터를 분석 중입니다...</div>
+        <div id="loading">🚀 챌린저 코치가 조합 분석 중...</div>
         <div id="display" class="sim-area"></div>
         <div id="strategy" class="strategy"></div>
     </div>
@@ -59,43 +66,58 @@
             document.getElementById('strategy').style.display = 'none';
         }
         function add(t) {
-            const val = document.getElementById('champ-in').value.trim();
-            if(val) { simData[t].push(val); document.getElementById('champ-in').value = ''; renderSim(); }
+            const champ = document.getElementById('champ-in').value.trim();
+            if(!champ) return alert('챔피언 영문 이름을 입력하세요!');
+            simData[t].push({
+                pos: document.getElementById('pos-sel').value,
+                champ: champ,
+                s1: document.getElementById('s1').value,
+                s2: document.getElementById('s2').value
+            });
+            renderSim();
         }
         function renderSim() {
             const disp = document.getElementById('display');
             disp.innerHTML = ['Blue', 'Red'].map(side => `
                 <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
-                <div class="sim-list">${simData[side].map((c,i) => `<span class="sim-tag">${c}<span class="remove" onclick="simData['${side}'].splice(${i},1);renderSim();">×</span></span>`).join('')}</div></div>
+                ${simData[side].map((p, i) => `
+                    <div class="p-row">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champ}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${p.s1}.png" class="s-img">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${p.s2}.png" class="s-img">
+                        </div>
+                        <div style="font-size:13px;"><b>${p.pos}</b><br><small>${p.champ}</small></div>
+                        <span class="remove" onclick="simData['${side}'].splice(${i},1);renderSim();">×</span>
+                    </div>
+                `).join('')}</div>
             `).join('');
         }
-        async function runLive() {
-            const n = document.getElementById('name').value.trim();
-            const t = document.getElementById('tag').value.trim().replace('#','');
-            api({ mode: 'live', name: n, tag: t });
-        }
-        async function runSim() {
-            if(!simData.Blue.length || !simData.Red.length) return alert('양팀에 챔피언을 추가하세요!');
-            api({ mode: 'sim', teams: simData });
-        }
+        async function runLive() { api({ mode: 'live', name: document.getElementById('name').value, tag: document.getElementById('tag').value.replace('#','') }); }
+        async function runSim() { api({ mode: 'sim', teams: simData }); }
         async function api(body) {
             document.getElementById('loading').style.display = 'block';
             try {
                 const res = await fetch('/analyze', { method:'POST', body:JSON.stringify(body) });
                 const d = await res.json();
                 if(d.error) throw new Error(d.error);
-                if(d.teams) renderLive(d.teams);
+                if(d.teams && body.mode === 'live') renderLive(d.teams);
                 document.getElementById('strategy').innerText = d.strategy;
                 document.getElementById('strategy').style.display = 'block';
-            } catch(e) { alert(e.message); }
+            } catch(e) { alert("입력 확인: " + e.message); }
             document.getElementById('loading').style.display = 'none';
         }
         function renderLive(teams) {
             const disp = document.getElementById('display');
+            const spells = { 21:"SummonerBarrier", 1:"SummonerBoost", 14:"SummonerDot", 3:"SummonerExhaust", 4:"SummonerFlash", 6:"SummonerHaste", 7:"SummonerHeal", 11:"SummonerSmite", 12:"SummonerTeleport" };
             disp.innerHTML = ['Blue', 'Red'].map(side => `
                 <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
                 ${teams[side].map(p => `<div class="p-row" style="${p.isMe?'background:rgba(232,169,58,0.1)':''}">
                     <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champId}.png" class="c-img">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spells[p.spell1]||'SummonerEmpty'}.png" class="s-img">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spells[p.spell2]||'SummonerEmpty'}.png" class="s-img">
+                    </div>
                     <div style="font-size:13px;"><b>${p.summonerName}${p.isMe?' ⭐':''}</b><br><small>${p.champKName}</small></div>
                 </div>`).join('')}</div>
             `).join('');

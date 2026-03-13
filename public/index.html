@@ -1,51 +1,70 @@
-<script>
-    async function startAnalysis() {
-        const btn = document.getElementById('mainBtn');
-        const name = document.getElementById('sName').value;
-        const tag = document.getElementById('tag').value.replace('#', '');
-        
-        btn.innerText = "분석 중...";
-        btn.disabled = true;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Strategy Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#121212] text-white font-sans">
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+            <h1 class="text-2xl font-bold italic text-blue-500">LOL.ANALYZE</h1>
+            <div class="text-sm text-gray-400">LIVE 인게임 분석 중</div>
+        </header>
 
-        try {
-            const res = await fetch('/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ summonerName: name, tagLine: tag })
-            });
-            const data = await res.json();
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <section id="blue-area">
+                <h2 class="text-blue-400 font-bold mb-4 flex items-center">🔵 BLUE TEAM <span class="ml-2 text-xs text-gray-500 font-normal">TOP → SUP</span></h2>
+                <div id="blue-list" class="space-y-2"></div>
+            </section>
 
-            if (data.error) {
-                alert(data.error); // 여기서 구체적인 에러(유저없음, 404 등)를 띄워줍니다.
-                return;
-            }
+            <section id="red-area">
+                <h2 class="text-red-400 font-bold mb-4 flex items-center text-right justify-end">RED TEAM 🔴 <span class="ml-2 text-xs text-gray-500 font-normal text-right">TOP → SUP</span></h2>
+                <div id="red-list" class="space-y-2 text-right"></div>
+            </section>
+        </div>
 
-            // 10명 리스트 그리기 (이미지 엑박 방지 처리)
-            renderPlayers('blueList', data.participants.filter(p => p.team === 'Blue'));
-            renderPlayers('redList', data.participants.filter(p => p.team === 'Red'));
-            
-            document.getElementById('stratText').innerText = data.strategy;
-            document.getElementById('resultView').style.display = 'grid';
-            document.getElementById('stratBox').style.display = 'block';
-
-        } catch (e) {
-            alert("연결 실패: " + e.message);
-        } finally {
-            btn.innerText = "게임 분석";
-            btn.disabled = false;
-        }
-    }
-
-    function renderPlayers(id, list) {
-        document.getElementById(id).innerHTML = list.map(p => `
-            <div class="player-item">
-                <img class="champ-img" src="https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${p.champId}.png" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/0.png'">
-                <div class="icon-stack">
-                    <img class="sub-icon" src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/SummonerFlash.png">
-                    <div class="sub-icon" style="background:#333"></div>
-                </div>
-                <span class="player-name">${p.name}</span>
+        <div class="mt-12 p-6 bg-[#1e1e1e] rounded-xl border border-blue-900/30">
+            <h3 class="text-xl font-bold text-yellow-500 mb-4">🏆 AI 권장 승리 전략</h3>
+            <div id="strategy-content" class="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                게임 데이터를 불러오면 AI가 실시간 상성 분석을 시작합니다.
             </div>
-        `).join('');
-    }
-</script>
+        </div>
+    </div>
+
+    <script>
+        const DDRAGON_VER = "14.5.1"; // 최신 패치 버전에 맞춰 업데이트
+
+        function createPlayerRow(player, isBlue) {
+            const champImg = `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VER}/img/champion/${player.championName}.png`;
+            const direction = isBlue ? 'flex-row' : 'flex-row-reverse';
+            
+            return `
+                <div class="flex ${direction} items-center p-2 bg-[#1a1a1a] rounded hover:bg-gray-800 transition shadow-md">
+                    <img src="${champImg}" class="w-12 h-12 rounded border-2 ${isBlue ? 'border-blue-500' : 'border-red-500'}">
+                    <div class="mx-3 flex-1">
+                        <div class="font-bold text-sm">${player.summonerName}</div>
+                        <div class="text-xs text-gray-400">${player.championName}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <div class="w-6 h-6 bg-gray-700 rounded"></div> <div class="w-6 h-6 bg-gray-700 rounded-full"></div> </div>
+                </div>
+            `;
+        }
+
+        async function fetchAnalysis(data) {
+            const res = await fetch('/functions/analyze', {
+                method: 'POST',
+                body: JSON.stringify({ gameData: data })
+            });
+            const result = await res.json();
+            
+            // 블루/레드 리스트 렌더링
+            document.getElementById('blue-list').innerHTML = result.blueTeam.map(p => createPlayerRow(p, true)).join('');
+            document.getElementById('red-list').innerHTML = result.redTeam.map(p => createPlayerRow(p, false)).join('');
+            document.getElementById('strategy-content').innerText = result.strategy;
+        }
+    </script>
+</body>
+</html>

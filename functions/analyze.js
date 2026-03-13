@@ -1,49 +1,41 @@
-export async function onRequestPost(context) {
-  const { RIOT_API_KEY, GEMINI_API_KEY } = context.env;
-  const { summonerName, tagLine } = await context.request.json();
-
-  try {
-      // 1. 유저 정보 가져오기 (Asia 서버)
-      const accountRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
-      if (!accountRes.ok) return new Response(JSON.stringify({ error: `유저를 찾을 수 없습니다. (에러코드: ${accountRes.status})` }));
-      const accountData = await accountRes.json();
-
-      // 2. 실시간 게임 정보 가져오기 (KR 서버)
-      // 중요: Spectator-v5는 kr.api.riotgames.com 주소를 사용해야 합니다.
-      const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${accountData.puuid}?api_key=${RIOT_API_KEY}`);
-      
-      if (gameRes.status === 404) {
-          return new Response(JSON.stringify({ error: "현재 게임 중이 아닙니다. (인게임 진입 후 1분 뒤 시도하세요)" }));
-      } else if (!gameRes.ok) {
-          return new Response(JSON.stringify({ error: `게임 정보를 가져오지 못했습니다. (라이엇 에러: ${gameRes.status})` }));
-      }
-      
-      const gameData = await gameRes.json();
-
-      // 3. 10명 데이터 정리
-      const participants = gameData.participants.map(p => ({
-          name: p.riotId || p.summonerId, // 닉네임
-          team: p.teamId === 100 ? 'Blue' : 'Red',
-          champId: p.championId,
-          spell1: p.spell1Id,
-          spell2: p.spell2Id,
-          perk: p.perks.perkIds[0] // 핵심 룬
-      }));
-
-      // 4. Gemini AI 승리 플랜 ( participants 데이터를 문장으로 변환 )
-      const prompt = `${summonerName} 중심으로 분석해줘. 우리팀/상대팀 조합: ${JSON.stringify(participants)}`;
-      const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-          method: 'POST',
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+export async function onRequest(context) {
+    const { request, env } = context;
+    if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
+  
+    const { gameData } = await request.json();
+    const RIOT_API_KEY = env.RIOT_API_KEY;
+    const GEMINI_API_KEY = env.GEMINI_API_KEY;
+  
+    // 1. 포지션 정렬 로직 (탑, 정글, 미드, 원딜, 서폿 순서)
+    const sortParticipants = (participants) => {
+      const roles = { TOP: 1, JUNGLE: 2, MIDDLE: 3, BOTTOM: 4, UTILITY: 5 };
+      return [...participants].sort((a, b) => {
+        // Riot API의 teamPosition 또는 소환사 주문(강타) 등으로 계산
+        return (roles[a.teamPosition] || 99) - (roles[b.teamPosition] || 99);
       });
-      const aiData = await aiRes.json();
-
-      return new Response(JSON.stringify({ 
-          participants, 
-          strategy: aiData.candidates[0].content.parts[0].text 
-      }));
-
-  } catch (err) {
-      return new Response(JSON.stringify({ error: `서버 내부 오류: ${err.message}` }));
+    };
+  
+    const blueTeam = sortParticipants(gameData.participants.filter(p => p.teamId === 100));
+    const redTeam = sortParticipants(gameData.participants.filter(p => p.teamId === 200));
+  
+    // 2. Gemini API에 보낼 프롬프트 생성
+    const prompt = `리그오브레전드 게임 분석해줘. 
+    블루팀: ${blueTeam.map(p => p.championName).join(', ')}
+    레드팀: ${redTeam.map(p => p.championName).join(', ')}
+    각 라인별 상성과 승리 전략을 요약해줘.`;
+  
+    try {
+      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: "POST",
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const aiData = await aiResponse.json();
+      const strategy = aiData.candidates[0].content.parts[0].text;
+  
+      return new Response(JSON.stringify({ blueTeam, redTeam, strategy }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    }
   }
-}

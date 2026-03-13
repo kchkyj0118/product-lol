@@ -16,6 +16,29 @@
         .loading { color: #c89b3c; font-weight: bold; font-size: 1.1rem; }
         .strategy-content { white-space: pre-wrap; font-size: 1.1rem; }
         .error-msg { color: #ff4d4d; font-weight: bold; }
+
+        /* Team Table Styles */
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #1c1c1f;
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: left;
+        }
+        .player-row {
+            border-bottom: 1px solid #2d2d31;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+        }
+        .player-row:last-child { border-bottom: none; }
+        .champ-img { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; border: 2px solid #3c4450; }
+        .spell-img, .rune-img { width: 22px; height: 22px; margin-right: 6px; border-radius: 4px; }
+        .player-info { flex-grow: 1; color: #fff; font-size: 14px; display: flex; flex-direction: column; }
+        .summoner-name { font-weight: bold; color: #c89b3c; }
+        .tier-badge { font-size: 12px; color: #9e9eb1; margin-top: 2px; }
     </style>
 </head>
 <body>

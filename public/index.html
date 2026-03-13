@@ -1,37 +1,138 @@
-// 스펠 및 룬 이미지 매핑 (이게 틀리면 이미지가 안 나옵니다)
-const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
-const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOL.ANALYZE - 맞춤형 훈수</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0d0f] text-white">
+    <div class="max-w-5xl mx-auto p-4 md:p-10">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-black italic text-blue-500 mb-8 tracking-tighter uppercase">Lol.Analyze</h1>
+            <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2 shadow-2xl">
+                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-32 md:w-48 text-sm text-white">
+                <span class="text-gray-600 self-center font-bold">#</span>
+                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400">
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all active:scale-95">전략 분석</button>
+            </div>
+        </header>
 
-function renderTeams(pList, ver) {
-    const blueBox = document.getElementById('blue-list');
-    const redBox = document.getElementById('red-list');
-    blueBox.innerHTML = '<h2 class="text-blue-500 font-bold mb-4 uppercase text-xs tracking-widest">Blue Side</h2>';
-    redBox.innerHTML = '<h2 class="text-red-500 font-bold mb-4 uppercase text-xs tracking-widest text-right">Red Side</h2>';
+        <div id="loader" class="hidden text-center py-20">
+            <div class="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-blue-400 font-bold animate-pulse">최신 메타 상성을 분석하여 훈수를 준비 중입니다...</p>
+        </div>
 
-    pList.forEach(p => {
-        const isBlue = p.team === 100;
-        const target = isBlue ? blueBox : redBox;
-        const rIcon = rMap[p.r] || "7200_Domination";
+        <div id="dashboard" class="hidden space-y-8 animate-in fade-in duration-500">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div id="blue-list" class="space-y-3"></div>
+                <div id="red-list" class="space-y-3"></div>
+            </div>
 
-        const html = `
-            <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 mb-3 shadow-lg">
-                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-12 h-12 rounded-xl border border-gray-700">
+            <div class="bg-[#14171a] border border-gray-800 p-8 rounded-3xl shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="strat-title" class="text-xl font-black text-yellow-500 italic uppercase">Winning Strategy</h3>
+                    <button id="toggle-btn" onclick="toggleDetail()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full text-xs font-bold transition-all shadow-lg">상세 훈수 보기 +</button>
+                </div>
+                <div id="strategy-box" class="text-gray-300 text-[15px] leading-relaxed whitespace-pre-wrap pt-4 border-t border-gray-800 font-medium"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fullStrat = "";
+        let isDetail = false;
+
+        const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
+        const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
+
+        function renderTeams(pList, ver) {
+            const blueBox = document.getElementById('blue-list');
+            const redBox = document.getElementById('red-list');
+            blueBox.innerHTML = '<h2 class="text-blue-500 font-bold mb-4 text-xs">BLUE SIDE</h2>';
+            redBox.innerHTML = '<h2 class="text-red-500 font-bold mb-4 text-xs text-right">RED SIDE</h2>';
+
+            pList.forEach(p => {
+                const isBlue = p.team === 100;
+                const target = isBlue ? blueBox : redBox;
+                const rIcon = rMap[p.r] || "7200_Domination";
+
+                const html = `
+                    <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 mb-3 shadow-md hover:border-gray-600 transition-all">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-12 h-12 rounded-xl border border-gray-700">
+                        
+                        <div class="mx-4 flex-1 ${isBlue ? 'text-left' : 'text-right'}">
+                            <div class="text-[13px] font-bold text-white truncate">${p.nick}</div>
+                            <div class="text-[11px] text-gray-500 font-medium">${p.cName}</div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <div class="flex flex-col gap-1">
+                                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]] || 'SummonerFlash'}.png" class="w-5 h-5 rounded-md">
+                                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]] || 'SummonerDot'}.png" class="w-5 h-5 rounded-md">
+                            </div>
+                            <div class="w-11 h-11 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center overflow-hidden">
+                                <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rIcon}.png" class="w-6 h-6">
+                            </div>
+                        </div>
+                    </div>`;
+                target.innerHTML += html;
+            });
+        }
+
+        async function fetchGame() {
+            const nameInput = document.getElementById('name').value.trim();
+            const tagInput = document.getElementById('tag').value.trim();
+            if(!nameInput || !tagInput) return alert("닉네임과 태그를 입력하세요.");
+
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: nameInput, tag: tagInput })
+                });
                 
-                <div class="mx-4 flex-1 ${isBlue ? 'text-left' : 'text-right'}">
-                    <div class="text-[13px] font-bold text-gray-100 truncate">${p.nick}</div>
-                    <div class="text-[11px] text-gray-500 font-medium">${p.cName}</div>
-                </div>
+                const data = await res.json();
+                if(data.error) {
+                    alert(data.error);
+                    document.getElementById('loader').classList.add('hidden');
+                    return;
+                }
 
-                <div class="flex gap-2">
-                    <div class="flex flex-col gap-1">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]] || 'SummonerFlash'}.png" class="w-5 h-5 rounded-md border border-black">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]] || 'SummonerDot'}.png" class="w-5 h-5 rounded-md border border-black">
-                    </div>
-                    <div class="w-11 h-11 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rIcon}.png" class="w-6 h-6">
-                    </div>
-                </div>
-            </div>`;
-        target.innerHTML += html;
-    });
-}
+                renderTeams(data.pList, data.ver);
+                fullStrat = data.strategy;
+                document.getElementById('strat-title').innerText = "⚡ " + data.myChampName + " 핵심 훈수";
+                
+                // 초기 요약만 표시
+                showSummary();
+
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+            } catch (err) {
+                alert("연결 오류가 발생했습니다.");
+                document.getElementById('loader').classList.add('hidden');
+            }
+        }
+
+        function showSummary() {
+            const summary = fullStrat.split('[상세]')[0].replace('[요약]', '').trim();
+            document.getElementById('strategy-box').innerText = summary;
+            document.getElementById('toggle-btn').innerText = "상세 훈수 보기 +";
+            isDetail = false;
+        }
+
+        function toggleDetail() {
+            isDetail = !isDetail;
+            if (isDetail) {
+                document.getElementById('strategy-box').innerText = fullStrat.replace('[요약]', '').replace('[상세]', '\n\n[상세]').trim();
+                document.getElementById('toggle-btn').innerText = "요약 보기 -";
+            } else {
+                showSummary();
+            }
+        }
+    </script>
+</body>
+</html>

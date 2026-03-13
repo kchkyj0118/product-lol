@@ -3,76 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOL.ANALYZE - 1타 강사 분석</title>
+    <title>LOL.ANALYZE - 승리 공식</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* 가독성을 위한 배경 및 글자색 강제 설정 */
-        body { background-color: #0b0d0f; color: #ffffff; }
+        /* 가독성 핵심: 배경 및 글자색 고정 */
+        body { background-color: #0b0e11; color: #ffffff; font-family: 'Pretendard', sans-serif; }
         
+        .user-nick { 
+            font-size: 1rem; 
+            font-weight: 900; 
+            color: #ffffff; 
+            letter-spacing: -0.025em;
+        }
+        
+        .champion-name {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .summary-box { 
+            background: rgba(30, 41, 59, 0.5); 
+            border: 1px solid #3b82f6; 
+            padding: 24px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .detail-content { 
+            background: #161b22; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-top: 16px; 
+            border: 1px solid #30363d; 
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
         input#name, input#tag {
             background-color: #1a1d20 !important;
             color: #ffffff !important;
             border: 1px solid #374151;
         }
-        input::placeholder { color: #9ca3af !important; }
-
-        /* 대시보드 및 리포트 박스 명시적 배경 설정 */
-        .report-box {
-            background-color: #111827 !important; /* 다크 네이비 */
-            border: 1px solid #1f2937;
-        }
+        input::placeholder { color: #6b7280; }
         
-        .summary-content {
-            color: #f3f4f6 !important; /* 밝은 회색/화이트 */
-            border-left: 4px solid #3b82f6;
-        }
-
-        .detail-content {
-            color: #d1d5db !important; /* 중간 밝기 회색 */
-        }
-
-        .champion-nick {
-            color: #ffffff !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
+        .hidden { display: none; }
     </style>
 </head>
-<body class="font-sans antialiased">
+<body class="antialiased">
     <div class="max-w-5xl mx-auto p-4 md:p-10">
-        <header class="text-center mb-10">
+        <header class="text-center mb-12">
             <h1 class="text-4xl font-black italic text-blue-500 mb-8 tracking-tighter uppercase">Lol.Analyze</h1>
             <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2 shadow-2xl">
                 <input type="text" id="name" placeholder="닉네임" class="px-4 py-2 outline-none w-32 md:w-48 text-sm rounded-l-xl">
                 <span class="text-gray-600 self-center font-bold px-1">#</span>
                 <input type="text" id="tag" placeholder="KR1" class="px-2 py-2 outline-none w-16 md:w-20 font-bold text-blue-400">
-                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all active:scale-95">전략 분석</button>
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all active:scale-95 text-sm">분석 시작</button>
             </div>
         </header>
 
-        <!-- 로딩 상태 -->
+        <!-- 로딩 -->
         <div id="loader" class="hidden text-center py-20">
             <div class="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-blue-400 font-black animate-pulse">op.gg & lol.ps 데이터를 기반으로 분석 중...</p>
+            <p class="text-blue-400 font-bold animate-pulse">1타 강사가 메타를 분석 중입니다...</p>
         </div>
 
-        <!-- 분석 대시보드 -->
-        <div id="dashboard" class="hidden space-y-8 animate-in fade-in duration-500">
+        <!-- 결과 대시보드 -->
+        <div id="dashboard" class="hidden space-y-10 animate-in fade-in duration-500">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div id="blue-list" class="space-y-3"></div>
                 <div id="red-list" class="space-y-3"></div>
             </div>
 
-            <!-- 승리 리포트 -->
-            <div class="report-box p-8 rounded-3xl shadow-2xl">
+            <!-- 전략 분석 영역 -->
+            <div id="analysis-area" class="summary-box">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 id="strat-title" class="text-xl font-black text-yellow-500 italic uppercase">Pro Analyst Report</h3>
-                    <button onclick="toggleDetail()" id="detail-btn" class="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest border border-blue-900/50 px-4 py-1.5 rounded-full bg-blue-900/10">Detail +</button>
+                    <h2 id="strat-title" class="text-xl font-black text-yellow-500 italic">WINNING STRATEGY</h2>
+                    <button onclick="toggleDetail()" id="detail-btn" class="text-xs font-bold text-blue-400 hover:text-blue-300 border border-blue-900/50 px-4 py-1.5 rounded-full transition-all">Detail +</button>
                 </div>
                 
-                <div id="summary-box" class="summary-content text-lg font-bold leading-relaxed whitespace-pre-wrap pl-6 mb-6"></div>
+                <div id="summary-box" class="text-lg font-bold leading-relaxed whitespace-pre-wrap border-l-4 border-blue-500 pl-6 text-gray-100"></div>
                 
-                <div id="detail-box" class="hidden mt-8 pt-8 border-t border-gray-800 detail-content text-sm leading-relaxed whitespace-pre-wrap italic"></div>
+                <div id="detail-section" class="hidden detail-content text-sm italic"></div>
             </div>
         </div>
     </div>
@@ -84,26 +98,26 @@
         function renderTeams(pList, ver) {
             const blueBox = document.getElementById('blue-list');
             const redBox = document.getElementById('red-list');
-            blueBox.innerHTML = '<h2 class="text-blue-500 font-black mb-4 text-[10px] tracking-widest opacity-80 uppercase">Blue Side (TOP → SUP)</h2>';
-            redBox.innerHTML = '<h2 class="text-red-500 font-black mb-4 text-[10px] tracking-widest opacity-80 uppercase text-right">Red Side (TOP → SUP)</h2>';
+            blueBox.innerHTML = '<h3 class="text-blue-500 font-black text-[10px] tracking-widest mb-4 uppercase opacity-70">Blue Side</h3>';
+            redBox.innerHTML = '<h3 class="text-red-500 font-black text-[10px] tracking-widest mb-4 text-right uppercase opacity-70">Red Side</h3>';
 
             pList.forEach(p => {
                 const isBlue = p.team === 100;
                 const target = isBlue ? blueBox : redBox;
                 const rIcon = rMap[p.r] || "7200_Domination";
                 const html = `
-                    <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 shadow-lg">
+                    <div class="flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center bg-[#16191c] p-3 rounded-2xl border border-gray-800 shadow-lg hover:border-gray-600 transition-colors">
                         <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/champion/${p.cName}.png" class="w-12 h-12 rounded-xl border-2 border-gray-700">
                         <div class="mx-4 flex-1 ${isBlue ? 'text-left' : 'text-right'}">
-                            <div class="champion-nick text-[14px] font-black">${p.nick}</div>
-                            <div class="text-[10px] text-gray-500 font-bold uppercase">${p.cName}</div>
+                            <div class="user-nick">${p.nick}</div>
+                            <div class="champion-name">${p.cName}</div>
                         </div>
                         <div class="flex gap-2">
                             <div class="flex flex-col gap-1">
-                                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]] || 'SummonerFlash'}.png" class="w-5 h-5 rounded-md border border-gray-900">
-                                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]] || 'SummonerDot'}.png" class="w-5 h-5 rounded-md border border-gray-900">
+                                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[0]] || 'SummonerFlash'}.png" class="w-5 h-5 rounded-md">
+                                <img src="https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${sMap[p.s[1]] || 'SummonerDot'}.png" class="w-5 h-5 rounded-md">
                             </div>
-                            <div class="w-11 h-11 bg-black/60 rounded-full border border-gray-700 flex items-center justify-center">
+                            <div class="w-11 h-11 bg-black/40 rounded-full border border-gray-700 flex items-center justify-center">
                                 <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${rIcon}.png" class="w-6 h-6">
                             </div>
                         </div>
@@ -119,7 +133,7 @@
 
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('detail-box').classList.add('hidden');
+            document.getElementById('detail-section').classList.add('hidden');
             document.getElementById('detail-btn').innerText = "Detail +";
 
             try {
@@ -137,28 +151,28 @@
                 }
 
                 renderTeams(data.pList, data.ver);
-                document.getElementById('strat-title').innerText = `⚡ ${data.myC} 분석 리포트`;
+                document.getElementById('strat-title').innerText = `⚡ ${data.myChamp} 실전 리포트`;
                 document.getElementById('summary-box').innerText = data.summary;
-                document.getElementById('detail-box').innerText = data.detail;
+                document.getElementById('detail-section').innerText = data.detail;
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
             } catch (err) {
-                alert("서버 통신 실패 (네트워크 연결을 확인하세요)");
+                alert("서버 통신 실패");
                 document.getElementById('loader').classList.add('hidden');
             }
         }
 
         function toggleDetail() {
-            const box = document.getElementById('detail-box');
+            const section = document.getElementById('detail-section');
             const btn = document.getElementById('detail-btn');
-            const isHidden = box.classList.contains('hidden');
+            const isHidden = section.classList.contains('hidden');
             
             if (isHidden) {
-                box.classList.remove('hidden');
+                section.classList.remove('hidden');
                 btn.innerText = "Detail -";
             } else {
-                box.classList.add('hidden');
+                section.classList.add('hidden');
                 btn.innerText = "Detail +";
             }
         }

@@ -1,33 +1,85 @@
-// index.html 내의 renderTeams 함수만 이 내용으로 덮어쓰거나, 전체를 다시 붙여넣으세요!
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><title>LoL 실시간 전략 분석기</title>
+    <style>
+        body { background: #0f1014; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .search-box { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; }
+        input { padding: 12px; background: #1c1c1f; border: 1px solid #323232; color: white; border-radius: 4px; }
+        button { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        
+        .board { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .team { background: #1c1c1f; border-radius: 8px; overflow: hidden; }
+        .blue { border-top: 4px solid #4171d6; } .red { border-top: 4px solid #e84057; }
+        .team-title { padding: 10px; font-weight: bold; background: rgba(255,255,255,0.05); }
+        
+        .p-row { display: flex; align-items: center; padding: 8px 15px; border-bottom: 1px solid #2d2d31; gap: 12px; }
+        .c-img { width: 45px; height: 45px; border-radius: 50%; }
+        .icons { display: grid; grid-template-columns: 20px 20px; gap: 2px; }
+        .icon { width: 20px; height: 20px; border-radius: 3px; background: #000; }
+        .rune { background: #000; border-radius: 50%; width: 22px; height: 22px; }
+        .info { flex-grow: 1; }
+        .name { font-size: 14px; font-weight: bold; display: block; }
+        
+        .strategy { margin-top: 30px; background: #1c1c1f; padding: 20px; border-radius: 8px; border-left: 4px solid #e8a93a; }
+        #loading { text-align: center; display: none; padding: 20px; color: #e8a93a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="name" placeholder="닉네임">
+            <input type="text" id="tag" placeholder="태그">
+            <button onclick="analyze()">실시간 분석</button>
+        </div>
+        <div id="loading">데이터 수집 및 Gemini 분석 중...</div>
+        <div class="board" id="board"></div>
+        <div class="strategy" id="strategy" style="display:none">
+            <h3 style="margin-top:0">🤖 Gemini의 승리 플랜</h3>
+            <p id="st-text"></p>
+        </div>
+    </div>
+    <script>
+        const spells = { 21:"SummonerBarrier", 1:"SummonerBoost", 14:"SummonerDot", 3:"SummonerExhaust", 4:"SummonerFlash", 6:"SummonerHaste", 7:"SummonerHeal", 11:"SummonerSmite", 12:"SummonerTeleport" };
+        async function analyze() {
+            const name = document.getElementById('name').value;
+            const tag = document.getElementById('tag').value;
+            if(!name || !tag) return alert('정보를 입력하세요.');
+            
+            document.getElementById('loading').style.display = 'block';
+            try {
+                const res = await fetch('/analyze', { method:'POST', body: JSON.stringify({ summonerName:name, tagLine:tag }) });
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
 
-function renderTeams(teams) {
-    const board = document.getElementById('gameBoard');
-    board.innerHTML = ''; 
-    ['Blue', 'Red'].forEach(side => {
-        const teamHtml = `
-            <div class="team-container">
-                <div class="team-header ${side.toLowerCase()}-header">${side.toUpperCase()} TEAM</div>
-                ${teams[side].map(p => `
-                    <div class="player-row">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champId}.png" class="champ-img">
-                        <div class="spells">
-                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${getSpellName(p.spell1)}.png" class="spell-img">
-                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${getSpellName(p.spell2)}.png" class="spell-img">
-                        </div>
-                        <div class="name-box">
-                            <span class="player-name">${p.champName}</span>
-                            <span class="player-tag">#${p.tag}</span>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        board.innerHTML += teamHtml;
-    });
-}
+                render(data.teams);
+                document.getElementById('st-text').innerText = data.strategy;
+                document.getElementById('strategy').style.display = 'block';
+            } catch(e) { alert(e.message); }
+            document.getElementById('loading').style.display = 'none';
+        }
 
-// 스펠 ID를 파일명으로 바꿔주는 간단한 함수 (스크립트 안에 추가하세요)
-function getSpellName(id) {
-    const spells = { 21:"SummonerBarrier", 1:"SummonerBoost", 14:"SummonerDot", 3:"SummonerExhaust", 4:"SummonerFlash", 6:"SummonerHaste", 7:"SummonerHeal", 11:"SummonerSmite", 12:"SummonerTeleport" };
-    return spells[id] || "SummonerEmpty";
-}
+        function render(teams) {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            ['Blue', 'Red'].forEach(side => {
+                let html = `<div class="team ${side.toLowerCase()}"><div class="team-title">${side} Team</div>`;
+                teams[side].forEach(p => {
+                    html += `
+                    <div class="p-row">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champId}.png" class="c-img">
+                        <div class="icons">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spells[p.spell1]||'SummonerEmpty'}.png" class="icon">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/img/${p.mainRuneIcon}" class="rune">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${spells[p.spell2]||'SummonerEmpty'}.png" class="icon">
+                        </div>
+                        <div class="info"><span class="name">${p.champKName}</span></div>
+                    </div>`;
+                });
+                board.innerHTML += html + `</div>`;
+            });
+        }
+    </script>
+</body>
+</html>

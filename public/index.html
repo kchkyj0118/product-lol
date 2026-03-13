@@ -1,42 +1,144 @@
-<div id="footer-area" style="margin-top: 50px; border-top: 1px solid #2d2d31; padding-top: 20px;">
-    <div id="ai-tip" style="background: rgba(232, 169, 58, 0.05); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-        <span style="color: #e8a93a; font-weight: bold;">💡 PickView Tip:</span> 
-        <span id="tip-text" style="color: #9e9eb1; font-size: 14px;">챔피언 이름을 영문으로 입력하면 시뮬레이션에 이미지가 표시됩니다!</span>
-    </div>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><title>PickView | 픽뷰</title>
+    <style>
+        body { background: #0f1014; color: white; font-family: 'Pretendard', sans-serif; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; }
+        .tabs { display: flex; gap: 5px; justify-content: center; margin-bottom: 20px; }
+        .tab { padding: 12px 25px; background: #1c1c1f; border: none; color: #9e9eb1; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; }
+        .tab.active { background: #e8a93a; color: black; font-weight: bold; }
+        .search-box { display: none; gap: 10px; justify-content: center; background: #1c1c1f; padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .search-box.active { display: flex; flex-wrap: wrap; }
+        input, select { padding: 12px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 6px; }
+        button { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: black; }
+        .board { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .team { background: #1c1c1f; padding: 15px; border-radius: 10px; border-top: 4px solid #323232; }
+        .blue { border-color: #4171d6; } .red { border-color: #e84057; }
+        .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; position: relative; }
+        .c-img { width: 42px; height: 42px; border-radius: 50%; border: 1px solid #444; }
+        .spells { display: flex; flex-direction: column; gap: 2px; }
+        .s-img { width: 18px; height: 18px; border-radius: 2px; }
+        .strategy { margin-top: 25px; background: #1c1c1f; padding: 20px; border-radius: 10px; border-left: 5px solid #e8a93a; white-space: pre-wrap; line-height: 1.7; display: none; font-size: 15px; }
+        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px 0; font-weight: bold; font-size: 18px; }
+        /* 하단 공간 채우기 */
+        .footer-info { margin-top: 40px; padding-top: 20px; border-top: 1px solid #2d2d31; }
+        .recent-tag { background: #2d2d31; padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1px solid #444; transition: 0.2s; }
+        .recent-tag:hover { background: #e8a93a; color: black; }
+        .ai-banner { background: linear-gradient(90deg, #1c1c1f, #2d2d31); padding: 20px; border-radius: 10px; margin-top: 20px; text-align: center; border: 1px solid #323232; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 style="color:#e8a93a; font-size: 36px; margin-bottom: 5px;">PickView</h1>
+            <p style="color:#9e9eb1;">AI가 제안하는 승리의 수수께끼 풀이</p>
+        </header>
 
-    <div id="recent-search">
-        <h4 style="color: #e8a93a; font-size: 14px; margin-bottom: 10px;">최근 분석한 소환사</h4>
-        <div id="recent-list" style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <span style="color: #555; font-size: 12px;">최근 기록이 없습니다.</span>
+        <div class="tabs">
+            <button id="tab-live" class="tab active" onclick="switchTab('live')">실시간 분석</button>
+            <button id="tab-sim" class="tab" onclick="switchTab('sim')">조합 시뮬레이션</button>
+        </div>
+
+        <div id="live-box" class="search-box active">
+            <input type="text" id="name" placeholder="소환사명">
+            <input type="text" id="tag" placeholder="태그 (#빼고)">
+            <button onclick="runLive()">게임 분석 시작</button>
+        </div>
+
+        <div id="sim-box" class="search-box">
+            <select id="pos-sel"><option>TOP</option><option>JNG</option><option>MID</option><option>ADC</option><option>SUP</option></select>
+            <input type="text" id="champ-in" placeholder="챔피언 영문명 (예: Aatrox)">
+            <button onclick="addSim('Blue')" style="background:#4171d6; color:white;">우리팀+</button>
+            <button onclick="addSim('Red')" style="background:#e84057; color:white;">상대팀+</button>
+            <button onclick="runSim()">조합 결과 보기</button>
+        </div>
+
+        <div id="loading">✨ 픽뷰 AI가 데이터 분석 중...</div>
+        <div id="display" class="board"></div>
+        <div id="strategy" class="strategy"></div>
+
+        <div class="footer-info">
+            <h4 style="color:#e8a93a; margin-bottom:10px;">🕒 최근 분석 기록</h4>
+            <div id="recent-list" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+            <div class="ai-banner">
+                <div style="color:#e8a93a; font-weight:bold; margin-bottom:5px;">💡 오늘의 협곡 팁</div>
+                <div style="color:#9e9eb1; font-size:14px;">상대 조합에 CC기가 많다면 헤르메스의 발걸음을 최우선으로 고려하세요.</div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // 검색 시 최근 리스트에 추가하는 로직 (기존 api 함수 내에 추가)
-    function saveRecent(name, tag) {
-        let list = JSON.parse(localStorage.getItem('recentPick') || '[]');
-        const entry = `${name}#${tag}`;
-        if(!list.includes(entry)) {
-            list.unshift(entry);
-            list = list.slice(0, 5); // 최근 5개만 저장
-            localStorage.setItem('recentPick', JSON.stringify(list));
-            renderRecent();
+    <script>
+        let simData = { Blue: [], Red: [] };
+        function switchTab(m) {
+            document.querySelectorAll('.tab, .search-box').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${m}`).classList.add('active');
+            document.getElementById(`${m}-box`).classList.add('active');
+            document.getElementById('display').innerHTML = '';
+            document.getElementById('strategy').style.display = 'none';
         }
-    }
-
-    function renderRecent() {
-        const list = JSON.parse(localStorage.getItem('recentPick') || '[]');
-        const el = document.getElementById('recent-list');
-        if(list.length > 0) {
-            el.innerHTML = list.map(item => {
-                const [n, t] = item.split('#');
-                return `<span onclick="document.getElementById('name').value='${n}'; document.getElementById('tag').value='${t}'; runLive();" 
-                        style="background:#1c1c1f; padding:5px 10px; border-radius:15px; font-size:12px; cursor:pointer; border:1px solid #323232;">
-                        ${item}</span>`;
-            }).join('');
+        function addSim(t) {
+            const c = document.getElementById('champ-in').value.trim();
+            if(!c) return;
+            simData[t].push({ pos: document.getElementById('pos-sel').value, champ: c });
+            renderSim();
         }
-    }
-    // 페이지 로드 시 호출
-    renderRecent();
-</script>
+        function renderSim() {
+            const d = document.getElementById('display');
+            d.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
+                ${simData[side].map((p, i) => `<div class="p-row">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champ}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
+                    <div style="font-size:13px;"><b>${p.pos}</b><br><small>${p.champ}</small></div>
+                    <span style="margin-left:auto; color:#e84057; cursor:pointer;" onclick="simData['${side}'].splice(${i},1);renderSim();">×</span>
+                </div>`).join('')}</div>
+            `).join('');
+        }
+        async function runLive() {
+            const n = document.getElementById('name').value.trim();
+            const t = document.getElementById('tag').value.trim();
+            if(!n || !t) return alert('정보를 다 채워주세요!');
+            saveRecent(n, t);
+            api({ mode: 'live', name: n, tag: t });
+        }
+        function runSim() { api({ mode: 'sim', teams: simData }); }
+        async function api(body) {
+            document.getElementById('loading').style.display = 'block';
+            try {
+                const res = await fetch('/analyze', { method:'POST', body:JSON.stringify(body) });
+                const d = await res.json();
+                if(d.error) throw new Error(d.error);
+                if(body.mode === 'live') renderLive(d.teams);
+                document.getElementById('strategy').innerText = d.strategy;
+                document.getElementById('strategy').style.display = 'block';
+            } catch(e) { alert(e.message); }
+            document.getElementById('loading').style.display = 'none';
+        }
+        function renderLive(teams) {
+            const disp = document.getElementById('display');
+            const sp = { 21:"SummonerBarrier", 1:"SummonerBoost", 14:"SummonerDot", 3:"SummonerExhaust", 4:"SummonerFlash", 6:"SummonerHaste", 7:"SummonerHeal", 11:"SummonerSmite", 12:"SummonerTeleport" };
+            disp.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
+                ${teams[side].map(p => `<div class="p-row" style="${p.isMe?'background:rgba(232,169,58,0.1)':''}">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champId}.png" class="c-img">
+                    <div class="spells">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${sp[p.s1]||'SummonerEmpty'}.png" class="s-img">
+                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${sp[p.s2]||'SummonerEmpty'}.png" class="s-img">
+                    </div>
+                    <div style="font-size:13px;"><b>${p.name}${p.isMe?' ⭐':''}</b><br><small>${p.cName}</small></div>
+                </div>`).join('')}</div>
+            `).join('');
+        }
+        function saveRecent(n, t) {
+            let r = JSON.parse(localStorage.getItem('rp') || '[]');
+            if(!r.includes(`${n}#${t}`)) { r.unshift(`${n}#${t}`); r = r.slice(0, 5); localStorage.setItem('rp', JSON.stringify(r)); renderRecent(); }
+        }
+        function renderRecent() {
+            const r = JSON.parse(localStorage.getItem('rp') || '[]');
+            document.getElementById('recent-list').innerHTML = r.map(v => `<span class="recent-tag" onclick="const [n,t]=this.innerText.split('#'); document.getElementById('name').value=n; document.getElementById('tag').value=t; runLive();">${v}</span>`).join('');
+        }
+        renderRecent();
+    </script>
+</body>
+</html>

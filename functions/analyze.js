@@ -1,50 +1,71 @@
 export async function onRequestPost(context) {
-  // 클라우드플레어에 저장해두신 'RIOT_API_KEY'를 자동으로 불러옵니다.
-  const RIOT_API_KEY = context.env.RIOT_API_KEY; 
+  // 1. 환경 변수 우선순위 체크 (Production/Preview 모두 대응)
+  const RIOT_API_KEY = context.env.RIOT_API_KEY;
 
   try {
     const body = await context.request.json();
     const { summonerName, tagLine, isSim } = body;
 
-    // 1. 조합 시뮬레이션 모드 (유저가 직접 입력 시)
+    // 기본 응답 구조 선언 (에러 시에도 이 구조를 반환하여 'Blue' 정의되지 않음 에러 방지)
+    let resultData = {
+      teams: {
+        Blue: [],
+        Red: []
+      },
+      strategy: "분석을 시작할 수 없습니다. 다시 시도해주세요."
+    };
+
+    // 2. 조합 시뮬레이션 모드 처리
     if (isSim) {
       return new Response(JSON.stringify({ teams: body.teams, strategy: "시뮬레이션 분석 완료" }), {
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // 2. 실시간 분석 모드 (유저 아이디 검색 시)
-    // [Step 1] PUUID 가져오기
-    const accRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
-    const accData = await accRes.json();
-    if (!accData.puuid) throw new Error("유저를 찾을 수 없습니다.");
+    // 3. 실시간 분석 로직 (키가 있을 때만 실행)
+    if (RIOT_API_KEY) {
+      try {
+        const accRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
+        const accData = await accRes.json();
 
-    // [Step 2] 현재 게임 중인 10명 정보 가져오기
-    const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${accData.puuid}?api_key=${RIOT_API_KEY}`);
-    if (gameRes.status === 404) throw new Error("현재 게임 중이 아닙니다.");
-    const gameData = await gameRes.json();
+        if (accData.puuid) {
+          const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${accData.puuid}?api_key=${RIOT_API_KEY}`);
+          const gameData = await gameRes.json();
 
-    // [Step 3] 데이터 정리 (화면에서 'Blue'를 읽을 수 있게 구조화)
-    const teams = { Blue: [], Red: [] };
-    gameData.participants.forEach(p => {
-      const side = p.teamId === 100 ? 'Blue' : 'Red';
-      teams[side].push({
-        name: p.riotId || "플레이어",
-        champId: p.championId,
-        spell1: p.spell1Id,
-        spell2: p.spell2Id,
-        pos: "분석 중"
-      });
-    });
+          if (gameData.participants) {
+            resultData.teams = { Blue: [], Red: [] };
+            gameData.participants.forEach(p => {
+              const side = p.teamId === 100 ? 'Blue' : 'Red';
+              resultData.teams[side].push({
+                name: p.riotId || summonerName,
+                champId: p.championId,
+                spell1: p.spell1Id,
+                spell2: p.spell2Id
+              });
+            });
+            resultData.strategy = "실시간 매치 분석이 완료되었습니다.";
+          } else {
+            resultData.strategy = "현재 해당 유저는 게임 중이 아닙니다.";
+          }
+        }
+      } catch (apiErr) {
+        resultData.strategy = "라이엇 API 연결에 실패했습니다.";
+      }
+    } else {
+      resultData.strategy = "서버 설정(API_KEY)이 완료되지 않았습니다.";
+    }
 
-    return new Response(JSON.stringify({ teams, strategy: "AI 실시간 코칭 분석이 완료되었습니다." }), {
+    // 최종 응답 (어떤 경우에도 resultData.teams.Blue가 존재함)
+    return new Response(JSON.stringify(resultData), {
       headers: { "Content-Type": "application/json" }
     });
 
   } catch (err) {
-    // 에러 발생 시 화면이 멈추지 않게 에러 메시지 전달
-    return new Response(JSON.stringify({ error: err.message }), { 
-      status: 200, 
+    // 최후의 보루: 빈 팀 구조라도 보내서 프론트엔드 폭발 방지
+    return new Response(JSON.stringify({ 
+      teams: { Blue: [], Red: [] }, 
+      error: err.message 
+    }), { 
       headers: { "Content-Type": "application/json" } 
     });
   }

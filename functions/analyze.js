@@ -3,30 +3,36 @@ export async function onRequestPost(context) {
   const GEMINI_API_KEY = context.env.GEMINI_API_KEY;
 
   try {
-    const body = await context.request.json();
-    
-    // 1. 라이엇 데이터 가져오기 (생략 - 기존 로직과 동일하게 작동)
-    // ... 실제 배포본에는 제가 이전에 드린 fetch 로직이 들어가야 합니다 ...
-    
-    // 2. 가짜 데이터 대신 AI 전략 포함 응답
-    const mockTeams = {
-      Blue: [{name: body.summonerName, champId: 86}], // 테스트용 가렌
-      Red: [{name: "상대", champId: 1}]
-    };
+      const body = await context.request.json();
+      const { summonerName, tagLine } = body;
 
-    // Gemini API 호출하여 전략 가져오기
-    const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: "롤 인게임 조합을 분석해서 이길 수 있는 전략 3문장으로 알려줘." }] }] })
-    });
-    const aiData = await aiRes.json();
-    const strategy = aiData.candidates[0].content.parts[0].text;
+      // 1. 라이엇 계정 조회
+      const accRes = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
+      const accData = await accRes.json();
+      if(!accData.puuid) throw new Error("유저를 찾을 수 없습니다.");
 
-    return new Response(JSON.stringify({ teams: mockTeams, strategy }), {
-      headers: { "Content-Type": "application/json" }
-    });
+      // 2. 현재 게임 조회
+      const gameRes = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${accData.puuid}?api_key=${RIOT_API_KEY}`);
+      const gameData = await gameRes.json();
+      if(!gameData.participants) throw new Error("현재 게임 중이 아닙니다.");
+
+      const teams = { Blue: [], Red: [] };
+      gameData.participants.forEach(p => {
+          const side = p.teamId === 100 ? 'Blue' : 'Red';
+          teams[side].push({ name: p.riotId || "Unknown", champId: p.championId });
+      });
+
+      // 3. Gemini AI 전략 생성
+      const prompt = `LoL 분석: 블루팀(${teams.Blue.map(p=>p.champId)}) vs 레드팀(${teams.Red.map(p=>p.champId)}). 승리 전략 3줄 요약해줘.`;
+      const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const aiData = await aiRes.json();
+      const strategy = aiData.candidates[0].content.parts[0].text;
+
+      return new Response(JSON.stringify({ teams, strategy }), { headers: { "Content-Type": "application/json" } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 200 });
+      return new Response(JSON.stringify({ error: err.message }), { status: 200 });
   }
 }

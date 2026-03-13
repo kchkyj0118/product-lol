@@ -2,4 +2,5 @@ firebase-debug.log
 .vscode/
 .idx/
 node_modules/
+_worker.js
 

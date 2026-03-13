@@ -47,15 +47,9 @@
             }
 
             try {
-                // Cloudflare Pages 내장 워커를 사용할 경우 '/api/analyze'를 그대로 사용하세요.
-                // 외부 워커를 사용하실 경우 아래 주소를 'https://your-worker.workers.dev/api/analyze'로 수정하세요.
-                const API_URL = '/api/analyze';
-
-                const response = await fetch(API_URL, {
+                const response = await fetch('/api/analyze', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ summonerName: name, tagLine: tag })
                 });
                 

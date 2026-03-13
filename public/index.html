@@ -5,21 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LoLTip | 롤팁</title>
     <style>
+        /* [디자인 복구] 배경 및 전체 레이아웃 */
         body { background: #0f1014; color: white; font-family: 'Pretendard', sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 30px; }
         .logo { font-size: 52px; font-weight: 900; letter-spacing: -3px; margin: 0; color: #fff; }
         .logo span { color: #e8a93a; }
-        .search-box { display: flex; gap: 10px; justify-content: center; background: #1c1c1f; padding: 20px; border-radius: 12px; flex-wrap: wrap; align-items: center; }
+        
+        /* [검색 박스 디자인] */
+        .search-box { display: flex; gap: 10px; justify-content: center; background: #1c1c1f; padding: 25px; border-radius: 12px; flex-wrap: wrap; align-items: center; }
         input, select { padding: 12px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 6px; }
         .main-btn { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: black; }
+        
+        /* [팀 보드 디자인] */
         .board { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .team { background: #1c1c1f; padding: 15px; border-radius: 10px; border-top: 4px solid #323232; }
         .blue { border-color: #4171d6; } .red { border-color: #e84057; }
+        
+        /* [선수 한 줄 레이아웃] */
         .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; }
         .c-img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #444; }
+        
+        /* [스펠 아이콘 디자인] */
         .spell-stack { display: flex; flex-direction: column; gap: 2px; }
         .s-img { width: 20px; height: 20px; border-radius: 3px; border: 1px solid #222; }
+        
         #loading { text-align: center; display: none; color: #e8a93a; margin: 20px; font-weight: bold; }
         .strategy { margin-top: 20px; background: #1c1c1f; padding: 20px; border-radius: 10px; border-left: 5px solid #e8a93a; display: none; white-space: pre-wrap; line-height: 1.6; }
     </style>
@@ -37,7 +47,7 @@
             <button onclick="runAnalysis()" class="main-btn">게임 분석</button>
         </div>
 
-        <div id="loading">✨ 롤팁 AI가 실시간 데이터를 분석 중입니다...</div>
+        <div id="loading">✨ 실시간 데이터를 가져오고 있습니다...</div>
         <div id="display" class="board"></div>
         <div id="strategy" class="strategy"></div>
     </div>
@@ -49,48 +59,36 @@
         async function runAnalysis() {
             const name = document.getElementById('name').value.trim();
             const tag = document.getElementById('tag').value.trim().replace('#', '');
-            
-            if(!name || !tag) return alert("닉네임과 태그를 모두 입력해주세요.");
+            if(!name || !tag) return alert("닉네임과 태그를 입력해주세요.");
 
-            const loading = document.getElementById('loading');
-            const display = document.getElementById('display');
-            const strategy = document.getElementById('strategy');
-
-            loading.style.display = 'block';
-            display.innerHTML = '';
-            strategy.style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('display').innerHTML = '';
+            document.getElementById('strategy').style.display = 'none';
 
             try {
-                const response = await fetch('/analyze', {
+                const res = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ summonerName: name, tagLine: tag })
                 });
 
-                // JSON 파싱 에러 방지 (Response 확인)
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || "서버 응답 오류");
-                }
-
-                const data = await response.json();
+                // JSON 에러 방지용 체크
+                if (!res.ok) throw new Error("서버 응답 에러");
+                const data = await res.json();
                 if (data.error) throw new Error(data.error);
 
                 renderResults(data.teams);
-                strategy.innerText = data.strategy;
-                strategy.style.display = 'block';
+                document.getElementById('strategy').innerText = data.strategy;
+                document.getElementById('strategy').style.display = 'block';
 
             } catch (err) {
-                alert("분석 실패: " + err.message);
-                console.error(err);
+                alert("오류: " + err.message);
             } finally {
-                loading.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
             }
         }
 
         function renderResults(teams) {
-            if (!teams || !teams.Blue || !teams.Red) return;
-            
             const display = document.getElementById('display');
             display.innerHTML = ['Blue', 'Red'].map(side => `
                 <div class="team ${side.toLowerCase()}">
@@ -99,8 +97,8 @@
                         <div class="p-row">
                             <img src="${CHAMP_URL}${p.champId}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
                             <div class="spell-stack">
-                                <img src="${SPELL_URL}${p.spell1}.png" class="s-img" title="Spell 1">
-                                <img src="${SPELL_URL}${p.spell2}.png" class="s-img" title="Spell 2">
+                                <img src="${SPELL_URL}${p.spell1}.png" class="s-img">
+                                <img src="${SPELL_URL}${p.spell2}.png" class="s-img">
                             </div>
                             <div style="flex:1;">
                                 <div style="font-weight:bold; font-size:14px;">${p.name}</div>

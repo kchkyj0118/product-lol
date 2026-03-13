@@ -39,4 +39,161 @@
         </div>
 
         <header>
-            <h
+            <h1 class="logo"><span style="color:#fff;">롤</span><span style="color:#e8a93a;">팁</span></h1>
+            <p id="txt-sub" style="color:#9e9eb1; font-size: 14px; margin-top: 10px; letter-spacing: 1px;"></p>
+        </header>
+
+        <div class="tabs">
+            <button id="tab-live" class="tab active" onclick="switchTab('live')"></button>
+            <button id="tab-sim" class="tab" onclick="switchTab('sim')"></button>
+        </div>
+
+        <div id="live-box" class="search-box active">
+            <input type="text" id="name">
+            <input type="text" id="tag">
+            <button onclick="runLive()" id="btn-run" class="main-btn"></button>
+        </div>
+
+        <div id="sim-box" class="search-box">
+            <select id="pos-sel"><option>TOP</option><option>JNG</option><option>MID</option><option>ADC</option><option>SUP</option></select>
+            <input type="text" id="champ-in">
+            <button onclick="addSim('Blue')" style="background:#4171d6; color:white;" class="main-btn">Blue +</button>
+            <button onclick="addSim('Red')" style="background:#e84057; color:white;" class="main-btn">Red +</button>
+            <button onclick="runSim()" id="btn-sim-run" class="main-btn"></button>
+        </div>
+
+        <div id="loading"></div>
+        <div id="display" class="board"></div>
+        <div id="strategy" class="strategy"></div>
+
+        <div class="footer-info">
+            <h4 id="txt-recent-title" style="color:#e8a93a; margin-bottom:10px;"></h4>
+            <div id="recent-list" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+            <div class="ai-banner">
+                <div id="txt-tip-title" style="color:#e8a93a; font-weight:bold; margin-bottom:5px;"></div>
+                <div id="dynamic-tip" style="color:#9e9eb1; font-size:14px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ko: {
+                sub: "AI STRATEGIC COACHING SERVICE", live: "실시간 분석", sim: "조합 시뮬레이션",
+                btn_run: "분석 시작", btn_sim: "결과 보기", recent: "🕒 최근 검색",
+                tip_title: "💡 롤팁 AI 조언", tip_text: "상대방의 스펠 쿨타임을 항상 체크하세요!",
+                loading: "✨ 롤팁 AI가 분석 중...", ph_name: "소환사명", ph_tag: "태그 (#제외)", ph_champ: "챔피언 영문 (Aatrox)"
+            },
+            en: {
+                sub: "AI STRATEGIC COACHING SERVICE", live: "Live Analysis", sim: "Simulator",
+                btn_run: "Analyze", btn_sim: "View Results", recent: "🕒 Recent",
+                tip_title: "💡 LoLTip AI Tip", tip_text: "Always check the enemy's summoner spell cooldowns!",
+                loading: "✨ LoLTip AI Analyzing...", ph_name: "Summoner", ph_tag: "Tag (no #)", ph_champ: "Champ (Aatrox)"
+            }
+        };
+
+        let curLang = localStorage.getItem('lang') || 'ko';
+        let simData = { Blue: [], Red: [] };
+
+        function setLang(lang) {
+            curLang = lang;
+            localStorage.setItem('lang', lang);
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${lang}`));
+            
+            const t = i18n[lang];
+            document.getElementById('txt-sub').innerText = t.sub;
+            document.getElementById('tab-live').innerText = t.live;
+            document.getElementById('tab-sim').innerText = t.sim;
+            document.getElementById('btn-run').innerText = t.btn_run;
+            document.getElementById('btn-sim-run').innerText = t.btn_sim;
+            document.getElementById('txt-recent-title').innerText = t.recent;
+            document.getElementById('txt-tip-title').innerText = t.tip_title;
+            document.getElementById('dynamic-tip').innerText = t.tip_text;
+            document.getElementById('loading').innerText = t.loading;
+            document.getElementById('name').placeholder = t.ph_name;
+            document.getElementById('tag').placeholder = t.ph_tag;
+            document.getElementById('champ-in').placeholder = t.ph_champ;
+        }
+
+        function switchTab(m) {
+            document.querySelectorAll('.tab, .search-box').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${m}`).classList.add('active');
+            document.getElementById(`${m}-box`).classList.add('active');
+            document.getElementById('display').innerHTML = '';
+            document.getElementById('strategy').style.display = 'none';
+        }
+
+        function addSim(t) {
+            const c = document.getElementById('champ-in').value.trim();
+            if(!c) return;
+            simData[t].push({ pos: document.getElementById('pos-sel').value, champ: c });
+            document.getElementById('champ-in').value = '';
+            renderSim();
+        }
+
+        function renderSim() {
+            const disp = document.getElementById('display');
+            disp.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
+                ${simData[side].map((p, i) => `<div class="p-row">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champ}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
+                    <div style="font-size:13px;"><b>${p.pos}</b><br><small>${p.champ}</small></div>
+                    <span style="margin-left:auto; color:#e84057; cursor:pointer;" onclick="simData['${side}'].splice(${i},1);renderSim();">×</span>
+                </div>`).join('')}</div>
+            `).join('');
+        }
+
+        async function runLive() {
+            const n = document.getElementById('name').value.trim();
+            const t = document.getElementById('tag').value.trim();
+            if(!n || !t) return alert('Input Required!');
+            saveRecent(n, t);
+            api({ mode: 'live', name: n, tag: t });
+        }
+
+        async function runSim() { api({ mode: 'sim', teams: simData }); }
+
+        async function api(body) {
+            body.lang = curLang;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('strategy').style.display = 'none';
+            try {
+                const res = await fetch('/analyze', { method:'POST', body:JSON.stringify(body) });
+                const d = await res.json();
+                if(d.error) throw new Error(d.error);
+                if(body.mode === 'live') renderLive(d.teams);
+                document.getElementById('strategy').innerText = d.strategy;
+                document.getElementById('strategy').style.display = 'block';
+            } catch(e) { alert(e.message); }
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function renderLive(teams) {
+            const disp = document.getElementById('display');
+            disp.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
+                ${teams[side].map(p => `<div class="p-row" style="${p.isMe?'background:rgba(232,169,58,0.1)':''}">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champId}.png" class="c-img">
+                    <div style="font-size:13px;"><b>${p.name}${p.isMe?' ⭐':''}</b><br><small>${p.cName}</small></div>
+                </div>`).join('')}</div>
+            `).join('');
+        }
+
+        function saveRecent(n, t) {
+            let r = JSON.parse(localStorage.getItem('rp') || '[]');
+            if(!r.includes(`${n}#${t}`)) { r.unshift(`${n}#${t}`); r = r.slice(0, 5); localStorage.setItem('rp', JSON.stringify(r)); renderRecent(); }
+        }
+
+        function renderRecent() {
+            const r = JSON.parse(localStorage.getItem('rp') || '[]');
+            document.getElementById('recent-list').innerHTML = r.map(v => `<span class="recent-tag" onclick="const [n,t]=this.innerText.split('#'); document.getElementById('name').value=n; document.getElementById('tag').value=t; runLive();">${v}</span>`).join('');
+        }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            setLang(curLang);
+            renderRecent();
+        });
+    </script>
+</body>
+</html>

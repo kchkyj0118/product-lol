@@ -1,12 +1,8 @@
-// spellMap 정의 (사진의 아이콘을 위해 꼭 필요)
-const spellMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
-
 async function fetchGame() {
     const name = document.getElementById('name').value.trim();
     const tag = document.getElementById('tag').value.trim();
-    if(!name || !tag) return alert("닉네임과 태그를 입력하세요.");
+    if(!name || !tag) return alert("닉네임#태그를 입력하세요.");
 
-    // 로딩 시작
     document.getElementById('loader').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
 
@@ -18,17 +14,13 @@ async function fetchGame() {
         });
         
         const data = await res.json();
-        
         if(data.error) {
             alert(data.error);
             document.getElementById('loader').classList.add('hidden');
             return;
         }
 
-        // 닉네임과 팀 정보 표시
-        renderTeams(data.pList, data.version);
-        
-        // 훈수 내용 표시
+        renderTeams(data.pList, data.ver);
         fullStrat = data.strategy;
         document.getElementById('strat-title').innerText = `⚡ ${data.myChamp} 실전 훈수`;
         showSummary();
@@ -36,7 +28,7 @@ async function fetchGame() {
         document.getElementById('loader').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
     } catch (err) {
-        alert("분석 서버와 연결할 수 없습니다.");
+        alert("분석 서버와 통신할 수 없습니다.");
         document.getElementById('loader').classList.add('hidden');
     }
 }

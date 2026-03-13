@@ -3,78 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>롤팁 - AI 필승 전략</title>
+    <title>롤팁 - 실시간 매치 분석</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #121212; color: #ffffff; font-family: 'Pretendard', sans-serif; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; text-align: center; }
-        .logo { font-size: 48px; font-weight: bold; color: #ffb900; margin-bottom: 10px; }
-        .subtitle { font-size: 14px; color: #aaa; letter-spacing: 2px; margin-bottom: 40px; }
-        .input-group { background: #1e1e1e; padding: 30px; border-radius: 12px; display: inline-flex; gap: 10px; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        input { background: #2a2a2a; border: 1px solid #444; color: white; padding: 12px 20px; border-radius: 8px; font-size: 16px; outline: none; }
-        button { background: #ffb900; border: none; color: #121212; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #e6a700; transform: translateY(-2px); }
-        .result-container { display: none; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
-        .team-card { background: #1e1e1e; border-radius: 12px; padding: 20px; text-align: left; border-top: 4px solid #444; }
-        .blue-team { border-top-color: #4488ff; }
-        .red-team { border-top-color: #ff4444; }
+        /* image_d77441.png의 다크 테마 디자인 복구 */
+        body { margin: 0; background-color: #121212; color: #ffffff; font-family: sans-serif; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; text-align: center; }
+        .logo { font-size: 40px; font-weight: bold; color: #ffffff; margin-bottom: 5px; }
+        .subtitle { font-size: 12px; color: #888; margin-bottom: 30px; letter-spacing: 1px; }
+        
+        .search-box { background: #1e1e1e; padding: 30px; border-radius: 8px; display: inline-flex; gap: 10px; margin-bottom: 40px; }
+        input { background: #2a2a2a; border: 1px solid #333; color: white; padding: 12px; border-radius: 5px; font-size: 16px; }
+        button { background: #ffb900; border: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        .teams-grid { display: none; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .team-card { background: #1e1e1e; border-radius: 8px; padding: 20px; text-align: left; }
+        .blue-border { border-left: 4px solid #4488ff; }
+        .red-border { border-left: 4px solid #ff4444; }
+        
         .player-item { display: flex; align-items: center; gap: 15px; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
-        .champ-icon { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #444; object-fit: cover; }
-        .strategy-box { display: none; margin-top: 30px; background: #1e1e1e; padding: 25px; border-radius: 12px; border-left: 6px solid #ffb900; text-align: left; }
+        .champ-img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #333; }
+        .strategy-footer { display: none; margin-top: 20px; background: #1e1e1e; padding: 20px; border-radius: 8px; border-left: 4px solid #ffb900; text-align: left; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">롤팁</div>
         <div class="subtitle">AI STRATEGIC COACHING SERVICE</div>
-        <div class="input-group">
-            <input type="text" id="summonerName" placeholder="아이디">
-            <input type="text" id="tagLine" placeholder="kr1" style="width: 80px;">
-            <button id="btnAnalyze" onclick="startAnalysis()">게임 분석</button>
+        
+        <div class="search-box">
+            <input type="text" id="sName" placeholder="아이디">
+            <input type="text" id="tag" placeholder="#KR1">
+            <button onclick="doAnalyze()">게임 분석</button>
         </div>
-        <div class="result-container" id="resultContainer">
-            <div class="team-card blue-team"><h3>BLUE TEAM</h3><div id="blueList"></div></div>
-            <div class="team-card red-team"><h3>RED TEAM</h3><div id="redList"></div></div>
+
+        <div class="teams-grid" id="gameArea">
+            <div class="team-card blue-border">
+                <div style="color:#4488ff; font-weight:bold; margin-bottom:15px;">BLUE TEAM</div>
+                <div id="blueList"></div>
+            </div>
+            <div class="team-card red-border">
+                <div style="color:#ff4444; font-weight:bold; margin-bottom:15px;">RED TEAM</div>
+                <div id="redList"></div>
+            </div>
         </div>
-        <div class="strategy-box" id="strategyBox">
-            <div style="color:#ffb900; font-weight:bold; margin-bottom:10px;">🚀 AI 필승 전략 분석 결과</div>
-            <div id="strategyContent" style="color:#ddd; line-height:1.6;"></div>
+
+        <div class="strategy-footer" id="stratArea">
+            <div id="stratMsg"></div>
         </div>
     </div>
+
     <script>
-        async function startAnalysis() {
-            const btn = document.getElementById('btnAnalyze');
-            const sName = document.getElementById('summonerName').value;
-            const tLine = document.getElementById('tagLine').value.replace('#', '');
-            if(!sName || !tLine) return alert("아이디와 태그를 입력해주세요.");
+        async function doAnalyze() {
+            const name = document.getElementById('sName').value;
+            const tag = document.getElementById('tag').value.replace('#', '');
+            
+            const res = await fetch('/analyze', {
+                method: 'POST',
+                body: JSON.stringify({ summonerName: name, tagLine: tag })
+            });
+            const data = await res.json();
 
-            btn.innerText = "분석 중...";
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ summonerName: sName, tagLine: tLine })
-                });
-                const data = await res.json();
-                if(data.teams) {
-                    renderTeam('blueList', data.teams.Blue);
-                    renderTeam('redList', data.teams.Red);
-                    document.getElementById('strategyContent').innerText = data.strategy;
-                    document.getElementById('resultContainer').style.display = 'grid';
-                    document.getElementById('strategyBox').style.display = 'block';
-                }
-            } catch(e) { alert("분석 실패: 게임 중인지 확인하세요."); }
-            finally { btn.innerText = "게임 분석"; btn.disabled = false; }
+            if(data.teams) {
+                showTeam('blueList', data.teams.Blue);
+                showTeam('redList', data.teams.Red);
+                document.getElementById('stratMsg').innerText = data.strategy || "분석 완료되었습니다.";
+                document.getElementById('gameArea').style.display = 'grid';
+                document.getElementById('stratArea').style.display = 'block';
+            }
         }
 
-        function renderTeam(id, players) {
-            const container = document.getElementById(id);
-            container.innerHTML = players.map(p => `
+        function showTeam(id, players) {
+            const el = document.getElementById(id);
+            el.innerHTML = players.map(p => `
                 <div class="player-item">
-                    <img src="https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${p.champId}.png" class="champ-icon" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/0.png'">
-                    <div class="player-name">${p.name}</div>
-                </div>`).join('');
+                    <img src="https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${p.champId}.png" class="champ-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/0.png'">
+                    <span>${p.name}</span>
+                </div>
+            `).join('');
         }
     </script>
 </body>

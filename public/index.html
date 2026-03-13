@@ -6,34 +6,35 @@
     <title>LOL.ANALYZE</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#0b0d0f] text-white font-sans">
-    <div class="max-w-4xl mx-auto p-6">
-        <header class="text-center py-10">
-            <h1 class="text-4xl font-black text-blue-500 italic mb-8">LOL.ANALYZE</h1>
-            <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2">
-                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-40">
+<body class="bg-[#0b0d0f] text-white">
+    <div class="max-w-5xl mx-auto p-4 md:p-10">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-black italic text-blue-500 mb-8">LOL.ANALYZE</h1>
+            <div class="inline-flex bg-[#1a1d20] border border-gray-700 rounded-2xl p-2 shadow-2xl">
+                <input type="text" id="name" placeholder="닉네임" class="bg-transparent px-4 py-2 outline-none w-32 md:w-48">
                 <span class="text-gray-600 self-center">#</span>
-                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-20">
-                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2">분석</button>
+                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-16 md:w-24 font-bold">
+                <button onclick="fetchGame()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl font-bold ml-2 transition-all">분석</button>
             </div>
         </header>
 
-        <div id="loader" class="hidden text-center py-10 text-blue-400 animate-pulse">게임 데이터를 가져오는 중...</div>
+        <div id="loader" class="hidden text-center py-20 text-blue-400 animate-pulse font-bold">AI가 게임 데이터를 분석하며 승리 공식을 찾는 중입니다...</div>
 
         <div id="dashboard" class="hidden space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
-                    <h2 class="text-blue-400 font-bold mb-4">BLUE TEAM</h2>
+                    <h2 class="text-blue-400 font-black text-xs mb-4">BLUE TEAM</h2>
                     <div id="blue-list" class="space-y-3"></div>
                 </div>
                 <div>
-                    <h2 class="text-red-400 font-bold mb-4 text-right">RED TEAM</h2>
+                    <h2 class="text-red-400 font-black text-xs mb-4 text-right">RED TEAM</h2>
                     <div id="red-list" class="space-y-3"></div>
                 </div>
             </div>
-            <div class="bg-[#14171a] p-6 rounded-2xl border border-gray-800">
-                <h3 class="text-yellow-500 font-bold mb-3">⚡ AI 전략 리포트</h3>
-                <div id="strategy-box" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap"></div>
+
+            <div class="bg-[#14171a] border-l-4 border-yellow-500 p-6 rounded-2xl shadow-2xl mt-10">
+                <h3 id="strategy-title" class="text-yellow-500 font-bold mb-4 text-sm italic">⚡ 맞춤형 승리 전략 리포트</h3>
+                <div id="strategy-box" class="text-gray-300 text-[13px] leading-relaxed whitespace-pre-wrap"></div>
             </div>
         </div>
     </div>
@@ -45,7 +46,7 @@
         async function fetchGame() {
             const name = document.getElementById('name').value;
             const tag = document.getElementById('tag').value;
-            if(!name || !tag) return alert("닉네임과 태그를 입력하세요.");
+            if(!name || !tag) return alert("닉네임과 태그를 입력해주세요.");
 
             document.getElementById('loader').classList.remove('hidden');
             document.getElementById('dashboard').classList.add('hidden');
@@ -61,6 +62,8 @@
 
                 renderTeam('blue-list', data.blueTeam, data.version, true);
                 renderTeam('red-list', data.redTeam, data.version, false);
+                
+                document.getElementById('strategy-title').innerText = "⚡ [" + data.userChampion + "] 중심 승리 전략 리포트";
                 document.getElementById('strategy-box').innerText = data.strategy;
 
                 document.getElementById('loader').classList.add('hidden');
@@ -75,23 +78,23 @@
             const list = document.getElementById(id);
             let html = "";
             players.forEach(p => {
-                const runePath = runeMap[p.subStyleId] || "7200_Domination";
-                const spell1 = spellMap[p.spell1] || "SummonerFlash";
-                const spell2 = spellMap[p.spell2] || "SummonerDot";
+                const rPath = runeMap[p.subStyleId] || "7200_Domination";
+                const s1 = spellMap[p.spell1] || "SummonerFlash";
+                const s2 = spellMap[p.spell2] || "SummonerDot";
                 
-                html += '<div class="flex ' + (isBlue ? 'flex-row' : 'flex-row-reverse') + ' items-center bg-[#1a1d20] p-3 rounded-xl border border-gray-800">' +
-                    '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/champion/' + p.championName + '.png" class="w-10 h-10 rounded-lg shadow-lg">' +
-                    '<div class="mx-3 flex-1 ' + (isBlue ? 'text-left' : 'text-right') + '">' +
-                        '<div class="text-sm font-bold truncate">' + p.realName + '</div>' +
-                        '<div class="text-[10px] text-gray-500">' + p.championName + '</div>' +
+                html += '<div class="flex ' + (isBlue ? 'flex-row' : 'flex-row-reverse') + ' items-center bg-[#1a1d20] p-3 rounded-2xl border border-gray-800">' +
+                    '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/champion/' + p.championName + '.png" class="w-12 h-12 rounded-xl shadow-lg border border-gray-700">' +
+                    '<div class="mx-4 flex-1 overflow-hidden ' + (isBlue ? 'text-left' : 'text-right') + '">' +
+                        '<div class="text-[13px] font-bold truncate text-white">' + p.realName + '</div>' + // 개별 닉네임 노출
+                        '<div class="text-[10px] text-gray-500 italic">' + p.championName + '</div>' +
                     '</div>' +
-                    '<div class="flex gap-1">' +
-                        '<div class="flex flex-col gap-0.5">' +
-                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + spell1 + '.png" class="w-4 h-4 rounded">' +
-                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + spell2 + '.png" class="w-4 h-4 rounded">' +
+                    '<div class="flex gap-2">' +
+                        '<div class="flex flex-col gap-1">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + s1 + '.png" class="w-5 h-5 rounded border border-black">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/' + ver + '/img/spell/' + s2 + '.png" class="w-5 h-5 rounded border border-black">' +
                         '</div>' +
-                        '<div class="w-8 h-8 bg-black rounded-full flex items-center justify-center border border-gray-700">' +
-                            '<img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/' + runePath + '.png" class="w-5 h-5">' +
+                        '<div class="w-9 h-9 bg-black rounded-full border border-gray-700 flex items-center justify-center">' +
+                            '<img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/' + rPath + '.png" class="w-6 h-6">' +
                         '</div>' +
                     '</div>' +
                 '</div>';

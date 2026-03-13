@@ -1,75 +1,116 @@
-<div id="sim-box" class="search-box">
-    <select id="pos-sel"><option>TOP</option><option>JNG</option><option>MID</option><option>ADC</option><option>SUP</option></select>
-    
-    <div style="position:relative;">
-        <input type="text" id="champ-in" oninput="updatePreview(this.value)" style="width:150px;">
-        <img id="champ-preview" src="" style="width:30px; position:absolute; right:10px; top:10px; border-radius:50%; display:none;">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoLTip | 롤팁</title>
+    <style>
+        body { background: #0f1014; color: white; font-family: 'Pretendard', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 52px; font-weight: 900; letter-spacing: -3px; margin: 0; color: #fff; }
+        .logo span { color: #e8a93a; }
+        .search-box { display: flex; gap: 10px; justify-content: center; background: #1c1c1f; padding: 20px; border-radius: 12px; flex-wrap: wrap; align-items: center; }
+        input, select { padding: 12px; background: #0f1014; border: 1px solid #323232; color: white; border-radius: 6px; }
+        .main-btn { padding: 12px 24px; background: #e8a93a; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; color: black; }
+        .board { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .team { background: #1c1c1f; padding: 15px; border-radius: 10px; border-top: 4px solid #323232; }
+        .blue { border-color: #4171d6; } .red { border-color: #e84057; }
+        .p-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2d2d31; gap: 12px; }
+        .c-img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #444; }
+        .spell-stack { display: flex; flex-direction: column; gap: 2px; }
+        .s-img { width: 20px; height: 20px; border-radius: 3px; border: 1px solid #222; }
+        #loading { text-align: center; display: none; color: #e8a93a; margin: 20px; font-weight: bold; }
+        .strategy { margin-top: 20px; background: #1c1c1f; padding: 20px; border-radius: 10px; border-left: 5px solid #e8a93a; display: none; white-space: pre-wrap; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">롤<span>팁</span></h1>
+            <p style="color:#9e9eb1; font-size: 14px;">AI STRATEGIC COACHING SERVICE</p>
+        </header>
+
+        <div class="search-box">
+            <input type="text" id="name" placeholder="소환사명">
+            <input type="text" id="tag" placeholder="태그">
+            <button onclick="runAnalysis()" class="main-btn">게임 분석</button>
+        </div>
+
+        <div id="loading">✨ 롤팁 AI가 실시간 데이터를 분석 중입니다...</div>
+        <div id="display" class="board"></div>
+        <div id="strategy" class="strategy"></div>
     </div>
 
-    <select id="spell-d" title="D Spell">
-        <option value="SummonerFlash">Flash</option>
-        <option value="SummonerIgnite">Ignite</option>
-        <option value="SummonerTeleport">Teleport</option>
-        <option value="SummonerSmite">Smite</option>
-    </select>
-    <select id="spell-f" title="F Spell">
-        <option value="SummonerFlash" selected>Flash</option>
-        <option value="SummonerExhaust">Exhaust</option>
-        <option value="SummonerHeal">Heal</option>
-        <option value="SummonerDot">Ignite</option>
-    </select>
+    <script>
+        const SPELL_URL = "https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/";
+        const CHAMP_URL = "https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/";
 
-    <button onclick="addSim('Blue')" style="background:#4171d6; color:white;" class="main-btn">Blue +</button>
-    <button onclick="addSim('Red')" style="background:#e84057; color:white;" class="main-btn">Red +</button>
-    <button onclick="runSim()" id="btn-sim-run" class="main-btn">결과 보기</button>
-</div>
+        async function runAnalysis() {
+            const name = document.getElementById('name').value.trim();
+            const tag = document.getElementById('tag').value.trim().replace('#', '');
+            
+            if(!name || !tag) return alert("닉네임과 태그를 모두 입력해주세요.");
 
-<script>
-    // 챔피언 입력 시 미리보기 이미지 업데이트
-    function updatePreview(val) {
-        const img = document.getElementById('champ-preview');
-        if(val.length > 2) {
-            img.src = `https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${val}.png`;
-            img.style.display = 'block';
-            img.onerror = () => img.style.display = 'none';
-        } else {
-            img.style.display = 'none';
+            const loading = document.getElementById('loading');
+            const display = document.getElementById('display');
+            const strategy = document.getElementById('strategy');
+
+            loading.style.display = 'block';
+            display.innerHTML = '';
+            strategy.style.display = 'none';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summonerName: name, tagLine: tag })
+                });
+
+                // JSON 파싱 에러 방지 (Response 확인)
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || "서버 응답 오류");
+                }
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                renderResults(data.teams);
+                strategy.innerText = data.strategy;
+                strategy.style.display = 'block';
+
+            } catch (err) {
+                alert("분석 실패: " + err.message);
+                console.error(err);
+            } finally {
+                loading.style.display = 'none';
+            }
         }
-    }
 
-    // 시뮬레이션 데이터에 스펠 추가
-    function addSim(t) {
-        const c = document.getElementById('champ-in').value.trim();
-        if(!c) return;
-        
-        simData[t].push({ 
-            pos: document.getElementById('pos-sel').value, 
-            champ: c,
-            spellD: document.getElementById('spell-d').value,
-            spellF: document.getElementById('spell-f').value
-        });
-        
-        document.getElementById('champ-in').value = '';
-        document.getElementById('champ-preview').style.display = 'none';
-        renderSim();
-    }
-
-    // 렌더링 시 초상화와 스펠 아이콘 표시
-    function renderSim() {
-        const disp = document.getElementById('display');
-        disp.innerHTML = ['Blue', 'Red'].map(side => `
-            <div class="team ${side.toLowerCase()}"><strong>${side} TEAM</strong>
-            ${simData[side].map((p, i) => `
-                <div class="p-row">
-                    <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${p.champ}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
-                    <div style="display:flex; flex-direction:column; gap:2px;">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${p.spellD}.png" style="width:16px;">
-                        <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/spell/${p.spellF}.png" style="width:16px;">
-                    </div>
-                    <div style="font-size:13px;"><b>${p.pos}</b><br><small>${p.champ}</small></div>
-                    <span style="margin-left:auto; color:#e84057; cursor:pointer;" onclick="simData['${side}'].splice(${i},1);renderSim();">×</span>
-                </div>`).join('')}
-            </div>
-        `).join('');
-    }
-</script>
+        function renderResults(teams) {
+            if (!teams || !teams.Blue || !teams.Red) return;
+            
+            const display = document.getElementById('display');
+            display.innerHTML = ['Blue', 'Red'].map(side => `
+                <div class="team ${side.toLowerCase()}">
+                    <strong style="display:block; margin-bottom:10px;">${side.toUpperCase()} TEAM</strong>
+                    ${teams[side].map(p => `
+                        <div class="p-row">
+                            <img src="${CHAMP_URL}${p.champId}.png" class="c-img" onerror="this.src='https://ddragon.leagueoflegends.com/cdn/14.5.1/img/profileicon/29.jpg'">
+                            <div class="spell-stack">
+                                <img src="${SPELL_URL}${p.spell1}.png" class="s-img" title="Spell 1">
+                                <img src="${SPELL_URL}${p.spell2}.png" class="s-img" title="Spell 2">
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight:bold; font-size:14px;">${p.name}</div>
+                                <div style="font-size:12px; color:#9e9eb1;">${p.cName}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

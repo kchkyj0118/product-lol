@@ -10,69 +10,42 @@ export async function onRequest(context) {
 
   try {
     const { summonerName, tagLine } = await request.json();
-    const RIOT_API_KEY = env.RIOT_API_KEY;
-    const GEMINI_API_KEY = env.GEMINI_API_KEY;
 
-    if (!RIOT_API_KEY || !GEMINI_API_KEY) {
-      throw new Error("API 키 설정이 누락되었습니다.");
-    }
+    // 1. 라이엇 계정 PUUID 확인
+    const accountReq = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${env.RIOT_API_KEY}`);
+    const accountData = await accountReq.json();
+    if (!accountData.puuid) throw new Error("소환사 정보를 찾을 수 없습니다.");
 
-    // 1. 소환사 PUUID 조회 (Account-V1)
-    const userReq = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${tagLine}?api_key=${RIOT_API_KEY}`);
-    const userData = await userReq.json();
-    
-    if (!userData || !userData.puuid) {
-      return new Response(JSON.stringify({ error: "소환사 정보를 찾을 수 없습니다." }), { 
-        status: 404, 
-        headers: { ...corsHeaders, "Content-Type": "application/json; charset=UTF-8" } 
-      });
-    }
-    const puuid = userData.puuid;
-
-    // 2. 실시간 게임 정보 조회 (Spectator-V5)
-    const gameReq = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${puuid}?api_key=${RIOT_API_KEY}`);
-    if (gameReq.status === 404) {
-      return new Response(JSON.stringify({ error: "현재 게임 중이 아닙니다." }), { 
-        status: 404, 
-        headers: { ...corsHeaders, "Content-Type": "application/json; charset=UTF-8" } 
-      });
-    }
+    // 2. 현재 인게임 정보(Spectator) 조회
+    const gameReq = await fetch(`https://kr.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${accountData.puuid}?api_key=${env.RIOT_API_KEY}`);
+    if (gameReq.status === 404) throw new Error("현재 해당 소환사는 게임 중이 아닙니다.");
     const gameData = await gameReq.json();
 
-    // 3. 상대 팀(Enemy Team) 정보 추출
-    const myTeamId = gameData.participants.find(p => p.puuid === puuid).teamId;
-    const enemies = gameData.participants.filter(p => p.teamId !== myTeamId);
-    const enemyInfo = enemies.map(e => `챔피언 ID: ${e.championId}, 스펠: ${e.spell1Id}/${e.spell2Id}`).join('\n');
+    // 3. 블루/레드 팀 데이터 정리
+    const teams = { Blue: [], Red: [] };
+    gameData.participants.forEach(p => {
+      const pInfo = { name: p.summonerName, championId: p.championId, tag: tagLine };
+      p.teamId === 100 ? teams.Blue.push(pInfo) : teams.Red.push(pInfo);
+    });
 
-    // 4. Gemini 3 Flash Preview 호출
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
-    const prompt = `
-      너는 LoL 프로 팀 코치야. 현재 ${summonerName} 선수가 실시간 게임 중이야.
-      상대 팀 정보는 다음과 같아:
-      ${enemyInfo}
-
-      이 상대 조합을 분석해서, 승리를 위해 ${summonerName} 선수가 이번 판에서 반드시 지켜야 할 핵심 전략 1가지를 한국어로 명확하게 짜줘.
-    `;
+    // 4. Gemini 3 Flash Preview에 분석 요청
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`;
+    const prompt = `리그 오브 레전드 게임 분석:
+    [우리 팀] ${JSON.stringify(teams.Blue)}
+    [상대 팀] ${JSON.stringify(teams.Red)}
+    
+    상대 팀의 구성을 보고, 우리가 승리하기 위한 핵심 전략을 '한 문장 요약'과 '3가지 상세 포인트'로 한국어로 알려줘.`;
 
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
-
-    const resData = await geminiRes.json();
     
-    let strategy = "분석 결과를 가져오지 못했습니다.";
-    if (resData.candidates && resData.candidates[0] && resData.candidates[0].content) {
-      strategy = resData.candidates[0].content.parts[0].text;
-    } else {
-      console.error("Gemini Error:", resData);
-      throw new Error(resData.error?.message || "Gemini 응답 구조 이상");
-    }
+    const resData = await geminiRes.json();
+    const strategy = resData.candidates[0].content.parts[0].text;
 
-    return new Response(JSON.stringify({ strategy }), {
+    return new Response(JSON.stringify({ teams, strategy }), {
       headers: { ...corsHeaders, "Content-Type": "application/json; charset=UTF-8" }
     });
 

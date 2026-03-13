@@ -1,83 +1,38 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>LOL.ANALYZE - Gemini 3</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-[#0f1113] text-gray-100 min-h-screen">
-    <div class="max-w-5xl mx-auto p-8">
-        <div class="flex flex-col items-center mb-12">
-            <h1 class="text-3xl font-black text-blue-500 italic mb-6">LOL.ANALYZE</h1>
-            <div class="flex bg-[#1c1f23] p-1 rounded-xl border border-gray-700 shadow-2xl w-full max-w-md">
-                <input type="text" id="name" placeholder="소환사명" class="bg-transparent px-4 py-2 outline-none flex-1">
-                <span class="text-gray-600 self-center">#</span>
-                <input type="text" id="tag" placeholder="KR1" class="bg-transparent px-2 py-2 outline-none w-20">
-                <button onclick="startAnalysis()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold transition">분석</button>
-            </div>
-            <div id="loading" class="mt-4 text-blue-400 text-sm hidden animate-pulse">데이터 분석 중...</div>
-        </div>
-
-        <div id="result-view" class="hidden space-y-8">
-            <div class="grid grid-cols-2 gap-6">
-                <div id="blue-list" class="space-y-2"></div>
-                <div id="red-list" class="space-y-2"></div>
-            </div>
-            <div class="bg-[#1c1f23] p-6 rounded-xl border border-blue-900/50">
-                <h3 class="text-yellow-500 font-bold mb-3 flex items-center">⚡ Gemini 3 전략 브리핑</h3>
-                <div id="strategy" class="text-gray-300 leading-relaxed text-sm"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        async function startAnalysis() {
-            const name = document.getElementById('name').value;
-            const tag = document.getElementById('tag').value;
-            const loading = document.getElementById('loading');
-            const resultView = document.getElementById('result-view');
-
-            if(!name || !tag) return alert("닉네임과 태그를 입력하세요!");
-
-            loading.classList.remove('hidden');
-            resultView.classList.add('hidden');
-
-            try {
-                // Cloudflare Pages Functions 호출 시 경로는 파일명만! (/functions 생략)
-                const res = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, tag })
-                });
+<script>
+    function renderTeam(id, players, isBlue, version) {
+        const container = document.getElementById(id);
+        container.innerHTML = `<h4 class="${isBlue ? 'text-blue-400' : 'text-red-400'} font-bold mb-3 text-xs uppercase">${isBlue ? 'Blue Team' : 'Red Team'}</h4>`;
+        
+        players.forEach(p => {
+            const champImg = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${p.championKey}.png`;
+            // 스펠 및 룬은 예시 경로입니다 (실제 매핑 테이블 필요)
+            const spell1Img = `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/SummonerFlash.png`; 
+    
+            const row = document.createElement('div');
+            row.className = `flex ${isBlue ? 'flex-row' : 'flex-row-reverse'} items-center p-3 bg-[#16191c] rounded-xl border border-gray-800 mb-2 shadow-lg`;
+            row.innerHTML = `
+                <img src="${champImg}" class="w-12 h-12 rounded-lg border border-gray-700 shadow-md" onerror="this.src='https://via.placeholder.com/48'">
                 
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error);
-
-                // 결과 렌더링
-                document.getElementById('strategy').innerText = data.strategy;
-                renderTeam('blue-list', data.blueTeam, true);
-                renderTeam('red-list', data.redTeam, false);
-
-                loading.classList.add('hidden');
-                resultView.classList.remove('hidden');
-            } catch (err) {
-                alert(err.message);
-                loading.classList.add('hidden');
-            }
-        }
-
-        function renderTeam(id, players, isBlue) {
-            const container = document.getElementById(id);
-            container.innerHTML = `<h4 class="${isBlue ? 'text-blue-400' : 'text-red-400'} font-bold mb-3 text-xs uppercase">${isBlue ? 'Blue Team' : 'Red Team'}</h4>` + 
-                players.map(p => `
-                <div class="flex items-center p-2 bg-[#16191c] rounded-lg border border-gray-800">
-                    <div class="w-10 h-10 bg-gray-800 rounded mr-3 flex items-center justify-center text-[10px] text-gray-500">
-                        ${p.championId}
-                    </div>
-                    <div class="text-xs font-medium truncate">${p.summonerName || 'Player'}</div>
+                <div class="mx-4 flex-1 overflow-hidden">
+                    <div class="text-sm font-bold truncate ${isBlue ? 'text-blue-100' : 'text-red-100'}">${p.summonerName}</div>
+                    <div class="text-[10px] text-gray-500 uppercase font-mono">${p.championKey}</div>
                 </div>
-            `).join('');
-        }
+    
+                <div class="flex gap-1 items-center">
+                    <div class="flex flex-col gap-1">
+                        <div class="w-5 h-5 bg-gray-900 rounded border border-gray-700 overflow-hidden">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/SummonerFlash.png" class="scale-110">
+                        </div>
+                        <div class="w-5 h-5 bg-gray-900 rounded border border-gray-700 overflow-hidden">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/SummonerDot.png" class="scale-110">
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 bg-gray-900 rounded-full border border-gray-700 flex items-center justify-center overflow-hidden">
+                         <img src="https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png" class="w-6 h-6">
+                    </div>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
     </script>
-</body>
-</html>

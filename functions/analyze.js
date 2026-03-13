@@ -16,46 +16,44 @@ export async function onRequestPost(context) {
       const game = await gameRes.json();
       if (!gameRes.ok) throw new Error("현재 게임 중이 아닙니다.");
   
-      // 3. 챔피언 이름 매핑 (Data Dragon 활용)
-      const versionRes = await fetch("https://ddragon.leagueoflegends.com/api/versions.json");
-      const version = (await versionRes.json())[0];
+      // 3. 최신 데이터 드래곤 버전 및 챔피언 데이터 가져오기
+      const verRes = await fetch("https://ddragon.leagueoflegends.com/api/versions.json");
+      const version = (await verRes.json())[0];
       const champRes = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/ko_KR/champion.json`);
       const champData = (await champRes.json()).data;
-      
       const idToName = {};
       Object.values(champData).forEach(c => { idToName[c.key] = c.id; });
   
-      // 4. 팀 데이터 정리 (이미지 주소 및 닉네임 포함)
-      const processParticipants = (p) => ({
-        summonerName: p.summonerName || `${name}#${tag}`, // 닉네임
-        championId: p.championId,
-        championKey: idToName[p.championId] || "unknown",
+      // 4. 참가자 데이터 정리 (닉네임, 챔피언명, 스펠, 룬)
+      const processP = (p) => ({
+        name: p.summonerName || `${name}#${tag}`,
+        championName: idToName[p.championId] || "Unknown",
         spell1: p.spell1Id,
         spell2: p.spell2Id,
-        mainRune: p.perks.perkStyle,
-        subRune: p.perks.perkSubStyle
+        mainRune: p.perks.perkIds[0], // 핵심 룬
+        subStyle: p.perks.perkSubStyle // 보조 룬 빌드
       });
   
-      const blueTeam = game.participants.filter(p => p.teamId === 100).map(processParticipants);
-      const redTeam = game.participants.filter(p => p.teamId === 200).map(processParticipants);
+      const blueTeam = game.participants.filter(p => p.teamId === 100).map(processP);
+      const redTeam = game.participants.filter(p => p.teamId === 200).map(processP);
   
-      // 5. Gemini 3 분석
-      const prompt = `LoL 분석. 블루팀: ${blueTeam.map(p=>p.championKey).join()}, 레드팀: ${redTeam.map(p=>p.championKey).join()}. 승리 전략 3줄 요약.`;
+      // 5. Gemini 3 Flash Preview 분석
+      const prompt = `LoL 분석. 블루팀: ${blueTeam.map(p=>p.championName).join()}, 레드팀: ${redTeam.map(p=>p.championName).join()}. 라인전 상성과 승리 전략 요약.`;
       const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const aiData = await aiRes.json();
+      const strategy = aiData.candidates[0].content.parts[0].text;
   
-      return new Response(JSON.stringify({ 
-        blueTeam, 
-        redTeam, 
-        strategy: aiData.candidates[0].content.parts[0].text,
-        version 
-      }), { headers: { "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ blueTeam, redTeam, strategy, version }), {
+        headers: { "Content-Type": "application/json" }
+      });
   
     } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: err.message }), { 
+        status: 500, headers: { "Content-Type": "application/json" } 
+      });
     }
   }

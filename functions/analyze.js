@@ -45,7 +45,10 @@ export async function onRequestPost(context) {
     - 실전 핵심 승리 전략 3줄 요약 (룬, 아이템 언급 금지).
 
     [상세]
-    - ${myC} 입장에서의 구체적인 상성, 정글 동선, 3레벨 타이밍, 교전 주의사항 분석.`;
+    - ${myC} 입장에서의 구체적인 상성 및 3레벨 타이밍 분석.
+    - 가장 갱킹 성공 확률이 높은 라인 지목 및 그 이유.
+    - 승리를 위해 집중적으로 성장시켜야 할 핵심 아군 챔피언 선정 및 이유.
+    - 교전 주의사항 및 주요 오브젝트 교전 전략.`;
 
     // 3. AI 호출 (토큰 제한 해제 및 온도 조절로 풍부한 답변 유도)
     const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {

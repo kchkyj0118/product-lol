@@ -130,6 +130,15 @@ A critical function of the AI is to continuously monitor for and automatically r
 
 ## **Accessibility or A11Y Standards:** The AI implements accessibility features to empower all users, assuming a wide variety of users with different physical abilities, mental abilities, age groups, education levels, and learning styles.
 
+## **Deployment & Source Control**
+
+*   **Automatic Deployment:** All completed tasks that modify the codebase MUST be pushed to the main branch of `https://github.com/kchkyj0118/product-lol`.
+*   **Workflow:** After making changes and verifying them, the AI agent will:
+    1.  `git add .`
+    2.  `git commit -m "Descriptive commit message"`
+    3.  `git push origin main`
+*   **Target:** Cloudflare Pages is configured to automatically deploy from the GitHub repository's `main` branch.
+
 ## **Iterative Development & User Interaction**
 
 The AI's workflow is iterative, transparent, and responsive to user input.

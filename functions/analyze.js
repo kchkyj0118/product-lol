@@ -26,38 +26,52 @@ export async function onRequestPost(context) {
         nick: p.riotIdGameName || cn, 
         cName: cn, 
         team: p.teamId,
-        s: [p.spell1Id, p.spell2Id], // UI 유지용
-        r: p.perks.perkStyle        // UI 유지용
+        s: [p.spell1Id, p.spell2Id], // UI 아이콘 유지용
+        r: p.perks.perkStyle        // UI 아이콘 유지용
       };
     });
 
-    // 핵심 수정: AI에게 줄 팀 정보 텍스트화
     const teamDescription = pList.map(p => `${p.team === 100 ? '블루' : '레드'}: ${p.nick}(${p.cName})`).join(', ');
 
-    // 2. Gemini 명령어 (프롬프트 고도화)
-    const prompt = `당신은 'op.gg', 'lol.ps', 'deeplol.gg' 데이터를 완벽 학습한 롤 1타 강사입니다. 반드시 한국어로만 답변하세요.
-    주인공: ${name} (${myC})
-    팀 정보: ${teamDescription}
+    // 2. 명령어 (지침 고도화)
+    const prompt = `당신은 롤 1타 강사입니다. 반드시 **한국어**로만 대답하세요.
+주인공: ${name} (${myC})
+대진표: ${teamDescription}
 
-    [규칙]
-    1. "[요약]" 섹션에 주인공 ${name}을 위한 핵심 전략 3줄 요약. (룬/템 언급 절대 금지)
-    2. "[상세]" 섹션에 라인전 상성, 3레벨 타이밍, 동선 등 상세 훈수.
-    3. 주인공 ${name}님의 이름을 직접 언급하며 1타 강사처럼 말할 것.
-    4. 반드시 [상세] 라는 글자를 구분자로 포함해라.`;
+반드시 아래 양식을 엄격히 지켜서 답변하세요. 양식을 어기면 시스템이 고장납니다.
 
-    // 3. AI 호출 (성능이 더 좋은 gemini-3-flash-preview 유지 혹은 1.5-flash 선택 가능)
+[요약]
+- 여기에 주인공 ${name}을 위한 실전 승리 전략 3줄 요약만 작성하세요. (룬, 아이템 언급 금지)
+
+[상세]
+- 여기에 상대 라이너와의 상성, 3레벨 타이밍, 구체적인 정글 동선 등을 ${name}님에게 훈수 두듯 작성하세요.`;
+
+    // 3. AI 호출 (일관성을 위해 온도를 낮춤)
     const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {
       method: "POST",
       body: JSON.stringify({ 
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1000 }
       })
     }).then(r => r.json());
 
-    const fullText = ai.candidates?.[0]?.content?.parts?.[0]?.text || "분석 실패";
-    const parts = fullText.split('[상세]');
-    const summary = parts[0].replace('[요약]', '').trim();
-    const detail = parts[1] ? parts[1].trim() : "상세 정보가 없습니다.";
+    const fullText = ai.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // 4. 파싱 로직 강화
+    let summary = "분석 실패";
+    let detail = "상세 정보가 없습니다.";
+
+    if (fullText.includes("[상세]")) {
+      const parts = fullText.split("[상세]");
+      summary = parts[0].replace("[요약]", "").trim();
+      detail = parts[1].trim();
+    } else if (fullText.includes("상세:")) {
+      const parts = fullText.split("상세:");
+      summary = parts[0].replace("요약:", "").trim();
+      detail = parts[1].trim();
+    } else {
+      summary = fullText;
+    }
     
     return new Response(JSON.stringify({ pList, summary, detail, ver: v, myC }), { status: 200, headers: h });
   } catch (e) { 

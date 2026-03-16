@@ -8,51 +8,74 @@
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사용법 가이드 | AI 롤 승리 플랜 코치</title>
-    <link rel="stylesheet" href="style.css">
+    <title>가이드 - LOL.ANALYZE</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #000000; color: #ffffff; font-family: 'Inter', sans-serif; }
+        .nav-link:hover { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        footer a:hover { text-decoration: underline; color: #3b82f6; }
+        h2 { color: #fbbf24; font-weight: 900; margin-bottom: 1.5rem; margin-top: 3rem; text-transform: uppercase; font-size: 1.5rem; letter-spacing: -0.05em; }
+        p { color: #d1d5db; line-height: 1.8; margin-bottom: 1.5rem; font-size: 1rem; }
+        .highlight { color: #3b82f6; font-weight: bold; }
+        .step-num { color: #3b82f6; font-weight: 900; font-style: italic; margin-right: 0.5rem; }
+    </style>
 </head>
-<body>
-    <header class="site-header">
-        <div class="nav-container">
-            <a href="/" class="logo">AI LOL COACH</a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="/">분석기</a></li>
-                    <li><a href="/about.html">서비스 소개</a></li>
-                    <li><a href="/guide.html">사용법</a></li>
-                </ul>
-            </nav>
+<body class="antialiased min-h-screen flex flex-col">
+    <nav class="border-b border-gray-900 bg-black sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="/" class="text-xl font-black italic text-blue-500 tracking-tighter">LOL.ANALYZE</a>
+            <div class="space-x-6 text-xs font-bold uppercase tracking-widest text-gray-400">
+                <a href="/" class="nav-link">Analysis</a>
+                <a href="/guide.html" class="nav-link text-white">Guide</a>
+                <a href="/about.html" class="nav-link">About</a>
+            </div>
         </div>
-    </header>
+    </nav>
 
-    <main class="container">
-        <article class="content-page">
-            <h1>사용법 가이드</h1>
-            
-            <section>
-                <h2>1. 내 라인 선택</h2>
-                <p>가장 먼저 화면 상단의 버튼을 통해 본인이 플레이할 라인을 선택하세요. AI가 해당 포지션에 특화된 1:1 상성과 운영법을 우선적으로 분석합니다.</p>
-            </section>
+    <main class="flex-grow max-w-3xl mx-auto w-full p-6 md:p-20">
+        <h1 class="text-5xl font-black mb-12 tracking-tighter uppercase italic text-white border-b-8 border-blue-600 pb-6 inline-block text-center w-full">How to use</h1>
+        
+        <section>
+            <h2><span class="step-num">01.</span> 소환사 정보 입력</h2>
+            <p>
+                메인 페이지의 검색창에 분석하고 싶은 <span class="highlight">소환사명과 태그(#KR1 등)</span>를 입력하세요. 현재 게임 중인 데이터(실시간 인게임 정보)를 기반으로 분석이 진행됩니다.
+            </p>
+        </section>
 
-            <section>
-                <h2>2. 팀 구성 입력</h2>
-                <p>아군과 적군의 챔피언 이름을 입력하세요. 초성 검색(예: 'ㄱㄹ' -> 가렌)을 지원하며, 챔피언을 선택하면 아이콘이 표시됩니다. 소환사 주문(스펠)까지 정확히 입력하면 더욱 정밀한 분석이 가능합니다.</p>
-            </section>
+        <section>
+            <h2><span class="step-num">02.</span> 실시간 데이터 로딩</h2>
+            <p>
+                '전략 분석' 버튼을 클릭하면 AI가 라이엇 API를 통해 <span class="highlight">현재 팀 구성, 챔피언 상성, 핵심 룬</span> 데이터를 수집합니다. 분석에는 약 3~5초 정도 소요됩니다.
+            </p>
+        </section>
 
-            <section>
-                <h2>3. 분석 리포트 확인</h2>
-                <p>'승리 플랜 분석 시작' 버튼을 누르면 AI가 통계 데이터를 계산합니다. 핵심 요약 카드를 먼저 확인하고, '상세 분석' 버튼을 눌러 구체적인 룬 세팅과 아이템 빌드를 확인하세요.</p>
-            </section>
+        <section>
+            <h2><span class="step-num">03.</span> 1타 강사의 필승 전략 확인</h2>
+            <p>
+                분석이 완료되면 <span class="highlight">⚡ Winning Formula</span> 섹션에서 요약된 핵심 전략을 확인할 수 있습니다. 'Detail Analysis +' 버튼을 눌러 포지션별 상세 운영법과 한타 포지셔닝 팁을 읽어보세요.
+            </p>
+        </section>
 
-            <section>
-                <h2>4. 정글러 팁</h2>
-                <p>정글러를 선택하신 경우, 분석 결과 하단에 미니맵 동선이 시각화됩니다. AI가 추천하는 최적의 동선을 따라 초반 주도권을 가져오세요.</p>
-            </section>
-        </article>
+        <section>
+            <h2><span class="step-num">04.</span> 승리 쟁취</h2>
+            <p>
+                AI가 제시한 <span class="highlight">상성 데이터와 3레벨 타이밍, 핵심 동선</span>을 숙지하고 게임에 임하세요. 데이터 기반의 판단이 당신의 승률을 획기적으로 높여줄 것입니다.
+            </p>
+        </section>
     </main>
 
-    <footer class="site-footer">
-        <p>&copy; 2026 AI LOL COACH. All rights reserved.</p>
+    <footer class="bg-black border-t border-gray-900 py-12">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <div class="flex justify-center space-x-8 text-[10px] font-black tracking-widest text-gray-500 uppercase mb-8">
+                <a href="/about.html">About</a>
+                <a href="/guide.html" class="text-white underline">Guide</a>
+                <a href="/privacy.html">Privacy Policy</a>
+                <a href="/terms.html">Terms of Service</a>
+            </div>
+            <p class="text-[9px] text-gray-700 tracking-widest font-medium">
+                &copy; 2026 LOL.ANALYZE. ALL RIGHTS RESERVED.
+            </p>
+        </div>
     </footer>
 </body>
 </html>

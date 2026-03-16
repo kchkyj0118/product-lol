@@ -21,4 +21,8 @@
     <loc>https://product-lol.pages.dev/terms.html</loc>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>https://product-lol.pages.dev/ads.txt</loc>
+    <priority>0.5</priority>
+  </url>
 </urlset>

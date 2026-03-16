@@ -12,7 +12,7 @@ LoL AI Coach is a web-based application designed to provide real-time strategic 
 - **Refined UI/UX**: Gold-themed aesthetics with responsive grids and clear lane labels.
 - **Tailwind CSS Integration**: Modern, responsive design using Tailwind CSS.
 - **SEO Optimization**: Added `robots.txt`, `sitemap.xml`, and meta tags.
-- **Google AdSense Integration**: Added AdSense scripts and placeholders for monetization.
+- **Google AdSense Integration**: Added AdSense scripts, placeholders for monetization, and `ads.txt` for verification.
 
 ## Technical Details
 - **Frontend**: HTML5, CSS3 (Tailwind), JavaScript (ES6+).

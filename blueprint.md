@@ -8,19 +8,16 @@ LoL AI Coach is a web-based application designed to provide real-time strategic 
 - **Dynamic UI Generation**: JavaScript-driven UI population for consistent lane rows.
 - **Smart Spell Selection**: Automatic "Flash" pre-selection and "Smite" logic for the Jungle position.
 - **Side-by-Side Matchup**: Grid layout featuring Blue Team vs. Red Team with clear lane indicators.
-- **Professional Analytics**: AI prompt focusing on lane dominance, jungle pathing, teamfight priority, and variable handling.
-- **Protagonist-Centered Strategy**: AI analyzes the game specifically from the searched user's perspective.
-- **3-Line Winning Formula**: Concise summary of the core victory conditions.
-- **Detailed Strategic Advice**: Toggleable section for in-depth "how-to" coaching.
-- **Refined UI/UX**: Gold-themed aesthetics with responsive grids and clear lane labels.
+- **Refined AI Analytics**: AI prompt now focuses on 3rd-level timing, ganking probability for each lane, and identifying win-condition champions to prioritize.
+- **Strategic Summarization**: Concise 3-line formula for victory with toggleable detailed strategic advice.
+- **Refined UI/UX**: Gold-themed aesthetics with responsive grids, lane labels, and clear team separation.
 - **Tailwind CSS Integration**: Modern, responsive design using Tailwind CSS.
-- **SEO Optimization**: Added `robots.txt`, `sitemap.xml`, and meta tags.
-- **Google AdSense Integration**: Added AdSense scripts, placeholders for monetization, and `ads.txt` for verification.
+- **SEO & Monetization**: Optimized for SEO with meta tags, robots.txt, and sitemap.xml. Integrated Google AdSense with ads.txt verification.
 
 ## Technical Details
 - **Frontend**: HTML5, CSS3 (Tailwind), JavaScript (ES6+).
 - **Backend**: Cloudflare Pages Functions (analyze.js).
-- **AI Integration**: Google Gemini 3 Flash Preview API.
+- **AI Integration**: Google Gemini 1.5 Flash API (via Cloudflare Functions).
 
 ## Current Plan
 1. [x] Update project structure (Move files to `public/`).
@@ -28,5 +25,6 @@ LoL AI Coach is a web-based application designed to provide real-time strategic 
 3. [x] Separate CSS and JavaScript into standalone files for better organization.
 4. [x] Integrate real Firebase/Gemini API for live analysis.
 5. [x] Automatically sync changes with GitHub.
-6. [x] Refine AI prompt for protagonist-focused analysis.
+6. [x] Refine AI prompt for protagonist-focused analysis (updated to focus on ganking probability and win-conditions).
 7. [x] Implement toggleable detailed strategy UI.
+8. [ ] Add more champion-specific strategic tips and counter-play advice.

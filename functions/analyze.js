@@ -33,18 +33,19 @@ export async function onRequestPost(context) {
 
     const teamDescription = pList.map(p => `${p.team === 100 ? '블루' : '레드'}: ${p.nick}(${p.cName})`).join(', ');
 
-    // 2. 명령어 (내용을 충분히 쓰도록 지시)
+    // 2. 명령어 (사족 없이 핵심만 전달하도록 지시)
     const prompt = `너는 롤 1타 강사야. 반드시 한국어로 대답해.
-주인공: ${name} (${myC})
-대진표: ${teamDescription}
+    주인공: ${name} (${myC})
+    대진표: ${teamDescription}
 
-반드시 아래 형식을 지켜. 중간에 끊기지 않게 끝까지 정성껏 써라. 상성, 동선, 3레벨 타이밍 등 아주 구체적으로 가르쳐줘.
+    인사말(반갑습니다, 학생 등)이나 "칠판 보세요", "집중하세요" 같은 불필요한 사족은 절대 하지 마. 
+    감정적인 표현이나 서술형 미사여구를 빼고 오직 실전 전략과 핵심 데이터 분석 결과만 명확하게 전달해.
 
-[요약]
-- 여기에 실전 승리 전략 3줄 요약만 작성해라. (룬, 아이템 언급 금지)
+    [요약]
+    - 실전 핵심 승리 전략 3줄 요약 (룬, 아이템 언급 금지).
 
-[상세]
-- 여기에 주인공 ${name}님을 위한 아주 자세한 훈수를 작성해라.`;
+    [상세]
+    - ${myC} 입장에서의 구체적인 상성, 정글 동선, 3레벨 타이밍, 교전 주의사항 분석.`;
 
     // 3. AI 호출 (토큰 제한 해제 및 온도 조절로 풍부한 답변 유도)
     const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {

@@ -34,6 +34,8 @@
         .hidden { display: none; }
         .nav-link:hover { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
         footer a:hover { text-decoration: underline; color: #3b82f6; }
+        .match-card { background: #0a0a0a; border: 1px solid #1a1a1a; transition: all 0.2s; }
+        .match-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -88,6 +90,13 @@
                     <div id="detail-section" class="hidden detail-box whitespace-pre-wrap italic"></div>
                 </div>
             </div>
+
+            <section id="match-history-section" class="mt-12">
+                <h2 class="text-2xl font-black text-blue-500 italic mb-6 uppercase tracking-tighter">Match History Analysis</h2>
+                <div id="match-list" class="grid gap-3">
+                    <!-- Match history cards will be injected here -->
+                </div>
+            </section>
         </div>
 
         <!-- SEO/Intro Content Section (Crucial for AdSense) -->
@@ -114,6 +123,15 @@
         </section>
     </main>
 
+    <!-- Deep Analysis Modal -->
+    <div id="deep-analysis-modal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
+        <div class="bg-[#0a0a0a] border border-gray-800 p-8 rounded-3xl max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-yellow-500 font-black text-xl mb-4 uppercase tracking-tighter italic">⚡ 정밀 분석 보고서</h3>
+            <div id="deep-analysis-content" class="text-gray-300 leading-relaxed whitespace-pre-wrap italic text-sm"></div>
+            <button onclick="closeModal()" class="mt-8 w-full py-3 bg-gray-900 text-white font-bold rounded-xl border border-gray-700 hover:bg-gray-800 transition-all uppercase tracking-widest text-xs">닫기</button>
+        </div>
+    </div>
+
     <!-- Footer (Standard Pages for Compliance) -->
     <footer class="bg-black border-t border-gray-900 py-12 mt-20">
         <div class="max-w-5xl mx-auto px-4 text-center">
@@ -133,6 +151,8 @@
     <script>
         const sMap = { 1: "SummonerBoost", 3: "SummonerExhaust", 4: "SummonerFlash", 6: "SummonerHaste", 7: "SummonerHeal", 11: "SummonerSmite", 12: "SummonerTeleport", 14: "SummonerDot", 21: "SummonerBarrier" };
         const rMap = { 8000: "7201_Precision", 8100: "7200_Domination", 8200: "7202_Sorcery", 8300: "7203_Whimsy", 8400: "7204_Resolve" };
+        let currentPuuid = "";
+        let currentName = "";
 
         function renderTeams(pList, ver) {
             const blue = document.getElementById('blue-list');
@@ -184,10 +204,15 @@
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
 
+                currentPuuid = data.puuid;
+                currentName = n;
                 renderTeams(data.pList, data.ver);
                 document.getElementById('strat-title').innerText = `⚡ ${data.myC} Pro Analysis`;
                 document.getElementById('summary-box').innerText = data.summary;
                 document.getElementById('detail-section').innerText = data.detail;
+
+                // 매치 히스토리 가져오기
+                await fetchMatchHistory();
 
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
@@ -196,6 +221,66 @@
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('intro-content').classList.remove('hidden');
             }
+        }
+
+        async function fetchMatchHistory() {
+            const listRes = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'GET_LIST', puuid: currentPuuid })
+            });
+            const { summaryList } = await listRes.json();
+            
+            const listEl = document.getElementById('match-list');
+            listEl.innerHTML = '';
+            
+            summaryList.forEach(m => {
+                const card = document.createElement('div');
+                card.className = `match-card p-4 rounded-xl flex items-center justify-between cursor-pointer ${m.win ? 'border-blue-900/50 bg-blue-900/5' : 'border-red-900/50 bg-red-900/5'}`;
+                card.onclick = () => deepAnalyze(m.id);
+                
+                card.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full border border-gray-800 overflow-hidden">
+                            <img src="https://ddragon.leagueoflegends.com/cdn/14.5.1/img/champion/${m.champion}.png" class="scale-125">
+                        </div>
+                        <div>
+                            <div class="text-xs font-black uppercase tracking-widest ${m.win ? 'text-blue-400' : 'text-red-400'}">${m.win ? 'Victory' : 'Defeat'}</div>
+                            <div class="text-xs text-gray-500 font-bold">${m.gameMode}</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm font-black text-gray-300 tracking-tighter">${m.kills} / <span class="text-red-500">${m.deaths}</span> / ${m.assists}</div>
+                        <div class="text-[10px] text-gray-600 font-bold tracking-widest uppercase">KDA</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-gray-500 font-black tracking-widest uppercase">Analyze →</div>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        async function deepAnalyze(matchId) {
+            const content = document.getElementById('deep-analysis-content');
+            content.innerText = "심층 분석 보고서를 작성 중입니다...\n잠시만 기다려주세요.";
+            document.getElementById('deep-analysis-modal').classList.remove('hidden');
+
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'DEEP_ANALYZE', matchId, puuid: currentPuuid, name: currentName })
+                });
+                const data = await res.json();
+                content.innerText = data.analysis;
+            } catch (err) {
+                content.innerText = "분석 중 오류가 발생했습니다: " + err.message;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('deep-analysis-modal').classList.add('hidden');
         }
 
         function toggleDetail() {

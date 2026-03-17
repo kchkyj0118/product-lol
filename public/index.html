@@ -14,7 +14,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        body { background-color: #000000 !important; color: #ffffff !important; font-family: 'Inter', sans-serif; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { background-color: #000000 !important; color: #ffffff !important; font-family: 'Pretendard', 'Inter', sans-serif; }
         .user-nick { font-size: 1.1rem; font-weight: 900; color: #3b82f6; }
         .champion-label { font-size: 0.75rem; color: #666; font-weight: bold; text-transform: uppercase; }
         .portrait-container { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
@@ -45,20 +46,20 @@
         }
 
         /* 텍스트 가독성 강화 */
-        .analysis-content-area {
+        .analysis-scroll-area {
             color: #f3f4f6 !important;
             line-height: 1.7;
-            font-family: 'Pretendard', 'Inter', sans-serif;
+            font-family: 'Pretendard', sans-serif;
         }
 
         /* 커스텀 스크롤바 */
-        .analysis-content-area::-webkit-scrollbar {
+        .analysis-scroll-area::-webkit-scrollbar {
             width: 5px;
         }
-        .analysis-content-area::-webkit-scrollbar-track {
+        .analysis-scroll-area::-webkit-scrollbar-track {
             background: transparent;
         }
-        .analysis-content-area::-webkit-scrollbar-thumb {
+        .analysis-scroll-area::-webkit-scrollbar-thumb {
             background: #2563eb;
             border-radius: 10px;
         }
@@ -150,18 +151,24 @@
     </main>
 
     <!-- Deep Analysis Modal -->
-    <div id="deep-analysis-modal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
-        <div class="modal-container border border-gray-800 p-6 md:p-10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+    <div id="deep-analysis-modal" class="hidden fixed inset-0 bg-black/98 z-[999] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="modal-container p-6 md:p-10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col relative border border-gray-800 shadow-2xl bg-[#050505]">
             
-            <h3 class="text-yellow-500 font-black text-xl mb-6 flex-shrink-0 flex items-center gap-2 italic uppercase tracking-tighter">
-                <span class="animate-pulse">⚡</span> 정밀 분석 보고서
-            </h3>
-            
-            <div id="deep-analysis-content" class="analysis-content-area text-gray-300 leading-relaxed whitespace-pre-wrap italic overflow-y-auto flex-grow pr-2 text-sm"></div>
+            <div class="flex items-center justify-between mb-4 flex-shrink-0 border-b border-gray-900 pb-4">
+                <h3 class="text-blue-500 font-black text-xl tracking-tighter italic uppercase flex items-center gap-2">
+                    <span class="text-yellow-500">⚡</span> Deep Analysis Report
+                </h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-white text-2xl transition-colors">×</button>
+            </div>
 
-            <button onclick="closeModal()" class="mt-6 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex-shrink-0 transition-all uppercase tracking-widest text-xs">
-                분석 완료 및 닫기
-            </button>
+            <div id="deep-analysis-content" class="analysis-scroll-area overflow-y-auto flex-grow pr-3 mb-4 text-gray-200 leading-relaxed whitespace-pre-wrap italic font-light text-sm"></div>
+
+            <div class="flex-shrink-0 pt-2">
+                <button onclick="closeModal()" 
+                        class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl transition-all active:scale-[0.98] shadow-lg">
+                    분석 완료 및 창 닫기
+                </button>
+            </div>
         </div>
     </div>
 

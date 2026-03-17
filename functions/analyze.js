@@ -74,7 +74,13 @@ export async function onRequestPost(context) {
       fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r => r.json()).then(vs => vs[0])
     ]);
 
-    if (!game.participants) throw new Error("현재 게임 중이 아닙니다.");
+    if (!game.participants) {
+      return new Response(JSON.stringify({ 
+        error: "현재 게임 중이 아닙니다.", 
+        puuid: acc.puuid,
+        name: name 
+      }), { status: 200, headers: h });
+    }
 
     const cData = await fetch(`https://ddragon.leagueoflegends.com/cdn/${v}/data/ko_KR/champion.json`).then(r => r.json()).then(res => res.data);
     const idMap = {}; Object.values(cData).forEach(c => idMap[c.key] = c.id);

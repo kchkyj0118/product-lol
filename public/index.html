@@ -38,42 +38,37 @@
         .match-card { background: #0a0a0a; border: 1px solid #1a1a1a; transition: all 0.2s; }
         .match-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
 
-        /* 분석 모달 전용 스타일 */
-        #deep-analysis-modal .modal-container {
-            background-color: #050505 !important; /* 투명도 없는 순수 검정 */
+        /* 분석 모달 컨테이너 - 배경 투명도 완전 제거 */
+        .modal-fixed-bg {
+            background-color: #050505 !important;
             border: 1px solid #1a1a1a;
             box-shadow: 0 0 40px rgba(0, 0, 0, 1);
         }
 
-        /* 텍스트 가독성 강화 */
-        .analysis-scroll-area {
+        /* 스크롤 영역 설정 */
+        .scroll-area {
+            overflow-y: auto !important;
+            max-height: 60vh; /* 창 크기를 화면의 60%로 제한하여 잘림 방지 */
+            padding-right: 10px;
             color: #f3f4f6 !important;
             line-height: 1.7;
             font-family: 'Pretendard', sans-serif;
         }
 
-        /* 분석창 전용 스크롤바 스타일 */
-        .analysis-scroll-area::-webkit-scrollbar {
-            width: 6px; /* 스크롤바 두께 */
+        /* 세련된 파란색 스크롤바 디자인 */
+        .scroll-area::-webkit-scrollbar {
+            width: 6px;
         }
-
-        .analysis-scroll-area::-webkit-scrollbar-track {
-            background: #0a0a0a; /* 스크롤바 뒷배경 */
+        .scroll-area::-webkit-scrollbar-track {
+            background: #0a0a0a;
             border-radius: 10px;
         }
-
-        .analysis-scroll-area::-webkit-scrollbar-thumb {
-            background: #2563eb; /* 스크롤바 색상 (블루) */
+        .scroll-area::-webkit-scrollbar-thumb {
+            background: #2563eb; /* 담당님 사이트 메인 컬러 */
             border-radius: 10px;
         }
-
-        .analysis-scroll-area::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6; /* 마우스 올렸을 때 색상 */
-        }
-
-        /* 모달 컨테이너 강제 배경색 (투명도 방지) */
-        .modal-container {
-            background-color: #050505 !important;
+        .scroll-area::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
         }
     </style>
 </head>
@@ -164,7 +159,7 @@
 
     <!-- Deep Analysis Modal -->
     <div id="deep-analysis-modal" class="hidden fixed inset-0 bg-black/98 z-[999] flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="modal-container p-6 md:p-10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col relative border border-gray-800 shadow-2xl bg-[#050505]">
+        <div class="modal-container modal-fixed-bg p-6 md:p-10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col relative">
             
             <div class="flex items-center justify-between mb-4 flex-shrink-0 border-b border-gray-900 pb-4">
                 <h3 class="text-blue-500 font-black text-xl tracking-tighter italic uppercase flex items-center gap-2">
@@ -173,7 +168,7 @@
                 <button onclick="closeModal()" class="text-gray-500 hover:text-white text-2xl transition-colors">×</button>
             </div>
 
-            <div id="deep-analysis-content" class="analysis-scroll-area overflow-y-auto flex-grow pr-3 mb-4 text-gray-200 leading-relaxed whitespace-pre-wrap italic font-light text-sm"></div>
+            <div id="deep-analysis-content" class="scroll-area flex-grow mb-4 text-gray-200 leading-relaxed whitespace-pre-wrap italic font-light text-sm"></div>
 
             <div class="flex-shrink-0 pt-2">
                 <button onclick="closeModal()" 

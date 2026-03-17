@@ -37,24 +37,31 @@
         .match-card { background: #0a0a0a; border: 1px solid #1a1a1a; transition: all 0.2s; }
         .match-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
 
-        /* 분석 결과 모달 배경 설정 */
-        #deep-analysis-modal .bg-modal-content {
-            background-color: #0a0a0a !important; /* 투명도 없는 짙은 검은색 */
-            background-image: linear-gradient(to bottom right, #0a0a0a, #111); /* 미세한 그라데이션 */
-            border: 1px solid #333;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9); /* 깊이감 있는 그림자 */
+        /* 분석 모달 전용 스타일 */
+        #deep-analysis-modal .modal-container {
+            background-color: #050505 !important; /* 투명도 없는 순수 검정 */
+            border: 1px solid #1a1a1a;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 1);
         }
 
-        /* 텍스트 가독성 */
-        .analysis-text {
-            color: #e5e7eb !important; /* 밝은 회색으로 눈의 피로 감소 */
-            line-height: 1.8;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* 글자 뒤에 미세한 그림자 */
+        /* 텍스트 가독성 강화 */
+        .analysis-content-area {
+            color: #f3f4f6 !important;
+            line-height: 1.7;
+            font-family: 'Pretendard', 'Inter', sans-serif;
         }
-        .analysis-scroll::-webkit-scrollbar { width: 4px; }
-        .analysis-scroll::-webkit-scrollbar-track { background: #050505; }
-        .analysis-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        .analysis-scroll::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+
+        /* 커스텀 스크롤바 */
+        .analysis-content-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        .analysis-content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .analysis-content-area::-webkit-scrollbar-thumb {
+            background: #2563eb;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -144,13 +151,15 @@
 
     <!-- Deep Analysis Modal -->
     <div id="deep-analysis-modal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
-        <div class="bg-[#0a0a0a] border border-gray-800 p-6 md:p-10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+        <div class="modal-container border border-gray-800 p-6 md:p-10 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
             
-            <h3 class="text-yellow-500 font-black text-xl mb-6 flex-shrink-0">⚡ 정밀 분석 보고서</h3>
+            <h3 class="text-yellow-500 font-black text-xl mb-6 flex-shrink-0 flex items-center gap-2 italic uppercase tracking-tighter">
+                <span class="animate-pulse">⚡</span> 정밀 분석 보고서
+            </h3>
             
-            <div id="deep-analysis-content" class="text-gray-300 leading-relaxed whitespace-pre-wrap italic overflow-y-auto flex-grow pr-2 analysis-scroll"></div>
+            <div id="deep-analysis-content" class="analysis-content-area text-gray-300 leading-relaxed whitespace-pre-wrap italic overflow-y-auto flex-grow pr-2 text-sm"></div>
 
-            <button onclick="closeModal()" class="mt-6 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex-shrink-0">
+            <button onclick="closeModal()" class="mt-6 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex-shrink-0 transition-all uppercase tracking-widest text-xs">
                 분석 완료 및 닫기
             </button>
         </div>

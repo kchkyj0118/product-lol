@@ -52,16 +52,28 @@
             font-family: 'Pretendard', sans-serif;
         }
 
-        /* 커스텀 스크롤바 */
+        /* 분석창 전용 스크롤바 스타일 */
         .analysis-scroll-area::-webkit-scrollbar {
-            width: 5px;
+            width: 6px; /* 스크롤바 두께 */
         }
+
         .analysis-scroll-area::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .analysis-scroll-area::-webkit-scrollbar-thumb {
-            background: #2563eb;
+            background: #0a0a0a; /* 스크롤바 뒷배경 */
             border-radius: 10px;
+        }
+
+        .analysis-scroll-area::-webkit-scrollbar-thumb {
+            background: #2563eb; /* 스크롤바 색상 (블루) */
+            border-radius: 10px;
+        }
+
+        .analysis-scroll-area::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6; /* 마우스 올렸을 때 색상 */
+        }
+
+        /* 모달 컨테이너 강제 배경색 (투명도 방지) */
+        .modal-container {
+            background-color: #050505 !important;
         }
     </style>
 </head>

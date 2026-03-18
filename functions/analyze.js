@@ -73,7 +73,7 @@ export async function onRequestPost(context) {
 
 모든 문장은 냉철하고 전문가다운 톤을 유지하라.`;
 
-      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {
         method: "POST",
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: prompt }] }],
@@ -138,7 +138,7 @@ export async function onRequestPost(context) {
     - 가장 갱킹 성공 확률이 높은 라인 지목 및 그 이유.
     - 승리 플랜 및 교전 주의사항.`;
 
-    const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+    const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {
       method: "POST",
       body: JSON.stringify({ 
         contents: [{ parts: [{ text: activePrompt }] }],

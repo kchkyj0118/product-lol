@@ -69,19 +69,20 @@ export async function onRequestPost(context) {
 [제약 사항]
 - "미드 라인전", "탑 교전" 등 특정 라인(Top, Mid, Bot, Jungle)을 명시하는 표현은 절대 사용하지 마라.
 - 라인 특정 없이 오직 '교전', '오브젝트 싸움', '한타', '시점' 등의 중립적인 용어만 사용하라.
+- 모든 섹션은 중간에 끊기지 않도록 문장을 완벽하게 마무리하라.
 
 다음 3가지 섹션으로 보고서를 작성하라:
 ① 골드 변곡점 분석 (The Critical Moment)
 ② 스킬 교환 효율 (Skill Efficiency)
 ③ 승리 플랜 (Authority)
 
-모든 문장은 냉철하고 전문가다운 톤을 유지하라.`;
+모든 문장은 냉철하고 전문가다운 톤을 유지하며, 마지막까지 논리적으로 명확하게 서술하여 마침표로 끝내라.`;
 
       const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {
         method: "POST",
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
+          generationConfig: { temperature: 0.3, maxOutputTokens: 2500 }
         })
       }).then(r => r.json());
 

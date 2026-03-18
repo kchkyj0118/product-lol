@@ -38,10 +38,13 @@ export async function onRequestPost(context) {
         fetch(`https://asia.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline?api_key=${env.RIOT_API_KEY}`).then(r => r.json())
       ]);
 
+      if (matchData.status || timelineData.status) {
+        throw new Error(`Riot API Error: ${matchData.status?.message || timelineData.status?.message || "Unknown"}`);
+      }
+
       const participant = matchData.info.participants.find(p => p.puuid === puuid);
       const championName = participant ? participant.championName : "Unknown";
       
-      // 주요 통계 추출
       const stats = {
         kda: `${participant.kills}/${participant.deaths}/${participant.assists}`,
         damage: participant.totalDamageDealtToChampions,
@@ -50,7 +53,6 @@ export async function onRequestPost(context) {
         killParticipation: ((participant.kills + participant.assists) / (matchData.info.teams.find(t => t.teamId === participant.teamId).objectives.champion.kills || 1) * 100).toFixed(1)
       };
 
-      // 타임라인 데이터에서 골드 변곡점 및 주요 이벤트 추출
       const frames = timelineData.info.frames;
       const criticalEvents = frames.flatMap(f => f.events).filter(e => 
         (e.type === 'CHAMPION_KILL' && (e.killerId === participant.participantId || e.victimId === participant.participantId)) ||
@@ -58,27 +60,20 @@ export async function onRequestPost(context) {
       );
 
       const prompt = `너는 리그 오브 레전드 최고 권위의 수석 데이터 분석관이다. 
-인사말이나 "안녕하십니까" 같은 서두는 절대 생략하고 바로 결론부터 제시해라.
-"포지셔닝", "진입 타임" 같은 추상적이고 뻔한 조언은 금지한다. 무조건 수치와 팩트 기반으로 분석해라.
+인사말이나 서두는 생략하고 바로 결론부터 제시해라. 수치와 팩트 기반으로 분석해라.
 
 분석 대상: ${championName} (${participant.win ? '승리' : '패배'})
 데이터 요약: KDA ${stats.kda}, 가한 피해량 ${stats.damage}, 킬 관여율 ${stats.killParticipation}%
 상세 사건 기록: ${JSON.stringify(criticalEvents.slice(0, 15))}
 
 다음 3가지 섹션으로 보고서를 작성하라:
-
 ① 골드 변곡점 분석 (The Critical Moment)
-- 특정 시점의 실수가 팀 골드 우위에 어떤 치명적 수치 변화를 줬는지 명시하라. (예: "23분 바론 교전 당시 귀하의 데스로 팀 골드 우위가 +2,000에서 -1,000으로 역전되었습니다.")
-
 ② 스킬 교환 효율 (Skill Efficiency)
-- 단순 딜량이 아닌, 특정 핵심 챔피언에 대한 유효 타격이나 스킬 미스 확률, 반응 속도 등을 분석하라. (예: "궁극기 사용 전 사망률 60%. 상대 핵심 CC기에 반응하지 못해 생존기를 보유하고도 데스가 발생했습니다.")
-
 ③ 승리 플랜 (Authority)
-- '범인 찾기'가 아니라, 해당 판에서 유저가 어떻게 행동했어야 이겼을지 단 한 문장의 결정적 승리 플랜으로 정의하라. (예: "32분 전까지 상대 제리를 3회 이상 마크하여 성장을 억제했어야 승리할 수 있었던 구도였습니다.")
 
 모든 문장은 냉철하고 전문가다운 톤을 유지하라.`;
 
-      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
         method: "POST",
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: prompt }] }],
@@ -86,14 +81,17 @@ export async function onRequestPost(context) {
         })
       }).then(r => r.json());
 
-      const analysis = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text || "데이터 분석 실패";
+      if (aiResponse.error) {
+        throw new Error(`AI API Error: ${aiResponse.error.message}`);
+      }
+
+      const analysis = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text || "데이터 분석 결과가 없습니다.";
       return new Response(JSON.stringify({ analysis }), { status: 200, headers: h });
     }
 
     // 3. 기존 실시간 게임 분석 (ACTIVE_GAME 또는 기본값)
     if (!name || !tag) throw new Error("유저 이름과 태그가 필요합니다.");
 
-    // 1. 유저 및 게임 데이터 수집
     const acc = await fetch(`https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(name)}/${encodeURIComponent(tag)}?api_key=${env.RIOT_API_KEY}`).then(r => r.json());
     if (!acc.puuid) throw new Error("유저 정보를 찾을 수 없습니다.");
 
@@ -128,12 +126,9 @@ export async function onRequestPost(context) {
 
     const teamDescription = pList.map(p => `${p.team === 100 ? '블루' : '레드'}: ${p.nick}(${p.cName})`).join(', ');
 
-    const activePrompt = `너는 롤 1타 강사야. 반드시 한국어로 대답해.
+    const activePrompt = `너는 롤 1타 강사야. 반드시 한국어로 대답해. 인사말 없이 바로 결론만 말해.
     주인공: ${name} (${myC})
     대진표: ${teamDescription}
-
-    인사말이나 불필요한 사족은 절대 하지 마. 
-    오직 실전 전략과 핵심 데이터 분석 결과만 명확하게 전달해.
 
     [요약]
     - 실전 핵심 승리 전략 3줄 요약.
@@ -141,16 +136,19 @@ export async function onRequestPost(context) {
     [상세]
     - ${myC} 입장에서의 구체적인 상성 및 3레벨 타이밍 분석.
     - 가장 갱킹 성공 확률이 높은 라인 지목 및 그 이유.
-    - 승리를 위해 집중적으로 성장시켜야 할 핵심 아군 챔피언 선정 및 이유.
-    - 교전 주의사항 및 주요 오브젝트 교전 전략.`;
+    - 승리 플랜 및 교전 주의사항.`;
 
-    const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {
+    const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
       method: "POST",
       body: JSON.stringify({ 
         contents: [{ parts: [{ text: activePrompt }] }],
         generationConfig: { temperature: 0.7, maxOutputTokens: 2048, topP: 0.9 }
       })
     }).then(r => r.json());
+
+    if (ai.error) {
+      throw new Error(`AI API Error: ${ai.error.message}`);
+    }
 
     const fullText = ai.candidates?.[0]?.content?.parts?.[0]?.text || "데이터 분석 실패";
     

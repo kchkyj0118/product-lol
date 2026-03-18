@@ -41,20 +41,48 @@ export async function onRequestPost(context) {
       const participant = matchData.info.participants.find(p => p.puuid === puuid);
       const championName = participant ? participant.championName : "Unknown";
       
-      // 골드 격차가 급변하거나 중요한 이벤트 추출
-      const criticalEvents = timelineData.info.frames.flatMap(f => f.events).filter(e => e.type === 'CHAMPION_KILL' && (e.killerId === participant.participantId || e.victimId === participant.participantId));
+      // 주요 통계 추출
+      const stats = {
+        kda: `${participant.kills}/${participant.deaths}/${participant.assists}`,
+        damage: participant.totalDamageDealtToChampions,
+        gold: participant.goldEarned,
+        vision: participant.visionScore,
+        killParticipation: ((participant.kills + participant.assists) / (matchData.info.teams.find(t => t.teamId === participant.teamId).objectives.champion.kills || 1) * 100).toFixed(1)
+      };
 
-      const prompt = `당신은 리그 오브 레전드 수석 분석관입니다. 다음 데이터를 바탕으로 해당 유저의 패배 원인을 분석하십시오. 
-      말투는 정중한 존댓말(~입니다, ~하십시오)을 사용하며, 냉철하고 객관적인 지표를 근거로 대안을 제시하십시오.
-      상황: ${matchData.info.gameMode}, 유저 챔피언: ${championName}, 결과: ${participant.win ? '승리' : '패배'}.
-      KDA: ${participant.kills}/${participant.deaths}/${participant.assists}
-      사건 기록(주요 교전): ${JSON.stringify(criticalEvents.slice(0, 10))}`;
+      // 타임라인 데이터에서 골드 변곡점 및 주요 이벤트 추출
+      const frames = timelineData.info.frames;
+      const criticalEvents = frames.flatMap(f => f.events).filter(e => 
+        (e.type === 'CHAMPION_KILL' && (e.killerId === participant.participantId || e.victimId === participant.participantId)) ||
+        (e.type === 'ELITE_MONSTER_KILL')
+      );
 
-      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${env.GEMINI_API_KEY}`, {
+      const prompt = `너는 리그 오브 레전드 최고 권위의 수석 데이터 분석관이다. 
+인사말이나 "안녕하십니까" 같은 서두는 절대 생략하고 바로 결론부터 제시해라.
+"포지셔닝", "진입 타임" 같은 추상적이고 뻔한 조언은 금지한다. 무조건 수치와 팩트 기반으로 분석해라.
+
+분석 대상: ${championName} (${participant.win ? '승리' : '패배'})
+데이터 요약: KDA ${stats.kda}, 가한 피해량 ${stats.damage}, 킬 관여율 ${stats.killParticipation}%
+상세 사건 기록: ${JSON.stringify(criticalEvents.slice(0, 15))}
+
+다음 3가지 섹션으로 보고서를 작성하라:
+
+① 골드 변곡점 분석 (The Critical Moment)
+- 특정 시점의 실수가 팀 골드 우위에 어떤 치명적 수치 변화를 줬는지 명시하라. (예: "23분 바론 교전 당시 귀하의 데스로 팀 골드 우위가 +2,000에서 -1,000으로 역전되었습니다.")
+
+② 스킬 교환 효율 (Skill Efficiency)
+- 단순 딜량이 아닌, 특정 핵심 챔피언에 대한 유효 타격이나 스킬 미스 확률, 반응 속도 등을 분석하라. (예: "궁극기 사용 전 사망률 60%. 상대 핵심 CC기에 반응하지 못해 생존기를 보유하고도 데스가 발생했습니다.")
+
+③ 승리 플랜 (Authority)
+- '범인 찾기'가 아니라, 해당 판에서 유저가 어떻게 행동했어야 이겼을지 단 한 문장의 결정적 승리 플랜으로 정의하라. (예: "32분 전까지 상대 제리를 3회 이상 마크하여 성장을 억제했어야 승리할 수 있었던 구도였습니다.")
+
+모든 문장은 냉철하고 전문가다운 톤을 유지하라.`;
+
+      const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
         method: "POST",
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+          generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
         })
       }).then(r => r.json());
 

@@ -66,6 +66,10 @@ export async function onRequestPost(context) {
 데이터 요약: KDA ${stats.kda}, 가한 피해량 ${stats.damage}, 킬 관여율 ${stats.killParticipation}%
 상세 사건 기록: ${JSON.stringify(criticalEvents.slice(0, 15))}
 
+[제약 사항]
+- "미드 라인전", "탑 교전" 등 특정 라인(Top, Mid, Bot, Jungle)을 명시하는 표현은 절대 사용하지 마라.
+- 라인 특정 없이 오직 '교전', '오브젝트 싸움', '한타', '시점' 등의 중립적인 용어만 사용하라.
+
 다음 3가지 섹션으로 보고서를 작성하라:
 ① 골드 변곡점 분석 (The Critical Moment)
 ② 스킬 교환 효율 (Skill Efficiency)

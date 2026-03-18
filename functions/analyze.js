@@ -54,10 +54,15 @@ export async function onRequestPost(context) {
       };
 
       const frames = timelineData.info.frames;
-      const criticalEvents = frames.flatMap(f => f.events).filter(e => 
-        (e.type === 'CHAMPION_KILL' && (e.killerId === participant.participantId || e.victimId === participant.participantId)) ||
-        (e.type === 'ELITE_MONSTER_KILL')
-      );
+      const criticalEvents = frames.flatMap(f => f.events)
+        .filter(e => 
+          (e.type === 'CHAMPION_KILL' && (e.killerId === participant.participantId || e.victimId === participant.participantId)) ||
+          (e.type === 'ELITE_MONSTER_KILL')
+        )
+        .map(e => ({
+          ...e,
+          timeDisplay: `${Math.floor(e.timestamp / 60000)}분 ${Math.floor((e.timestamp % 60000) / 1000)}초`
+        }));
 
       const prompt = `너는 리그 오브 레전드 최고 권위의 수석 데이터 분석관이다. 
 인사말이나 서두는 생략하고 바로 결론부터 제시해라. 수치와 팩트 기반으로 분석해라.
@@ -67,6 +72,7 @@ export async function onRequestPost(context) {
 상세 사건 기록: ${JSON.stringify(criticalEvents.slice(0, 15))}
 
 [제약 사항]
+- 시간을 표기할 때는 반드시 제공된 'timeDisplay' 값을 사용하여 "MM분 SS초" 형식으로 표기하라. (예: "23분 15초")
 - "미드 라인전", "탑 교전" 등 특정 라인(Top, Mid, Bot, Jungle)을 명시하는 표현은 절대 사용하지 마라.
 - 라인 특정 없이 오직 '교전', '오브젝트 싸움', '한타', '시점' 등의 중립적인 용어만 사용하라.
 - 모든 섹션은 중간에 끊기지 않도록 문장을 완벽하게 마무리하라.

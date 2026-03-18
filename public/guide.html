@@ -18,6 +18,8 @@
         p { color: #d1d5db; line-height: 1.8; margin-bottom: 1.5rem; font-size: 1rem; }
         .highlight { color: #3b82f6; font-weight: bold; }
         .step-num { color: #3b82f6; font-weight: 900; font-style: italic; margin-right: 0.5rem; }
+        .guide-card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 2.5rem; border-radius: 2rem; margin-bottom: 3rem; position: relative; overflow: hidden; }
+        .guide-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #3b82f6; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -32,34 +34,52 @@
         </div>
     </nav>
 
-    <main class="flex-grow max-w-3xl mx-auto w-full p-6 md:p-20">
-        <h1 class="text-5xl font-black mb-12 tracking-tighter uppercase italic text-white border-b-8 border-blue-600 pb-6 inline-block text-center w-full">How to use</h1>
+    <main class="flex-grow max-w-4xl mx-auto w-full p-6 md:p-20">
+        <h1 class="text-5xl font-black mb-12 tracking-tighter uppercase italic text-white border-b-8 border-blue-600 pb-6 inline-block text-center w-full">Usage Guide</h1>
         
-        <section>
-            <h2><span class="step-num">01.</span> 소환사 정보 입력</h2>
-            <p>
-                메인 페이지의 검색창에 분석하고 싶은 <span class="highlight">소환사명과 태그(#KR1 등)</span>를 입력하세요. 현재 게임 중인 데이터(실시간 인게임 정보)를 기반으로 분석이 진행됩니다.
-            </p>
-        </section>
+        <p class="text-center text-gray-400 mb-16 text-lg">lol-coaches를 100% 활용하여 승률을 높이는 방법을 확인하세요.</p>
 
-        <section>
-            <h2><span class="step-num">02.</span> 실시간 데이터 로딩</h2>
+        <div class="guide-card">
+            <h2><span class="step-num">01.</span> 소환사 정보 입력 및 검색</h2>
             <p>
-                '전략 분석' 버튼을 클릭하면 AI가 라이엇 API를 통해 <span class="highlight">현재 팀 구성, 챔피언 상성, 핵심 룬</span> 데이터를 수집합니다. 분석에는 약 3~5초 정도 소요됩니다.
+                메인 페이지의 검색창에 분석하고 싶은 <span class="highlight">소환사명과 태그(#KR1 등)</span>를 정확히 입력하세요. 라이엇 게임즈의 통합 ID 시스템을 기반으로 하므로 태그 입력이 필수적입니다.
             </p>
-        </section>
+            <p class="text-sm text-gray-500 italic">* 게임 로딩 화면이나 인게임 중에 검색하시면 실시간 데이터를 기반으로 한 분석이 제공됩니다.</p>
+        </div>
 
-        <section>
-            <h2><span class="step-num">03.</span> 1타 강사의 필승 전략 확인</h2>
+        <div class="guide-card">
+            <h2><span class="step-num">02.</span> 실시간 전략 리포트 확인</h2>
             <p>
-                분석이 완료되면 <span class="highlight">⚡ Winning Formula</span> 섹션에서 요약된 핵심 전략을 확인할 수 있습니다. 'Detail Analysis +' 버튼을 눌러 포지션별 상세 운영법과 한타 포지셔닝 팁을 읽어보세요.
+                분석이 완료되면 <span class="highlight">⚡ Winning Formula</span> 섹션에서 즉시 실천 가능한 3줄 요약 전략이 제공됩니다. 
             </p>
-        </section>
+            <ul class="list-disc list-inside space-y-2 text-gray-400 text-sm ml-4">
+                <li>현재 라인전 상성에 따른 초반 운영법</li>
+                <li>적 정글러의 예상 동선과 갱킹 주의 구간</li>
+                <li>한타 단계에서의 핵심 포지셔닝 및 타겟팅 우선순위</li>
+            </ul>
+        </div>
 
-        <section>
-            <h2><span class="step-num">04.</span> 승리 쟁취</h2>
+        <div class="guide-card">
+            <h2><span class="step-num">03.</span> Deep Analysis (사후 분석) 활용</h2>
             <p>
-                AI가 제시한 <span class="highlight">상성 데이터와 3레벨 타이밍, 핵심 동선</span>을 숙지하고 게임에 임하세요. 데이터 기반의 판단이 당신의 승률을 획기적으로 높여줄 것입니다.
+                게임이 종료된 후에는 매치 히스토리에서 <span class="highlight">'분석하기 >'</span> 버튼을 클릭하여 정밀 사후 분석 리포트를 받아볼 수 있습니다. 
+            </p>
+            <p class="text-gray-400 text-sm">
+                사후 분석 리포트에서는 '골드 변곡점', '스킬 효율', '승리 플랜' 세 가지 관점에서 당신의 플레이를 복기해 드립니다. 특히 패배한 게임의 리포트를 통해 다음 판에서의 승리 확률을 높일 수 있는 결정적인 팁을 얻으세요.
+            </p>
+        </div>
+
+        <div class="guide-card">
+            <h2><span class="step-num">04.</span> 티어 상승을 위한 팁</h2>
+            <p>
+                lol-coaches는 단순한 지표 확인용이 아닙니다. AI 코치가 제시하는 <span class="highlight">3레벨 타이밍 스파이크</span>를 적극적으로 활용하여 주도권을 잡으세요. 주도권을 통해 확보한 시야와 오브젝트 컨트롤이 티어 상승의 핵심입니다.
+            </p>
+        </div>
+
+        <section class="mt-20 p-8 bg-blue-600/5 rounded-3xl border border-blue-500/10">
+            <h3 class="text-xl font-black text-white mb-4 uppercase tracking-tighter italic">💡 Pro Tips for AdSense Users</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+                우리는 유저들에게 최상의 경험을 제공하기 위해 광고 배치를 최적화하고 있습니다. 전략 리포트 사이에 배치된 광고는 유저의 분석 경험을 방해하지 않도록 설계되었습니다. lol-coaches의 고품질 분석 콘텐츠는 유저들의 신뢰를 바탕으로 성장합니다.
             </p>
         </section>
     </main>

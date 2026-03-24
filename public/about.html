@@ -11,13 +11,13 @@
     <title>소개 - lol-coaches</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        body { background-color: #000000; color: #ffffff; font-family: 'Inter', sans-serif; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { background-color: #000000; color: #ffffff; font-family: 'Pretendard', sans-serif; }
         .nav-link:hover { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
-        footer a:hover { text-decoration: underline; color: #3b82f6; }
-        h2 { color: #fbbf24; font-weight: 900; margin-bottom: 1.5rem; margin-top: 3.5rem; text-transform: uppercase; font-size: 1.5rem; letter-spacing: -0.05em; border-left: 4px solid #3b82f6; padding-left: 1rem; }
-        p { color: #d1d5db; line-height: 1.8; margin-bottom: 1.5rem; font-size: 1rem; }
-        .highlight { color: #3b82f6; font-weight: bold; }
-        .card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 2rem; border-radius: 1.5rem; margin-bottom: 2rem; }
+        .hero-title { font-size: 4rem; font-weight: 900; line-height: 1; letter-spacing: -0.05em; }
+        .section-card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 3rem; border-radius: 2.5rem; margin-bottom: 2rem; }
+        .highlight-blue { color: #3b82f6; }
+        p { color: #9ca3af; line-height: 1.8; margin-bottom: 1.5rem; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -32,60 +32,48 @@
         </div>
     </nav>
 
-    <main class="flex-grow max-w-4xl mx-auto w-full p-6 md:p-20">
-        <h1 class="text-5xl font-black mb-12 tracking-tighter uppercase italic text-white border-b-8 border-blue-600 pb-6 inline-block text-center w-full">Next-Gen LoL Coach</h1>
-        
-        <div class="card">
-            <h2>데이터 그 이상의 통찰력</h2>
-            <p>
-                리그 오브 레전드는 매 순간 수만 가지의 변수가 발생하는 복잡한 게임입니다. 단순히 상대방의 승률이나 전적을 아는 것만으로는 충분하지 않습니다. <span class="highlight">lol-coaches</span>는 "그래서 내가 지금 무엇을 해야 하는가?"라는 질문에 답하기 위해 만들어졌습니다.
-            </p>
-            <p>
-                우리는 라이엇 API를 통해 수집된 실시간 인게임 컨텍스트를 Google의 최첨단 AI 모델인 <span class="highlight">Gemini 3 Flash Preview</span>에 전달합니다. AI는 현재 패치 버전의 메타 데이터와 수백만 건의 고티어 매치 데이터를 기반으로, 당신의 챔피언이 가진 잠재력을 극대화할 수 있는 최적의 경로를 실시간으로 설계합니다.
+    <main class="flex-grow max-w-5xl mx-auto w-full p-6 md:p-20">
+        <div class="mb-20">
+            <h1 class="hero-title italic uppercase mb-8">Empowering<br><span class="highlight-blue">Digital Athletes</span></h1>
+            <p class="text-xl text-gray-400 max-w-2xl leading-relaxed">
+                lol-coaches는 데이터와 인공지능이 게이머의 잠재력을 어떻게 극대화할 수 있는지 보여주는 살아있는 실험실입니다.
             </p>
         </div>
 
-        <div class="card">
-            <h2>왜 AI 코칭인가?</h2>
-            <p>
-                기존의 통계 사이트들은 '과거'의 기록에 의존합니다. 하지만 AI 코칭은 '현재'의 조합과 '미래'의 성장 곡선을 계산합니다. 
-            </p>
-            <ul class="list-disc list-inside space-y-4 text-gray-400 text-sm ml-4 mb-6">
-                <li><span class="text-white font-bold">실시간 가변성 대응:</span> 아군과 적군의 룬 세팅과 스펠 선택에 따라 매 순간 바뀌는 상성을 분석합니다.</li>
-                <li><span class="text-white font-bold">객관적인 판단:</span> 감정에 치우치지 않고 순수하게 데이터와 확률에 근거한 최선의 수를 제안합니다.</li>
-                <li><span class="text-white font-bold">초보부터 고수까지:</span> 브론즈 유저에게는 기본적인 라인 운영법을, 다이아몬드 유저에게는 정교한 턴 관리와 한타 포지셔닝을 가이드합니다.</li>
-            </ul>
-        </div>
-
-        <section class="mt-20">
-            <h2 class="text-center border-none p-0 mb-10">자주 묻는 질문 (FAQ)</h2>
-            <div class="space-y-8">
-                <div>
-                    <h4 class="text-blue-500 font-bold mb-2">Q. 서비스 이용료가 있나요?</h4>
-                    <p class="text-sm">A. lol-coaches는 모든 유저에게 무료로 제공됩니다. 우리는 광고 수익을 통해 서비스를 유지하며, 유저들에게 추가적인 비용 부담을 주지 않는 것을 원칙으로 합니다.</p>
-                </div>
-                <div>
-                    <h4 class="text-blue-500 font-bold mb-2">Q. 분석 결과가 얼마나 정확한가요?</h4>
-                    <p class="text-sm">A. 최신 메타와 고티어 데이터를 학습한 AI가 분석하므로 매우 높은 신뢰도를 자랑합니다. 다만, 게임은 실시간으로 변수가 발생하므로 AI의 조언을 전략적 가이드라인으로 활용하시는 것이 좋습니다.</p>
-                </div>
-                <div>
-                    <h4 class="text-blue-500 font-bold mb-2">Q. 닉네임 검색이 안 됩니다.</h4>
-                    <p class="text-sm">A. 소환사명과 함께 '#' 뒤의 태그(예: KR1)를 정확히 입력했는지 확인해 주세요. 또한 라이엇 서버 상태에 따라 일시적으로 조회가 지연될 수 있습니다.</p>
-                </div>
+        <div class="grid md:grid-cols-1 gap-8">
+            <div class="section-card">
+                <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tighter">The Technology Behind</h2>
+                <p>
+                    우리는 라이엇 게임즈의 실시간 매치 데이터를 수집하기 위해 고성능 데이터 파이프라인을 운영합니다. 수집된 인게임 컨텍스트는 Google의 차세대 대규모 언어 모델(LLM)인 <span class="highlight-blue font-bold">Gemini 3 Flash Preview</span>를 통해 처리됩니다.
+                </p>
+                <p>
+                    이 AI 모델은 단순한 텍스트 생성을 넘어, 수백만 건의 마스터/챌린저 티어 매치 시나리오를 학습한 '전략 최적화 엔진'으로 작동합니다. 이를 통해 유저에게 가장 확률 높은 승리 경로를 실시간으로 제안할 수 있습니다.
+                </p>
             </div>
-        </section>
 
-        <section class="mt-20 text-center border-t border-gray-900 pt-20">
-            <h2 class="border-none p-0 inline-block mb-6">Contact Us</h2>
-            <p class="text-sm">서비스 개선 제안이나 문의 사항은 아래 이메일로 연락 주시기 바랍니다.</p>
-            <p class="text-blue-500 font-bold">support@lol-coaches.com</p>
-        </section>
+            <div class="section-card">
+                <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tighter">Our Mission</h2>
+                <p>
+                    우리의 목표는 단순히 승률을 높이는 것이 아닙니다. 유저가 자신의 플레이를 데이터의 관점에서 객관적으로 바라보고, '왜 이 선택이 최선이었는가'를 이해하게 함으로써 근본적인 실력 향상(Game Knowledge)을 돕는 것입니다.
+                </p>
+                <p>
+                    lol-coaches와 함께라면 모든 게임은 배움의 기회가 되며, 모든 패배는 다음 승리를 위한 분석 데이터가 됩니다. 우리는 당신이 '운'에 의지하지 않고 '전략'으로 승리하는 진정한 디지털 운동선수가 되기를 바랍니다.
+                </p>
+            </div>
+
+            <div class="section-card border-blue-900/50">
+                <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-tighter">Legal Disclaimer</h2>
+                <p class="text-xs text-gray-600">
+                    lol-coaches isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
+                </p>
+            </div>
+        </div>
     </main>
 
-    <footer class="bg-black border-t border-gray-900 py-12">
+    <footer class="bg-black border-t border-gray-900 py-12 mt-20">
         <div class="max-w-5xl mx-auto px-4 text-center">
             <div class="flex justify-center space-x-8 text-[10px] font-black tracking-widest text-gray-500 uppercase mb-8">
-                <a href="/about.html" class="text-white underline">About</a>
+                <a href="/about.html">About</a>
                 <a href="/guide.html">Guide</a>
                 <a href="/privacy.html">Privacy Policy</a>
                 <a href="/terms.html">Terms of Service</a>
